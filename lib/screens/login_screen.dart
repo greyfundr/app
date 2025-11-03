@@ -1,13 +1,84 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
+import 'dashboard.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../class/auth_service.dart';
+import 'profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
+
+   static final emailController = TextEditingController();
+  static final passwordController = TextEditingController();
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+
+    void _showErrorDialog(context,String message) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Login Error'),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    void login() async {
+      SharedPreferences.setMockInitialValues({});
+      final response = await http.post(
+        Uri.parse('https://greyfoundr-backend.onrender.com/auth/login'),
+        body: {
+          'email': emailController.text,
+          'password': passwordController.text,
+        },
+      );
+      if (response.statusCode == 200) {
+        // Handle successful login
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        String message = responseData['msg'];
+        String token = responseData['token'];
+
+        await AuthService().saveToken(token);
+
+        _showErrorDialog(context,message);
+        Future.delayed(const Duration(seconds: 3), () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const ProfileScreen()),
+        );
+        });
+      } else {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        String message = responseData['msg'];
+        print('Response from Node.js: $responseData');
+
+        _showErrorDialog(context,message);
+
+
+      }
+
+    }
+
 
     return Scaffold(
       body: Container(
@@ -151,7 +222,7 @@ class LoginScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              onPressed: () {},
+                              onPressed: login,
                               child: const Text(
                                 "Log In",
                                 style: TextStyle(

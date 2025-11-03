@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'verify_screen.dart';
 import 'login_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class PersonalRegisterScreen extends StatelessWidget {
   const PersonalRegisterScreen({super.key});
@@ -11,6 +13,56 @@ class PersonalRegisterScreen extends StatelessWidget {
     final phoneController = TextEditingController();
     final passController = TextEditingController();
     final confirmController = TextEditingController();
+
+    void _showErrorDialog(context,String message) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Login Error'),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    void register() async {
+      final response = await http.post(
+        Uri.parse('https://greyfoundr-backend.onrender.com/auth/register'),
+        body: {
+          'email': emailController.text,
+          'username': emailController.text,
+          'phone': phoneController.text,
+          'password': passController.text,
+          'cpassword': confirmController.text,
+        },
+      );
+      if (response.statusCode == 200) {
+        // Handle successful login
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        String message = responseData['message'];
+        print('Response from Node.js: $responseData');
+        _showErrorDialog(context,message);
+
+      } else {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        String message = responseData['error'];
+        print('Response from Node.js: $message');
+
+        _showErrorDialog(context,message);
+
+
+      }
+
+    }
 
     return Scaffold(
       body: Container(
@@ -193,13 +245,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const VerifyScreen()),
-                                );
-                              },
+                              onPressed: register,
                               child: const Text(
                                 "Continue",
                                 style: TextStyle(
@@ -211,30 +257,30 @@ class PersonalRegisterScreen extends StatelessWidget {
 
                           // Already have account? Login
                           // Already have account? Login
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    const Text(
-      "Have an account? ",
-      style: TextStyle(color: Colors.grey),
-    ),
-    GestureDetector(
-      onTap: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      },
-      child: const Text(
-        "Login Here",
-        style: TextStyle(
-          color: Colors.red,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    )
-  ],
-),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Have an account? ",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                  );
+                                },
+                                child: const Text(
+                                  "Login Here",
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         ],
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'campaign_details.dart';
 
 class CampaignScreen extends StatefulWidget {
   const CampaignScreen({super.key});
@@ -26,9 +27,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Handle back navigation
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
@@ -109,9 +108,9 @@ class _CampaignScreenState extends State<CampaignScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Campaign Title
               const Text(
                 'Campaign Title',
@@ -136,9 +135,9 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 ),
                 maxLines: 1,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Description
               const Text(
                 'Description',
@@ -163,33 +162,38 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 ),
                 maxLines: 5,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Select Category
               _buildExpandableOption(
                 icon: Icons.add_circle,
                 title: 'Select Category',
                 subtitle: 'What Kind of Fundraiser are you creating?',
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Set Offers with Rewards
               _buildExpandableOption(
                 icon: Icons.add_circle,
                 title: 'Set Offers with Rewards',
                 subtitle: '',
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Next Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle next button press
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CampaignDetailScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00A9A5),

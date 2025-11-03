@@ -30,6 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.2.0 # Or the latest stable version from pub.dev
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.1.2  # To store JWT locally
+  jwt_decoder: ^2.0.1 # Decode and validate JWTs
+  dio: ^5.9.0
+  percent_indicator: ^4.2.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -76,6 +82,8 @@ flutter:
     - assets/icons/business.png
     - assets/icons/groupb.png
     - assets/icons/charityNP.png
+    - assets/images/avatar.png
+    - assets/images/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

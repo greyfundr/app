@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../services/api_service.dart';
-import '../../auth/login_screen.dart';
+import 'login_screen.dart';
+import '../class/auth_service.dart';
+import '../class/jwt_helper.dart';
+import 'main_campaign.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,20 +22,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void loadProfile() async {
-    final res = await ApiService.getProfile();
-    setState(() => user = res['user']);
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => user = userData['user']);
+      print("User ID: ${userData['user']}");
+    } else {
+      print("Token is expired or invalid");
+
+    }
+   // setState(() => user = res['user']);
   }
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('userId');
+    await AuthService().logout();
 
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
+          (route) => false,
     );
   }
 
@@ -46,157 +57,180 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: user == null
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // === Top Bar ===
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            // Profile Picture
-                            CircleAvatar(
-                              radius: 25,
-                              backgroundImage: user!['profile_pic'] != null
-                                  ? NetworkImage(user!['profile_pic'])
-                                  : const AssetImage('assets/images/avatar.png')
-                                      as ImageProvider,
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${user!['first_name']} ${user!['last_name']}",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "@${user!['username']}",
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.notifications_none),
-                            ),
-                            IconButton(
-                              onPressed: logout,
-                              icon: const Icon(Icons.logout, color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // === Verify Banner ===
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red[400],
-                        borderRadius: BorderRadius.circular(8),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // === Top Bar ===
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      // Profile Picture
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundImage: user!['profile_pic'] != null
+                            ? const AssetImage('assets/images/avatar.png')
+                            : const AssetImage('assets/images/avatar.png')
+                        as ImageProvider,
                       ),
-                      child: const Text(
-                        'Kindly verify your Identity to upgrade your account',
-                        style: TextStyle(color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // === Feature Grid ===
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      crossAxisSpacing: 13,
-                      mainAxisSpacing: 13,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildFeatureCard('Lifestyle', 'assets/images/lifestyle.png'),
-                        _buildFeatureCard('Invoices', 'assets/images/invoices.png'),
-                        _buildFeatureCard('Create New', 'assets/images/create.png'),
-                        _buildFeatureCard('Charity', 'assets/images/charity.png'),
-                      ],
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // === Balance Section ===
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF007A74), Color(0xFF00B3AE)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
+                      const SizedBox(width: 10),
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Total Balance',
-                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          Text(
+                            "${user!['first_name']} ${user!['last_name']}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            '₦72,311.00',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
-                              Text('You owe: ₦23,200',
-                                  style: TextStyle(color: Colors.white70)),
-                              Text('You are owed: ₦45,200',
-                                  style: TextStyle(color: Colors.white70)),
-                            ],
-                          ),
-                          const SizedBox(height: 15),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.teal,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                              onPressed: () {},
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add Money'),
+                          Text(
+                            "@${user!['username']}",
+                            style: const TextStyle(
+                              color: Colors.grey,
                             ),
                           ),
                         ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.notifications_none),
+                      ),
+                      IconButton(
+                        onPressed: logout,
+                        icon: const Icon(Icons.logout, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // === Verify Banner ===
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[400],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Kindly verify your Identity to upgrade your account',
+                  style: TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              // === Feature Grid ===
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                crossAxisSpacing: 13,
+                mainAxisSpacing: 13,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildFeatureCard('Lifestyle', 'assets/images/avatar.png'),
+                  _buildFeatureCard('Invoices', 'assets/images/avatar.png'),
+                  _buildFeatureCard('Create New', 'assets/images/avatar.png'),
+                  _buildFeatureCard('Charity', 'assets/images/avatar.png'),
+                ],
+              ),
+
+              const SizedBox(height: 25),
+
+              // === Balance Section ===
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF007A74), Color(0xFF00B3AE)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Balance',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      '₦72,311.00',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text('You owe: ₦23,200',
+                            style: TextStyle(color: Colors.white70)),
+                        Text('You are owed: ₦45,200',
+                            style: TextStyle(color: Colors.white70)),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.teal,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        onPressed: () {},
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Money'),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.teal,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const CampaignScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create Campaign'),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
 
       // === Bottom Navigation ===
       bottomNavigationBar: BottomNavigationBar(

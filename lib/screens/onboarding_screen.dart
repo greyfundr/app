@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'register_screen.dart'; // 👈 make sure this file exists
+import 'Auth/login_screen.dart';
+import 'Auth/register_screen.dart'; // 👈 make sure this file exists
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,7 +14,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assets/images/onboarding1.jpg",
+      "image": "assets/images/Onboarding1.jpg",
       "title": "Pay, \nTransfer & Split Bills",
       "subtitle":
           "Pay, transfer, or split bills with others. Everyone can pitch in - easy, fair, and hassle-free."

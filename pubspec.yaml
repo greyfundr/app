@@ -36,6 +36,10 @@ dependencies:
   jwt_decoder: ^2.0.1 # Decode and validate JWTs
   dio: ^5.9.0
   percent_indicator: ^4.2.5
+  flutter_launcher_icons: "^0.14.4" # Use the latest version
+  intl: ^0.20.2
+  flutter_svg: ^2.2.2
+  google_fonts: ^6.3.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -60,6 +64,8 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
+  web: true
+  windows: true
   image_path: "assets/icon/app_icon.png" # path to your logo
 
 # The following section is specific to Flutter packages.
@@ -73,7 +79,7 @@ flutter:
   
   assets:
     - assets/images/login_bg.png
-    - assets/images/onboarding1.jpg
+    - assets/images/Onboarding1.jpg
     - assets/images/onboarding2.jpg
     - assets/images/onboarding3.jpg
     - assets/images/splash_bg.jpg
@@ -83,7 +89,18 @@ flutter:
     - assets/icons/groupb.png
     - assets/icons/charityNP.png
     - assets/images/avatar.png
-    - assets/images/
+    - assets/
+    - assets/images/ellipse_29_1.svg
+    - assets/images/union_1.svg
+    - assets/images/group_139.svg
+    - assets/images/httpslottiefilescomanimationssuccessixzuhjaasy.png
+    - assets/images/group_6.svg
+    - assets/images/group_507_1.svg
+    - assets/images/ellipse_50_1.svg
+    - assets/images/ellipse_52_1.svg
+    - assets/images/ellipse_53_2.svg
+    - assets/images/vuesaxboldpeople_1.svg
+    - assets/images/ellipse_53_3.svg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

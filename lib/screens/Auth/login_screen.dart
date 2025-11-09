@@ -46,7 +46,7 @@ class LoginScreen extends StatelessWidget {
     void login() async {
       SharedPreferences.setMockInitialValues({});
       final response = await http.post(
-        Uri.parse('http://localhost:3000/auth/login'),
+        Uri.parse('https://greyfoundr-backend.onrender.com/auth/login'),
         body: {
           'email': emailController.text,
           'password': passwordController.text,

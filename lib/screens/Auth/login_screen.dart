@@ -60,7 +60,14 @@ class LoginScreen extends StatelessWidget {
 
         await AuthService().saveToken(token);
 
-        _showErrorDialog(context,message);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login successful!'),
+            duration: Duration(seconds: 2), // Optional: how long it shows
+            backgroundColor: Colors.green, // Optional: customize color
+          ),
+
+        );
         Future.delayed(const Duration(seconds: 3), () {
         Navigator.push(
           context,

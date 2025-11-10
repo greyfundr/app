@@ -119,7 +119,7 @@ class _HomeProfileState extends State<HomeProfile> {
             Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/Onboarding1.jpg'),
+                  image: AssetImage('assets/images/onboarding1.jpg'),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.only(

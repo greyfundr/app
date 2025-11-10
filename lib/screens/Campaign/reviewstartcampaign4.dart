@@ -58,7 +58,7 @@ class Reviewstartcampaign4 extends StatelessWidget {
         // Handle successful login
         Map<String, dynamic> responseData = jsonDecode(response.body);
         String message = responseData['msg'];
-        String id = responseData['id'];
+        String id = responseData['id'].toString();
         print(responseData);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

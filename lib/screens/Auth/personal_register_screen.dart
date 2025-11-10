@@ -19,7 +19,7 @@ class PersonalRegisterScreen extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Login Error'),
+            title: Text('Registeration Error'),
             content: Text(message),
             actions: <Widget>[
               TextButton(
@@ -50,7 +50,22 @@ class PersonalRegisterScreen extends StatelessWidget {
         Map<String, dynamic> responseData = jsonDecode(response.body);
         String message = responseData['message'];
         print('Response from Node.js: $responseData');
-        _showErrorDialog(context,message);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User Register successful!'),
+            duration: Duration(seconds: 2), // Optional: how long it shows
+            backgroundColor: Colors.green, // Optional: customize color
+          ),
+
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+
+
 
       } else {
         Map<String, dynamic> responseData = jsonDecode(response.body);

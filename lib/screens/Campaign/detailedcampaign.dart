@@ -35,6 +35,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String first = '';
   String last = '';
   String profile = '';
+  int days = 0;
   final List<String> mainTabs = [
     "ABOUT",
     "FINANCING",
@@ -47,9 +48,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
   void loadCampaign() async {
     final id = widget.id;
-    final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/getcampaign'; // Replace with your API base URL
+    final String baseUrl = 'http://localhost:3000/campaign/searchCampaign'; // Replace with your API base URL
     final url = Uri.parse('$baseUrl/$id'); // Appends the ID to the URL path
-
+    print(id);
     final response = await http.get(url);
 
     print(response.body);
@@ -67,8 +68,14 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       donor = responseData['donors'];
       final id = responseData['creator_id'];
 
+      DateTime dateTimeObject = DateFormat('yyyy-MM-dd').parse(endDate);
+      DateTime dateTimesObject = DateFormat('yyyy-MM-dd').parse(startDate);
 
-      final String baseUrl = 'http://localhost:3000/users/getUser'; // Replace with your API base URL
+      Duration difference = dateTimeObject.difference(dateTimesObject);
+      days = difference.inDays;
+
+
+      final String baseUrl = 'https://greyfoundr-backend.onrender.com/users/getUser'; // Replace with your API base URL
       final url = Uri.parse('$baseUrl/$id'); // Appends the ID to the URL path
 
       final respon = await http.get(url);
@@ -511,11 +518,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   @override
   Widget build(BuildContext context) {
 
-    DateTime dateTimeObject = DateTime.parse(endDate);
-    DateTime dateTimesObject = DateTime.parse(startDate);
 
-    Duration difference = dateTimeObject.difference(dateTimesObject);
-    int days = difference.inDays;
+
+
 
 
     return Scaffold(

@@ -14,7 +14,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assets/images/Onboarding1.jpg",
+      "image": "assets/images/onboarding1.jpg",
       "title": "Pay, \nTransfer & Split Bills",
       "subtitle":
           "Pay, transfer, or split bills with others. Everyone can pitch in - easy, fair, and hassle-free."

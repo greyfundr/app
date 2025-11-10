@@ -79,7 +79,7 @@ flutter:
   
   assets:
     - assets/images/login_bg.png
-    - assets/images/Onboarding1.jpg
+    - assets/images/onboarding1.jpg
     - assets/images/onboarding2.jpg
     - assets/images/onboarding3.jpg
     - assets/images/splash_bg.jpg

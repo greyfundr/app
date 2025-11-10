@@ -71,7 +71,7 @@ class Reviewstartcampaign4 extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => reviewstartcampaign6(id:id)),
+                builder: (_) => reviewstartcampaign6(id:title)),
           );
         });
       } else {
@@ -98,7 +98,7 @@ class Reviewstartcampaign4 extends StatelessWidget {
           child: SingleChildScrollView(
             child: Builder(
               builder: (BuildContext context) {
-                Future.delayed(Duration(seconds: 6), () {
+                Future.delayed(Duration(seconds: 3), () {
 
                  login();
                 });

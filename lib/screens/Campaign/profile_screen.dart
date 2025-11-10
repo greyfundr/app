@@ -249,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Create Campaign'),
+                        label: const Text('Campaigns'),
                       ),
                     ),
                   ],

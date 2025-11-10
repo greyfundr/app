@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 class CampaignDetailPage extends StatefulWidget {
   final String id;
-  const CampaignDetailPage({super.key,required this.id});
+  const CampaignDetailPage({super.key, required this.id});
 
   @override
   State<CampaignDetailPage> createState() => _CampaignDetailPageState();
@@ -17,13 +17,14 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void initState() {
     super.initState();
     loadCampaign();
-
   }
+
   int selectedTabIndex = 0;
   int financingSubTabIndex = 1; // Default: Expenditure
-
   int donationSubTabIndex = 1; // Default: Top Donors
+
   Map<String, dynamic>? campaign;
+  bool isLoading = true;
   String title = '';
   String goal = '';
   String current = '';
@@ -35,7 +36,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String first = '';
   String last = '';
   String profile = '';
-  int days = 0;
+
   final List<String> mainTabs = [
     "ABOUT",
     "FINANCING",
@@ -44,72 +45,93 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     "COMMENTS",
   ];
 
-
-
   void loadCampaign() async {
-    final id = widget.id;
-    final String baseUrl = 'http://localhost:3000/campaign/searchCampaign'; // Replace with your API base URL
-    final url = Uri.parse('$baseUrl/$id'); // Appends the ID to the URL path
-    print(id);
-    final response = await http.get(url);
+    try {
+      final id = widget.id;
+      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/searchCampaign';
+      final url = Uri.parse('$baseUrl/$id');
 
-    print(response.body);
-    if (response.statusCode == 200) {
-      // Handle successful login
-      Map<String, dynamic> responseData = jsonDecode(response.body);
-      setState(() => campaign = responseData);
-      title = responseData['title'];
-      goal = responseData['goal_amount'];
-      current = responseData['current_amount'];
-      description = responseData['description'];
-      startDate = responseData['start_date'];
-      endDate = responseData['end_date'];
-      champion = responseData['champions'];
-      donor = responseData['donors'];
-      final id = responseData['creator_id'];
+      final response = await http.get(url);
 
-      DateTime dateTimeObject = DateFormat('yyyy-MM-dd').parse(endDate);
-      DateTime dateTimesObject = DateFormat('yyyy-MM-dd').parse(startDate);
+      print(response.body);
 
-      Duration difference = dateTimeObject.difference(dateTimesObject);
-      days = difference.inDays;
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
 
+        // Update all campaign data in setState
+        setState(() {
+          campaign = responseData;
+          title = responseData['title'] ?? '';
+          goal = responseData['goal_amount']?.toString() ?? '0';
+          current = responseData['current_amount']?.toString() ?? '0';
+          description = responseData['description'] ?? '';
+          startDate = responseData['start_date'] ?? '';
+          endDate = responseData['end_date'] ?? '';
+          champion = responseData['champions'] ?? 0;
+          donor = responseData['donors'] ?? 0;
+        });
 
-      final String baseUrl = 'https://greyfoundr-backend.onrender.com/users/getUser'; // Replace with your API base URL
-      final url = Uri.parse('$baseUrl/$id'); // Appends the ID to the URL path
+        final creatorId = responseData['creator_id'];
 
-      final respon = await http.get(url);
-      Map<String, dynamic> userData = jsonDecode(respon.body);
-      print(userData);
-      first = userData['first_name'];
-      last = userData['last_name'];
-      profile = userData['profile_pic'];
+        // FIXED: Changed from localhost to actual API URL
+        final String userBaseUrl = 'https://greyfoundr-backend.onrender.com/users/getUser';
+        final userUrl = Uri.parse('$userBaseUrl/$creatorId');
 
-      print(first);
-      print(last);
-      print(profile);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Campaign Loaded successful!'),
-          duration: Duration(seconds: 2), // Optional: how long it shows
-          backgroundColor: Colors.green, // Optional: customize color
-        ),
-      );
-    } else {
-      Map<String, dynamic> responseData = jsonDecode(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No Campaign Found'),
-          duration: Duration(seconds: 2), // Optional: how long it shows
-          backgroundColor: Colors.red, // Optional: customize color
-        ),
-      );
+        final userResponse = await http.get(userUrl);
 
+        if (userResponse.statusCode == 200) {
+          Map<String, dynamic> userData = jsonDecode(userResponse.body);
+          print(userData);
 
+          // FIXED: Update user data in setState
+          setState(() {
+            first = userData['first_name'] ?? '';
+            last = userData['last_name'] ?? '';
+            profile = userData['profile_pic'] ?? '';
+            isLoading = false;
+          });
 
+          print(first);
+          print(last);
+          print(profile);
 
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Campaign Loaded successfully!'),
+                duration: Duration(seconds: 2),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          setState(() => isLoading = false);
+        }
+      } else {
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No Campaign Found'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error loading campaign: $e');
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-
   }
 
   Widget _buildFinancingSubTabs() {
@@ -152,7 +174,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
-
   Widget _buildDonationSubTabs() {
     final List<String> subTabs = ["All Donors", "Top Donors"];
     return Padding(
@@ -192,15 +213,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
-
-
   Widget _buildExpenditureContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Table Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
@@ -220,8 +238,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
             ],
           ),
           const Divider(),
-
-          // Row 1
           Row(
             children: const [
               Expanded(flex: 2, child: Text("1. Vedic Hospital Bill")),
@@ -232,8 +248,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
             ],
           ),
           const SizedBox(height: 6),
-
-          // Row 2
           Row(
             children: const [
               Expanded(flex: 2, child: Text("2. Transportation")),
@@ -243,8 +257,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
             ],
           ),
           const SizedBox(height: 6),
-
-          // Row 3
           Row(
             children: const [
               Expanded(flex: 2, child: Text("3. Feeding and hygiene")),
@@ -255,8 +267,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
             ],
           ),
           const SizedBox(height: 6),
-
-          // Row 4
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -283,10 +293,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
             "Through the surgery we will be doing 20 lab tests at ₦40,000 each.",
             style: TextStyle(color: Colors.grey, fontSize: 13),
           ),
-
           const SizedBox(height: 12),
-
-          // Tags Row
           Row(
             children: [
               Container(
@@ -309,7 +316,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                   height: 40, width: 30, fit: BoxFit.cover),
             ],
           ),
-
           const SizedBox(height: 20),
           const Divider(),
           Row(
@@ -337,9 +343,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
-
-
-
   Widget _buildFinancingContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,20 +356,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   }
 
   Widget _buildTopdonorContent() {
-    // return const Padding(
-    //   padding: EdgeInsets.symmetric(horizontal: 16),
-    //   child: Text(
-    //     "The Budgeting section provides a breakdown of planned expenses and funding allocation. "
-    //     "Here, we outline projected spending categories and future fund distributions.",
-    //     style: TextStyle(height: 1.4, color: Colors.black87),
-    //   ),
-    // );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 12),
           ListView.builder(
             itemCount: 2,
@@ -389,14 +383,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
-
   Widget _buildAlldonorContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 12),
           ListView.builder(
             itemCount: 3,
@@ -431,24 +423,19 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
-
-
-
-
-
-
-
   Widget _buildTabContent() {
     switch (selectedTabIndex) {
       case 0:
-        return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            "Welcome to [Charity Name], where together we can make a difference! "
+            description.isEmpty
+                ? "Welcome to [Charity Name], where together we can make a difference! "
                 "We are dedicated to empowering lives and creating positive change in our community. "
-                "Whether you’re here to volunteer, donate, or spread the word, your support helps us provide "
-                "essential resources to those in need.",
-            style: TextStyle(height: 1.4, color: Colors.black87),
+                "Whether you're here to volunteer, donate, or spread the word, your support helps us provide "
+                "essential resources to those in need."
+                : description,
+            style: const TextStyle(height: 1.4, color: Colors.black87),
           ),
         );
 
@@ -468,38 +455,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         );
 
       case 3:
-
-
         return _buildDonationContent();
-
-
-    // return Padding(
-    //   padding: const EdgeInsets.symmetric(horizontal: 16),
-    //   child: Column(
-    //     crossAxisAlignment: CrossAxisAlignment.start,
-    //     children: [
-    //       const Text("Recent Donations",
-    //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-    //       const SizedBox(height: 12),
-    //       ListView.builder(
-    //         itemCount: 3,
-    //         shrinkWrap: true,
-    //         physics: const NeverScrollableScrollPhysics(),
-    //         itemBuilder: (context, index) {
-    //           return ListTile(
-    //             leading: const CircleAvatar(
-    //               backgroundImage: AssetImage('assets/images/organizer.jpg'),
-    //             ),
-    //             title: Text("Donor ${index + 1}"),
-    //             subtitle: const Text("₦10,000 donated"),
-    //             trailing: const Text("2h ago",
-    //                 style: TextStyle(color: Colors.grey, fontSize: 12)),
-    //           );
-    //         },
-    //       ),
-    //     ],
-    //   ),
-    // );
 
       case 4:
         return const Padding(
@@ -515,13 +471,34 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     }
   }
 
+  // FIXED: Calculate days safely with null checks
+  int _calculateDaysLeft() {
+    if (endDate.isEmpty || startDate.isEmpty) return 0;
+
+    try {
+      DateTime dateTimeObject = DateTime.parse(endDate);
+      DateTime dateTimesObject = DateTime.parse(startDate);
+      Duration difference = dateTimeObject.difference(dateTimesObject);
+      return difference.inDays;
+    } catch (e) {
+      print('Error parsing dates: $e');
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // FIXED: Safe calculation of days
+    int days = _calculateDaysLeft();
 
-
-
-
-
+    // FIXED: Show loading indicator while data loads
+    if (isLoading) {
+      return Scaffold(
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.teal),
+        ),
+      );
+    }
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
@@ -529,9 +506,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         selectedItemColor: Colors.teal,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: "Bills"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profile"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined), label: "Bills"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline), label: "Profile"),
         ],
       ),
       body: SafeArea(
@@ -539,7 +519,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Image
               Stack(
                 children: [
                   ClipRRect(
@@ -560,16 +539,14 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                   ),
                 ],
               ),
-
-               Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   title,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-
-              // Progress Bar
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(12),
@@ -577,13 +554,16 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: Colors.grey.shade200, blurRadius: 6, offset: const Offset(0, 3))
+                    BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 6,
+                        offset: const Offset(0, 3))
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("₦ $current raised of ₦$goal"),
+                    Text("₦$current raised of ₦$goal"),
                     const SizedBox(height: 6),
                     LinearPercentIndicator(
                       lineHeight: 8,
@@ -597,18 +577,27 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(children: [
-                          const Icon(Icons.schedule, size: 16, color: Colors.grey),
+                          const Icon(Icons.schedule,
+                              size: 16, color: Colors.grey),
                           const SizedBox(width: 4),
-                          Text("$days Days left", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text("$days Days left",
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
                         ]),
                         Row(children: [
-                          const Icon(Icons.people_outline, size: 16, color: Colors.grey),
+                          const Icon(Icons.people_outline,
+                              size: 16, color: Colors.grey),
                           const SizedBox(width: 4),
-                          Text("$donor Donors", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text("$donor Donors",
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
                           const SizedBox(width: 10),
-                          const Icon(Icons.volunteer_activism_outlined, size: 16, color: Colors.grey),
+                          const Icon(Icons.volunteer_activism_outlined,
+                              size: 16, color: Colors.grey),
                           const SizedBox(width: 4),
-                          Text('$champion Champions', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text('$champion Champions',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
                         ]),
                       ],
                     ),
@@ -616,17 +605,17 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Organizer Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     const Expanded(
                       child: Text("Organizer",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
-                    TextButton(onPressed: () {}, child: const Text("See All")),
+                    TextButton(
+                        onPressed: () {}, child: const Text("See All")),
                   ],
                 ),
               ),
@@ -637,13 +626,20 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: Colors.grey.shade200, blurRadius: 6, offset: const Offset(0, 3))
+                    BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 6,
+                        offset: const Offset(0, 3))
                   ],
                 ),
                 child: Row(
                   children: [
+                    // FIXED: Use NetworkImage for URL, AssetImage for local assets
                     CircleAvatar(
-                      backgroundImage: AssetImage(profile),
+                      backgroundImage: profile.isNotEmpty &&
+                          profile.startsWith('http')
+                          ? NetworkImage(profile) as ImageProvider
+                          : const AssetImage('assets/images/organizer.jpg'),
                       radius: 22,
                     ),
                     const SizedBox(width: 12),
@@ -652,9 +648,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("$first $last",
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                          const Text("Head of Doctors - Doctors Without Borders",
-                              style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                          const Text(
+                              "Head of Doctors - Doctors Without Borders",
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -679,8 +678,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Main Tabs
               SizedBox(
                 height: 40,
                 child: ListView.builder(
@@ -697,7 +694,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: isSelected ? Colors.teal : Colors.transparent,
+                              color: isSelected
+                                  ? Colors.teal
+                                  : Colors.transparent,
                               width: 2,
                             ),
                           ),
@@ -706,8 +705,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                           mainTabs[index],
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.grey,
-                            fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontSize: 14,
                           ),
                         ),
@@ -717,13 +717,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Content
               _buildTabContent(),
-
               const SizedBox(height: 24),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     Expanded(

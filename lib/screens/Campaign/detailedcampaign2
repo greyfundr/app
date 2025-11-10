@@ -48,7 +48,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/getcampaign';
+      final String baseUrl = 'http://localhost:3000/campaign/searchCampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);

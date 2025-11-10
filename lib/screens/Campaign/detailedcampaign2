@@ -1,0 +1,764 @@
+import 'package:flutter/material.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
+
+class CampaignDetailPage extends StatefulWidget {
+  final String id;
+  const CampaignDetailPage({super.key, required this.id});
+
+  @override
+  State<CampaignDetailPage> createState() => _CampaignDetailPageState();
+}
+
+class _CampaignDetailPageState extends State<CampaignDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    loadCampaign();
+  }
+
+  int selectedTabIndex = 0;
+  int financingSubTabIndex = 1; // Default: Expenditure
+  int donationSubTabIndex = 1; // Default: Top Donors
+  
+  Map<String, dynamic>? campaign;
+  bool isLoading = true;
+  String title = '';
+  String goal = '';
+  String current = '';
+  String description = '';
+  String startDate = '';
+  String endDate = '';
+  int champion = 0;
+  int donor = 0;
+  String first = '';
+  String last = '';
+  String profile = '';
+
+  final List<String> mainTabs = [
+    "ABOUT",
+    "FINANCING",
+    "OFFERS",
+    "DONATIONS",
+    "COMMENTS",
+  ];
+
+  void loadCampaign() async {
+    try {
+      final id = widget.id;
+      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/getcampaign';
+      final url = Uri.parse('$baseUrl/$id');
+
+      final response = await http.get(url);
+
+      print(response.body);
+      
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        // Update all campaign data in setState
+        setState(() {
+          campaign = responseData;
+          title = responseData['title'] ?? '';
+          goal = responseData['goal_amount']?.toString() ?? '0';
+          current = responseData['current_amount']?.toString() ?? '0';
+          description = responseData['description'] ?? '';
+          startDate = responseData['start_date'] ?? '';
+          endDate = responseData['end_date'] ?? '';
+          champion = responseData['champions'] ?? 0;
+          donor = responseData['donors'] ?? 0;
+        });
+
+        final creatorId = responseData['creator_id'];
+
+        // FIXED: Changed from localhost to actual API URL
+        final String userBaseUrl = 'https://greyfoundr-backend.onrender.com/users/getUser';
+        final userUrl = Uri.parse('$userBaseUrl/$creatorId');
+
+        final userResponse = await http.get(userUrl);
+        
+        if (userResponse.statusCode == 200) {
+          Map<String, dynamic> userData = jsonDecode(userResponse.body);
+          print(userData);
+          
+          // FIXED: Update user data in setState
+          setState(() {
+            first = userData['first_name'] ?? '';
+            last = userData['last_name'] ?? '';
+            profile = userData['profile_pic'] ?? '';
+            isLoading = false;
+          });
+
+          print(first);
+          print(last);
+          print(profile);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Campaign Loaded successfully!'),
+                duration: Duration(seconds: 2),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          setState(() => isLoading = false);
+        }
+      } else {
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No Campaign Found'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error loading campaign: $e');
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildFinancingSubTabs() {
+    final List<String> subTabs = ["Budgeting", "Expenditure"];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: List.generate(subTabs.length, (index) {
+          final bool isSelected = financingSubTabIndex == index;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                financingSubTabIndex = index;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 20),
+              padding: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: isSelected ? Colors.teal : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: Text(
+                subTabs[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.teal : Colors.grey,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildDonationSubTabs() {
+    final List<String> subTabs = ["All Donors", "Top Donors"];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: List.generate(subTabs.length, (index) {
+          final bool isSelected = donationSubTabIndex == index;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                donationSubTabIndex = index;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 20),
+              padding: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: isSelected ? Colors.teal : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: Text(
+                subTabs[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.teal : Colors.grey,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildExpenditureContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Expanded(
+                flex: 2,
+                child: Text("Expected Expense",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Expanded(
+                child: Text("Estimate Cost",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Expanded(
+                child: Text("Document",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const Divider(),
+          Row(
+            children: const [
+              Expanded(flex: 2, child: Text("1. Vedic Hospital Bill")),
+              Expanded(child: Text("₦3,458,000")),
+              Expanded(
+                  child: Text("View 2 docs",
+                      style: TextStyle(color: Colors.teal))),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: const [
+              Expanded(flex: 2, child: Text("2. Transportation")),
+              Expanded(child: Text("₦458,000")),
+              Expanded(
+                  child: Text("No docs", style: TextStyle(color: Colors.grey))),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: const [
+              Expanded(flex: 2, child: Text("3. Feeding and hygiene")),
+              Expanded(child: Text("₦1,458,000")),
+              Expanded(
+                  child: Text("View 4 docs",
+                      style: TextStyle(color: Colors.teal))),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(flex: 2, child: Text("4. Lab Tests")),
+              const Expanded(child: Text("₦800,000")),
+              Expanded(
+                child: Row(
+                  children: [
+                    Image.asset('assets/images/doc1.png',
+                        height: 40, width: 30, fit: BoxFit.cover),
+                    const SizedBox(width: 4),
+                    Image.asset('assets/images/doc2.png',
+                        height: 40, width: 30, fit: BoxFit.cover),
+                    const SizedBox(width: 4),
+                    Image.asset('assets/images/doc3.png',
+                        height: 40, width: 30, fit: BoxFit.cover),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Through the surgery we will be doing 20 lab tests at ₦40,000 each.",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                    color: Colors.teal.shade50,
+                    borderRadius: BorderRadius.circular(8)),
+                child: const Text("Tags",
+                    style: TextStyle(color: Colors.teal, fontSize: 13)),
+              ),
+              const SizedBox(width: 8),
+              Image.asset('assets/images/doc1.png',
+                  height: 40, width: 30, fit: BoxFit.cover),
+              const SizedBox(width: 4),
+              Image.asset('assets/images/doc2.png',
+                  height: 40, width: 30, fit: BoxFit.cover),
+              const SizedBox(width: 4),
+              Image.asset('assets/images/doc3.png',
+                  height: 40, width: 30, fit: BoxFit.cover),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text("Total Estimate =",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("₦6,458,000", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("7 docs", style: TextStyle(color: Colors.teal)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetingContent() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        "The Budgeting section provides a breakdown of planned expenses and funding allocation. "
+        "Here, we outline projected spending categories and future fund distributions.",
+        style: TextStyle(height: 1.4, color: Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildFinancingContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFinancingSubTabs(),
+        financingSubTabIndex == 0
+            ? _buildBudgetingContent()
+            : _buildExpenditureContent(),
+      ],
+    );
+  }
+
+  Widget _buildTopdonorContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          ListView.builder(
+            itemCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return ListTile(
+                leading: const CircleAvatar(
+                  backgroundImage: AssetImage('assets/images/organizer.jpg'),
+                ),
+                title: Text("Top ${index + 1}"),
+                subtitle: const Text("₦30,000 donated"),
+                trailing: const Text("2h ago",
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlldonorContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          ListView.builder(
+            itemCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return ListTile(
+                leading: const CircleAvatar(
+                  backgroundImage: AssetImage('assets/images/organizer.jpg'),
+                ),
+                title: Text("Donor ${index + 1}"),
+                subtitle: const Text("₦45,000 donated"),
+                trailing: const Text("2h ago",
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDonationContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDonationSubTabs(),
+        donationSubTabIndex == 0
+            ? _buildAlldonorContent()
+            : _buildTopdonorContent(),
+      ],
+    );
+  }
+
+  Widget _buildTabContent() {
+    switch (selectedTabIndex) {
+      case 0:
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            description.isEmpty
+                ? "Welcome to [Charity Name], where together we can make a difference! "
+                    "We are dedicated to empowering lives and creating positive change in our community. "
+                    "Whether you're here to volunteer, donate, or spread the word, your support helps us provide "
+                    "essential resources to those in need."
+                : description,
+            style: const TextStyle(height: 1.4, color: Colors.black87),
+          ),
+        );
+
+      case 1:
+        return _buildFinancingContent();
+
+      case 2:
+        return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            "Exclusive offers for donors: \n\n"
+            "• Donors above ₦100,000 will receive a personalized thank-you certificate.\n"
+            "• Top contributors will be featured on our official website.\n"
+            "• Corporate donors get a partnership badge and social media recognition.",
+            style: TextStyle(height: 1.4, color: Colors.black87),
+          ),
+        );
+
+      case 3:
+        return _buildDonationContent();
+
+      case 4:
+        return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            "User comments and feedback will be shown here.",
+            style: TextStyle(height: 1.4, color: Colors.black87),
+          ),
+        );
+
+      default:
+        return const SizedBox();
+    }
+  }
+
+  // FIXED: Calculate days safely with null checks
+  int _calculateDaysLeft() {
+    if (endDate.isEmpty || startDate.isEmpty) return 0;
+    
+    try {
+      DateTime dateTimeObject = DateTime.parse(endDate);
+      DateTime dateTimesObject = DateTime.parse(startDate);
+      Duration difference = dateTimeObject.difference(dateTimesObject);
+      return difference.inDays;
+    } catch (e) {
+      print('Error parsing dates: $e');
+      return 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // FIXED: Safe calculation of days
+    int days = _calculateDaysLeft();
+
+    // FIXED: Show loading indicator while data loads
+    if (isLoading) {
+      return Scaffold(
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.teal),
+        ),
+      );
+    }
+
+    return Scaffold(
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        selectedItemColor: Colors.teal,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined), label: "Bills"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline), label: "Profile"),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    child: Image.asset(
+                      'assets/images/onboarding2.jpg',
+                      height: 240,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 6,
+                        offset: const Offset(0, 3))
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("₦$current raised of ₦$goal"),
+                    const SizedBox(height: 6),
+                    LinearPercentIndicator(
+                      lineHeight: 8,
+                      percent: 0.70,
+                      progressColor: Colors.teal,
+                      backgroundColor: Colors.grey.shade200,
+                      barRadius: const Radius.circular(8),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(children: [
+                          const Icon(Icons.schedule,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text("$days Days left",
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
+                        ]),
+                        Row(children: [
+                          const Icon(Icons.people_outline,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text("$donor Donors",
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.volunteer_activism_outlined,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text('$champion Champions',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
+                        ]),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text("Organizer",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                    TextButton(
+                        onPressed: () {}, child: const Text("See All")),
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 6,
+                        offset: const Offset(0, 3))
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // FIXED: Use NetworkImage for URL, AssetImage for local assets
+                    CircleAvatar(
+                      backgroundImage: profile.isNotEmpty &&
+                              profile.startsWith('http')
+                          ? NetworkImage(profile) as ImageProvider
+                          : const AssetImage('assets/images/organizer.jpg'),
+                      radius: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("$first $last",
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                          const Text(
+                              "Head of Doctors - Doctors Without Borders",
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal.shade50,
+                        foregroundColor: Colors.teal,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text("Follow"),
+                    ),
+                    const SizedBox(width: 10),
+                    const CircleAvatar(
+                      backgroundImage: AssetImage('assets/images/unicef.png'),
+                      radius: 18,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: mainTabs.length,
+                  itemBuilder: (context, index) {
+                    final bool isSelected = selectedTabIndex == index;
+                    return GestureDetector(
+                      onTap: () => setState(() => selectedTabIndex = index),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 20),
+                        padding: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isSelected
+                                  ? Colors.teal
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          mainTabs[index],
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.grey,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildTabContent(),
+              const SizedBox(height: 24),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text("Champion"),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text("Donate"),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

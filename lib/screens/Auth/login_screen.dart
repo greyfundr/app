@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../class/auth_service.dart';
-import '../Dashboard/profile_screen.dart';
+import '../Campaign/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Campaign/homeprofile.dart';
 

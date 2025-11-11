@@ -3,7 +3,9 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-
+import 'billscreen.dart';
+import 'homeprofile.dart';
+import 'profile_screen.dart';
 class CampaignDetailPage extends StatefulWidget {
   final String id;
   const CampaignDetailPage({super.key, required this.id});
@@ -19,7 +21,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     loadCampaign();
   }
 
-  int selectedTabIndex = 0;
+  int selectedTabIndex = 2;
   int financingSubTabIndex = 1; // Default: Expenditure
   int donationSubTabIndex = 1; // Default: Top Donors
 
@@ -36,6 +38,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String first = '';
   String last = '';
   String profile = '';
+  int _selectedIndex = 1; // Bills tab active
 
   final List<String> mainTabs = [
     "ABOUT",
@@ -131,6 +134,33 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           ),
         );
       }
+    }
+  }
+
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    setState(() => _selectedIndex = index);
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MyBillScreen()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeProfile()),
+        );
+        break;
     }
   }
 
@@ -502,9 +532,10 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
         unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined), label: "Home"),

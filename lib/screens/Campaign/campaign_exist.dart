@@ -208,7 +208,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       ),
                     ), //Search Existing Campagne
                     Positioned(
-                      left: 105.0,
+                      left: 50.0,
                       top: 135.0,
                       child: ErrorBoundary(
                         child: Container(
@@ -216,7 +216,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.topCenter,
                             child: Text(
-                              "Search Existing Campagne",
+                              "Search Existing Campaign",
                               style: GoogleFonts.inter(
                                 color: Color.fromRGBO(0, 0, 0, 1.0),
                                 fontWeight: FontWeight.w600,

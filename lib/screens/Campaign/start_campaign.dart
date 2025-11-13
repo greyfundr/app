@@ -53,34 +53,10 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.lightBlue.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 20,
-                              height: 15,
-                              color: Colors.orange,
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              width: 20,
-                              height: 15,
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    Image(
+                        image: AssetImage("assets/icons/personal.png"),
+                        width: 60,
+                        height: 60,
                     ),
                     const SizedBox(width: 16),
                     Expanded(

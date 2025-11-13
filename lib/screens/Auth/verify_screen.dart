@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'chooseusername.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class VerifyPerScreen extends StatefulWidget {
   final String phoneNumber;
-  
-  const VerifyPerScreen({super.key, this.phoneNumber = '3255'});
+  final String email;
+
+  const VerifyPerScreen({super.key, required this.phoneNumber, required this.email});
 
   @override
   State<VerifyPerScreen> createState() => _VerifyPerScreenState();
@@ -38,6 +41,78 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
+  }
+
+  void verifyCode() async {
+    String values = '';
+    for (var controller in _otpControllers) {
+      values = values + controller.text;
+    }
+
+
+
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/auth/verifyphone'),
+      body: {
+        'code': values,
+        'email': widget.email,
+      },
+    );
+    if (response.statusCode == 200) {
+      // Handle successful login
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['message'];
+      int id = responseData['id'];
+      print('Response from Node.js: $responseData');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 2), // Optional: how long it shows
+          backgroundColor: Colors.green, // Optional: customize color
+        ),
+
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ChooseUsernameScreen(user_id:id)),
+      );
+
+
+
+
+
+    } else {
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['error'];
+      print('Response from Node.js: $message');
+
+      _showErrorDialog(context,message);
+
+
+    }
+
+  }
+
+  void _showErrorDialog(context,String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Registeration Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -243,13 +318,7 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
                               //   // );
                               // },
 
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const ChooseUsernameScreen()),
-                                );
-                              },
+                              onPressed: verifyCode,
                               child: const Text(
                                 "Verify",
                                 style: TextStyle(

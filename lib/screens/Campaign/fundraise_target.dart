@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'reviewstartcampaign3.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class FundraisingScreen extends StatefulWidget {
   final String title;
@@ -18,7 +20,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   final TextEditingController _endDateController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
 
-
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
 
 
@@ -412,12 +415,20 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
         color: Colors.white,
       ),
       child: Center(
-        child: Icon(
-          Icons.add_circle_outline,
-          color: isMain ? Colors.teal : Colors.grey.shade400,
-          size: 24,
+        child:  IconButton(
+          icon: Icon(Icons.add_circle_outline), // The icon to display
+          onPressed: _pickImage,
         ),
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
   }
 }

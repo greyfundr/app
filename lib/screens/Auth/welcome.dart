@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 // import '../auth/personal/profile_screen.dart';
 import '../Dashboard/profile_screen.dart';
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final String userName;
@@ -25,7 +26,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => const ProfileScreen(),
+            builder: (_) => const LoginScreen(),
           ),
         );
       }

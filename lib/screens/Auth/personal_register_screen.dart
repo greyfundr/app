@@ -36,7 +36,7 @@ class PersonalRegisterScreen extends StatelessWidget {
 
     void register() async {
       final response = await http.post(
-        Uri.parse('https://greyfoundr-backend.onrender.com/auth/register'),
+        Uri.parse('http://localhost:3000/auth/register'),
         body: {
           'email': emailController.text,
           'username': emailController.text,
@@ -53,7 +53,7 @@ class PersonalRegisterScreen extends StatelessWidget {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('User Register successful!'),
+            content: Text(message),
             duration: Duration(seconds: 2), // Optional: how long it shows
             backgroundColor: Colors.green, // Optional: customize color
           ),
@@ -62,7 +62,7 @@ class PersonalRegisterScreen extends StatelessWidget {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => VerifyPerScreen(email:emailController.text,phoneNumber:phoneController.text)),
         );
 
 
@@ -197,6 +197,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                           TextField(
                             controller: phoneController,
                             decoration: InputDecoration(
+                              prefixText: '234',
                               labelText: "Phone",
                               labelStyle: const TextStyle(color: Colors.grey),
                               suffixIcon:

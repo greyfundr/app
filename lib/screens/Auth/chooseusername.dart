@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'welcome.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 class ChooseUsernameScreen extends StatefulWidget {
-  const ChooseUsernameScreen({super.key});
+  final int user_id;
+  const ChooseUsernameScreen({super.key, required this.user_id});
 
   @override
   State<ChooseUsernameScreen> createState() => _ChooseUsernameScreenState();
@@ -24,7 +28,71 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
 
   String get generatedUsername {
     if (usernameController.text.isEmpty) return '';
-    return 'greyfundr/${usernameController.text}';
+    return 'greyfundr-${usernameController.text}';
+  }
+
+  void saveDetails() async {
+     //userid = String.parseInt()
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/auth/updateregister'),
+      body: {
+        'id': widget.user_id.toString(),
+        'first_name': nameController.text,
+        'last_name':  surnameController.text,
+        'username': usernameController.text,
+        'rUsername': generatedUsername,
+      },
+    );
+    if (response.statusCode == 200) {
+      // Handle successful login
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['message'];
+      print('Response from Node.js: $responseData');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 5), // Optional: how long it shows
+          backgroundColor: Colors.green, // Optional: customize color
+        ),
+
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => WelcomeScreen(userName:generatedUsername)),
+      );
+
+    } else {
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['message'];
+      print('Response from Node.js: $message');
+
+      _showErrorDialog(context,message);
+
+
+    }
+
+  }
+
+  void _showErrorDialog(context,String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Registeration Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -291,19 +359,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              onPressed: () {
-                                // Combine surname and first name
-                                String fullName = '${surnameController.text}, ${nameController.text}';
-                                
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => WelcomeScreen(
-                                      userName: fullName,
-                                    ),
-                                  ),
-                                );
-                              },
+                              onPressed: saveDetails ,
                               child: const Text(
                                 "Continue",
                                 style: TextStyle(

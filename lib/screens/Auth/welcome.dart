@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 // import '../auth/personal/profile_screen.dart';
-import '../Dashboard/profile_screen.dart';
 import 'login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {

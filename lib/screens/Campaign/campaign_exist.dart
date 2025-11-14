@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'error_boundary.dart';
-import 'dart:math';
 import 'detailedcampaign.dart';
 
 class Profilepublicviewrequest15 extends StatelessWidget {
@@ -25,7 +24,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(),
           child: ErrorBoundary(
-            child: Container(
+            child: SizedBox(
               height: 499.0,
               width: MediaQuery.of(context).size.width,
               child: LayoutBuilder(
@@ -49,7 +48,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       top: 1886.0,
                       left: -3108.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 111.0 + 2,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -149,7 +148,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                               ),
                             );
                           },
-                          child: Container(
+                          child: SizedBox(
                             width: 168.0 + 2,
                             child: Text(
 
@@ -211,7 +210,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       left: 50.0,
                       top: 135.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 260.0 + 2,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -258,7 +257,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(),
                           child: ErrorBoundary(
-                            child: Container(
+                            child: SizedBox(
                               height: 18.0,
                               width: 194.0,
                               child: LayoutBuilder(
@@ -365,7 +364,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       top: 272.0,
                       left: 65.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 119.0 + 10,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -389,7 +388,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       left: 64.0,
                       top: 289.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 178.0 + 2,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -413,7 +412,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       top: 306.0,
                       left: 63.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 211.0 + 2,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -437,7 +436,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       left: 61.0,
                       top: 253.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 91.0 + 2,
                           child: Align(
                             alignment: Alignment.topCenter,
@@ -471,7 +470,7 @@ class Profilepublicviewrequest15 extends StatelessWidget {
                       top: 200.0,
                       left: 50.0,
                       child: ErrorBoundary(
-                        child: Container(
+                        child: SizedBox(
                           width: 300,
                           child: Align(
                             alignment: Alignment.topCenter,

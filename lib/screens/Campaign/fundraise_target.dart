@@ -21,6 +21,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   final TextEditingController amountController = TextEditingController();
 
   File? _imageFile;
+  File? _imageFile1;
+  File? _imageFile2;
   final ImagePicker _picker = ImagePicker();
 
 
@@ -198,11 +200,18 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               // Image upload buttons
               Row(
                 children: [
-                  _buildImageUploadButton(true),
+
+                  _imageFile != null
+                      ? _buildImageSelected(_imageFile)
+                      : _buildImageUploadButton(true,_imageFile),
                   const SizedBox(width: 12),
-                  _buildImageUploadButton(false),
+                  _imageFile1 != null
+                      ? _buildImageSelected(_imageFile1)
+                      : _buildImageUploadButton(false,_imageFile1),
                   const SizedBox(width: 12),
-                  _buildImageUploadButton(false),
+                  _imageFile2 != null
+                      ? _buildImageSelected(_imageFile2)
+                      : _buildImageUploadButton(false,_imageFile2),
                 ],
               ),
 
@@ -405,7 +414,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     );
   }
 
-  Widget _buildImageUploadButton(bool isMain) {
+  Widget _buildImageUploadButton(bool isMain, File? img) {
     return Container(
       width: 60,
       height: 60,
@@ -417,17 +426,38 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
       child: Center(
         child:  IconButton(
           icon: Icon(Icons.add_circle_outline), // The icon to display
-          onPressed: _pickImage,
+          onPressed: () async {await _pickImage(img);
+          },
         ),
       ),
     );
   }
 
-  Future<void> _pickImage() async {
+  Widget _buildImageSelected(File? img) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        border: Border.all(color: true ? Colors.teal : Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+      ),
+      child: Center(
+        child:  Image.file(
+          img!,
+          height: 150,
+          width: 150,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(File? img) async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        img = File(pickedFile.path);
       });
     }
   }

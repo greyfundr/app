@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'error_boundary.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import 'reviewstartcampaign4.dart';
@@ -68,7 +67,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
           decoration: BoxDecoration(color: Color.fromRGBO(255, 255, 255, 1.0)),
           child: SingleChildScrollView(
             child: ErrorBoundary(
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: 956.0,
                 child: LayoutBuilder(
@@ -79,7 +78,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 333.0,
                         top: 320.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 42.0 + 10,
                             child: Align(
                               alignment: Alignment.topCenter,
@@ -107,7 +106,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             child: Container(
                               decoration: BoxDecoration(),
                               child: ErrorBoundary(
-                                child: Container(
+                                child: SizedBox(
                                   width: 54.0,
                                   height:
                                       constraints.maxHeight *
@@ -126,7 +125,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                                   (21.0 / 2 - 3.0),
                                               left: 0.0,
                                               child: ErrorBoundary(
-                                                child: Container(
+                                                child: SizedBox(
                                                   width:
                                                       constraints.maxWidth -
                                                       0.0 +
@@ -197,7 +196,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 332.0,
                         left: 16.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 276.0 + 2,
                             child: Text(
                               widget.title,
@@ -241,7 +240,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 477.0,
                         left: 17.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 47.0 + 10,
                             child: Align(
                               alignment: Alignment.topCenter,
@@ -265,7 +264,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 389.0,
                         top: 478.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 33.0 + 10,
                             child: Align(
                               alignment: Alignment.topCenter,
@@ -300,7 +299,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 421.0,
                         left: 396.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 17.0 + 10,
                             child: Text(
                               "0% ",
@@ -319,7 +318,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 24.0,
                         top: 397.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 182.0 + 2,
                             child: RichText(
                               text: TextSpan(
@@ -353,7 +352,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 358.0,
                         top: 397.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 56.0 + 2,
                             child: Text(
                               ('$days Days left'),
@@ -372,7 +371,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 162.0,
                         top: 441.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 83.0 + 10,
                             child: Text(
                               "0 Champions",
@@ -391,7 +390,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 439.0,
                         left: 44.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 67.0 + 10,
                             child: Text(
                               "0 Donors                ",
@@ -452,7 +451,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 610.0,
                         left: 27.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 386.0 + 2,
                             child: Text(
                               "Welcome to [Charity Name], where together we can make a difference! We are dedicated to empowering lives and creating positive change in our community. Whether you’re here to volunteer, donate, or spread the word, your support helps us provide essential resources to those in need. Thank you for joining us on this journey of compassion, hope, and transformation. Together, we can build a brighter future for all!  and shelter to those facing hardship. Your involvement fuels our mission to create lasting impact, one life at a time. Together, we can transform challenges into opportunities, and inspire hope for a brighter, more ",
@@ -474,7 +473,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           child: Container(
                             decoration: BoxDecoration(),
                             child: ErrorBoundary(
-                              child: Container(
+                              child: SizedBox(
                                 height: 25.0,
                                 width: 402.0,
                                 child: LayoutBuilder(
@@ -527,7 +526,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                             top: 6.0,
                                             left: 3.0,
                                             child: ErrorBoundary(
-                                              child: Container(
+                                              child: SizedBox(
                                                 width: 36.0 + 10,
                                                 child: Align(
                                                   alignment:
@@ -559,7 +558,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                             left: 85.0,
                                             top: 6.0,
                                             child: ErrorBoundary(
-                                              child: Container(
+                                              child: SizedBox(
                                                 width: 57.0 + 10,
                                                 child: Align(
                                                   alignment:
@@ -591,7 +590,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                             top: 6.0,
                                             left: 192.0,
                                             child: ErrorBoundary(
-                                              child: Container(
+                                              child: SizedBox(
                                                 width: 39.0 + 10,
                                                 child: Align(
                                                   alignment:
@@ -623,7 +622,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                             left: 271.0,
                                             top: 6.0,
                                             child: ErrorBoundary(
-                                              child: Container(
+                                              child: SizedBox(
                                                 width: 60.0 + 10,
                                                 child: Align(
                                                   alignment:
@@ -655,7 +654,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                             left: 359.0,
                                             top: 6.0,
                                             child: ErrorBoundary(
-                                              child: Container(
+                                              child: SizedBox(
                                                 width: 60.0 + 10,
                                                 child: Align(
                                                   alignment:
@@ -749,7 +748,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 82.0),
                         top: 784.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 86.0 + 10,
                             child: Text(
                               "CUSTOMISE ",
@@ -818,7 +817,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: (constraints.maxHeight / 2) - (956.0 / 2 - 784.0),
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 258.0),
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 114.0 + 10,
                             child: Text(
                               "EDIT CAMPAIGN",
@@ -849,7 +848,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                               ),
                             ),
                             child: ErrorBoundary(
-                              child: Container(
+                              child: SizedBox(
                                 height: 73.0,
                                 width: 404.0,
                                 child: LayoutBuilder(
@@ -900,7 +899,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                         top: 15.0,
                                         left: 71.0,
                                         child: ErrorBoundary(
-                                          child: Container(
+                                          child: SizedBox(
                                             width: 120.0 + 10,
                                             child: Align(
                                               alignment: Alignment.topCenter,
@@ -930,7 +929,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                         top: 30.849050521850586,
                                         left: 71.0,
                                         child: ErrorBoundary(
-                                          child: Container(
+                                          child: SizedBox(
                                             width: 217.0 + 2,
                                             child: Text(
                                               widget.description,
@@ -983,7 +982,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                         left: 322.0,
                                         top: 24.886748790740967,
                                         child: ErrorBoundary(
-                                          child: Container(
+                                          child: SizedBox(
                                             width: 35.0 + 10,
                                             child: Align(
                                               alignment: Alignment.topCenter,
@@ -1138,7 +1137,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                                                 ),
                                                               );
                                                             },
-                                                          child: Container(
+                                                          child: SizedBox(
                                                             width: 168.0 + 2,
                                                             child: Text(
 
@@ -1193,7 +1192,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 173.0),
                         top: 748.0,
                         child: ErrorBoundary(
-                          child: Container(
+                          child: SizedBox(
                             width: 94.0 + 2,
                             child: Text(
                               "END OF CAMPAIGN",

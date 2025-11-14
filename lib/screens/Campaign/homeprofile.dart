@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../auth/login_screen.dart';
-import '../Campaign/detailedcampaign.dart';
 import 'billscreen.dart';
 import 'profile_screen.dart';
 import '../../class/auth_service.dart';
@@ -19,7 +18,7 @@ class _HomeProfileState extends State<HomeProfile> {
   Map<String, dynamic>? user;
   int _selectedIndex = 2;
   int _selectedTab = 0;
-  int _selectedSubTab = 0;
+  final int _selectedSubTab = 0;
 
   @override
   void initState() {

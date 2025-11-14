@@ -7,14 +7,11 @@ import 'billscreen.dart';
 
 
 
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import '../Campaign/main_campaign.dart';
-import 'homeprofile.dart';
-import 'billscreen.dart';
 import 'kyc.dart';
 
 

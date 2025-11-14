@@ -5,10 +5,10 @@ class ErrorBoundary extends StatefulWidget {
   late final Function(dynamic error, StackTrace stackTrace) errorCallback;
 
   ErrorBoundary({
-    Key? key,
+    super.key,
     required this.child,
     Function(dynamic error, StackTrace stackTrace)? onError,
-  }) : super(key: key) {
+  }) {
     errorCallback = (error, stackTrace) {
       if (onError != null) {
         onError(error, stackTrace);

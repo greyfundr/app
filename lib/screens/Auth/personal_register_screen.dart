@@ -14,7 +14,7 @@ class PersonalRegisterScreen extends StatelessWidget {
     final passController = TextEditingController();
     final confirmController = TextEditingController();
 
-    void _showErrorDialog(context,String message) {
+    void showErrorDialog(context,String message) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -72,7 +72,7 @@ class PersonalRegisterScreen extends StatelessWidget {
         String message = responseData['error'];
         print('Response from Node.js: $message');
 
-        _showErrorDialog(context,message);
+        showErrorDialog(context,message);
 
 
       }

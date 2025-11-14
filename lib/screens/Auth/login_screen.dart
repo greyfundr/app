@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
-import '../Dashboard/dashboard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../class/auth_service.dart';
 import '../Dashboard/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Campaign/homeprofile.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -23,7 +20,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    void _showErrorDialog(context,String message) {
+    void showErrorDialog(context,String message) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -80,7 +77,7 @@ class LoginScreen extends StatelessWidget {
         String message = responseData['msg'];
         print('Response from Node.js: $responseData');
 
-        _showErrorDialog(context,message);
+        showErrorDialog(context,message);
 
 
       }

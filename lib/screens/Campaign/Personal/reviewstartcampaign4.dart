@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../error_boundary.dart';
-import 'reviewstartcampaign4.dart';
 
 class reviewstartcampaign4 extends StatelessWidget {
   const reviewstartcampaign4({super.key});
@@ -36,7 +35,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                           ),
                         );
                       });
-                      return Container(
+                      return SizedBox(
                         width: MediaQuery.of(context).size.width,
                         height: 956.0,
                         child: LayoutBuilder(
@@ -53,7 +52,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(),
                                       child: ErrorBoundary(
-                                        child: Container(
+                                        child: SizedBox(
                                           width: 54.0,
                                           height:
                                           constraints.maxHeight *
@@ -69,7 +68,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                       (21.0 / 2 - 3.0),
                                                   left: 0.0,
                                                   child: ErrorBoundary(
-                                                    child: Container(
+                                                    child: SizedBox(
                                                       width:
                                                       constraints.maxWidth -
                                                           0.0 +
@@ -149,7 +148,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(),
                                       child: ErrorBoundary(
-                                        child: Container(
+                                        child: SizedBox(
                                           height: 53.0,
                                           width: 440.0,
                                           child: LayoutBuilder(
@@ -178,7 +177,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                         decoration:
                                                         BoxDecoration(),
                                                         child: ErrorBoundary(
-                                                          child: Container(
+                                                          child: SizedBox(
                                                             width: 54.0,
                                                             height:
                                                             constraints
@@ -202,7 +201,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                                     left:
                                                                     0.0,
                                                                     child: ErrorBoundary(
-                                                                      child: Container(
+                                                                      child: SizedBox(
                                                                         width:
                                                                         constraints.maxWidth -
                                                                             0.0 +
@@ -282,7 +281,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                       ),
                                     ),
                                     child: ErrorBoundary(
-                                      child: Container(
+                                      child: SizedBox(
                                         height: 523.0,
                                         width: 440.0,
                                         child: LayoutBuilder(
@@ -349,7 +348,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                 (constraints.maxWidth / 2) -
                                                     (440.0 / 2 - 91.0),
                                                 child: ErrorBoundary(
-                                                  child: Container(
+                                                  child: SizedBox(
                                                     width: 72.0 + 10,
                                                     child: Align(
                                                       alignment:
@@ -449,7 +448,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                     2) -
                                                     (523.0 / 2 - 235.0),
                                                 child: ErrorBoundary(
-                                                  child: Container(
+                                                  child: SizedBox(
                                                     width: 157.0 + 2,
                                                     child: Align(
                                                       alignment:
@@ -565,7 +564,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                     2) -
                                                     (523.0 / 2 - 314.0),
                                                 child: ErrorBoundary(
-                                                  child: Container(
+                                                  child: SizedBox(
                                                     width: 93.0 + 10,
                                                     child: Align(
                                                       alignment:
@@ -661,7 +660,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                 left: 92.0,
                                                 top: 397.0,
                                                 child: ErrorBoundary(
-                                                  child: Container(
+                                                  child: SizedBox(
                                                     width: 99.0 + 10,
                                                     child: Align(
                                                       alignment:
@@ -718,7 +717,7 @@ class reviewstartcampaign4 extends StatelessWidget {
                                                 top: 59.0,
                                                 left: 25.0,
                                                 child: ErrorBoundary(
-                                                  child: Container(
+                                                  child: SizedBox(
                                                     width: 252.0 + 2,
                                                     child: Text(
                                                       '''Champion Your Campaign
@@ -777,7 +776,7 @@ with Others''',
                                     (440.0 / 2 - 134.0),
                                 top: 171.0,
                                 child: ErrorBoundary(
-                                  child: Container(
+                                  child: SizedBox(
                                     width: 171.0 + 10,
                                     child: Align(
                                       alignment: Alignment.topCenter,
@@ -834,7 +833,7 @@ with Others''',
                                 top: 248.0,
                                 left: 69.0,
                                 child: ErrorBoundary(
-                                  child: Container(
+                                  child: SizedBox(
                                     width: 186.0 + 2,
                                     child: Align(
                                       alignment: Alignment.topCenter,
@@ -858,7 +857,7 @@ with Others''',
                                 left: 75.0,
                                 top: 290.0,
                                 child: ErrorBoundary(
-                                  child: Container(
+                                  child: SizedBox(
                                     width: 204.0 + 2,
                                     child: Align(
                                       alignment: Alignment.topCenter,
@@ -882,7 +881,7 @@ with Others''',
                                 left: 75.0,
                                 top: 330.0,
                                 child: ErrorBoundary(
-                                  child: Container(
+                                  child: SizedBox(
                                     width: 305.0 + 2,
                                     child: Align(
                                       alignment: Alignment.topCenter,
@@ -927,7 +926,7 @@ with Others''',
                                 left: 75.0,
                                 top: 375.0,
                                 child: ErrorBoundary(
-                                  child: Container(
+                                  child: SizedBox(
                                     width: 245.0 + 2,
                                     child: Align(
                                       alignment: Alignment.topCenter,
@@ -1018,7 +1017,7 @@ with Others''',
                                                                 (122.0 / 2 -
                                                                     0.0),
                                                             child: ErrorBoundary(
-                                                              child: Container(
+                                                              child: SizedBox(
                                                                 width:
                                                                 122.0 +
                                                                     2,

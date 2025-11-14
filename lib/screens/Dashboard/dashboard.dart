@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../Auth/personal_register_screen.dart';
-import '../Campaign/Personal/personal_campaign.dart';
 import '../Auth/group_register_screen.dart';
 import '../Auth/business_register_screen.dart';
 import '../Auth/charity_register_screen.dart';

@@ -18,7 +18,7 @@ class _HomeProfileState extends State<HomeProfile> {
   // Map<String, dynamic>? user;
   int _selectedIndex = 2;
   int _selectedTab = 0;
-  int _selectedSubTab = 0;
+  final int _selectedSubTab = 0;
 
   // Mock user data for testing without authentication
   final Map<String, dynamic> user = {

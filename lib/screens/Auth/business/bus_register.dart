@@ -1,91 +1,42 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'verify_screen.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'verifybus.dart';
 
-class PersonalRegisterScreen extends StatelessWidget {
-  const PersonalRegisterScreen({super.key});
+class BusinessRegisterScreen extends StatefulWidget {
+  const BusinessRegisterScreen({super.key});
+
+  @override
+  State<BusinessRegisterScreen> createState() => _BusinessRegisterScreenState();
+}
+
+class _BusinessRegisterScreenState extends State<BusinessRegisterScreen> {
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passController = TextEditingController();
+  final confirmController = TextEditingController();
+
+  // Password visibility toggles
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    phoneController.dispose();
+    passController.dispose();
+    confirmController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final phoneController = TextEditingController();
-    final passController = TextEditingController();
-    final confirmController = TextEditingController();
-
-    void _showErrorDialog(context,String message) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Registeration Error'),
-            content: Text(message),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
-
-    void register() async {
-      final response = await http.post(
-        Uri.parse('http://localhost:3000/auth/register'),
-        body: {
-          'email': emailController.text,
-          'username': emailController.text,
-          'phone': phoneController.text,
-          'password': passController.text,
-          'cpassword': confirmController.text,
-        },
-      );
-      if (response.statusCode == 200) {
-        // Handle successful login
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['message'];
-        print('Response from Node.js: $responseData');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: Duration(seconds: 2), // Optional: how long it shows
-            backgroundColor: Colors.green, // Optional: customize color
-          ),
-
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => VerifyPerScreen(email:emailController.text,phoneNumber:phoneController.text)),
-        );
-
-
-
-      } else {
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['error'];
-        print('Response from Node.js: $message');
-
-        _showErrorDialog(context,message);
-
-
-      }
-
-    }
-
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/login_bg.png"), // 👈 background image
+            image: AssetImage("assets/images/login_bg.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -109,10 +60,12 @@ class PersonalRegisterScreen extends StatelessWidget {
                     // Need Help
                     GestureDetector(
                       onTap: () {
-                        // TODO: add help navigation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Need Help tapped")),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (_) => const NeedHelpScreen(),
+                        //   ),
+                        // );
                       },
                       child: const Text(
                         "Need Help?",
@@ -159,7 +112,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            "Register",
+                            "Business Sign-Up",
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -167,7 +120,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            "Create a GreyFundr account to continue",
+                            "Create A GreyFundr Business Account to Continue",
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -178,8 +131,9 @@ class PersonalRegisterScreen extends StatelessWidget {
                           // Email
                           TextField(
                             controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: "Email",
+                              labelText: "Business Email",
                               labelStyle: const TextStyle(color: Colors.grey),
                               suffixIcon:
                                   const Icon(Icons.email, color: Colors.grey),
@@ -193,12 +147,15 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 15),
 
-                          // Phone
+                          // Phone - Only accepts digits
                           TextField(
                             controller: phoneController,
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             decoration: InputDecoration(
-                              prefixText: '234',
-                              labelText: "Phone",
+                              labelText: "Business Phone",
                               labelStyle: const TextStyle(color: Colors.grey),
                               suffixIcon:
                                   const Icon(Icons.phone, color: Colors.grey),
@@ -212,15 +169,26 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 15),
 
-                          // Password
+                          // Password with toggle visibility
                           TextField(
                             controller: passController,
-                            obscureText: true,
+                            obscureText: !_isPasswordVisible,
                             decoration: InputDecoration(
                               labelText: "Password",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.visibility_off,
-                                  color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordVisible = !_isPasswordVisible;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -231,15 +199,27 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 15),
 
-                          // Retype Password
+                          // Retype Password with toggle visibility
                           TextField(
                             controller: confirmController,
-                            obscureText: true,
+                            obscureText: !_isConfirmPasswordVisible,
                             decoration: InputDecoration(
                               labelText: "Re-type Password",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.visibility_off,
-                                  color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isConfirmPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isConfirmPasswordVisible =
+                                        !_isConfirmPasswordVisible;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -261,7 +241,13 @@ class PersonalRegisterScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              onPressed: register,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const VerifyBusScreen()),
+                                );
+                              },
                               child: const Text(
                                 "Continue",
                                 style: TextStyle(
@@ -271,7 +257,6 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
 
-                          
                           // Already have account? Login
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -282,15 +267,15 @@ class PersonalRegisterScreen extends StatelessWidget {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                  );
+                                  // Navigator.pushReplacement(
+                                  //   context,
+                                  //   MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                  // );
                                 },
                                 child: const Text(
                                   "Login Here",
                                   style: TextStyle(
-                                    color: Colors.red,
+                                    color: Color.fromARGB(255, 244, 124, 54),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -310,27 +295,6 @@ class PersonalRegisterScreen extends StatelessWidget {
     );
   }
 }
-
-// // Curved background clipper
-// class CurvedTopClipper extends CustomClipper<Path> {
-//   @override
-//   Path getClip(Size size) {
-//     var path = Path();
-//     path.lineTo(0, 8);
-//     path.quadraticBezierTo(
-//       size.width / 2, -40, 
-//       size.width, 20
-//       );
-//     path.lineTo(size.width, size.height);
-//     path.lineTo(0, size.height);
-//     path.close();
-//     return path;
-//   }
-
-//   @override
-//   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-// }
-
 
 class CurvedTopClipper extends CustomClipper<Path> {
   @override

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Auth/personal_register_screen.dart';
 import 'group_register_screen.dart';
-import 'business_register_screen.dart';
-import 'charity_register_screen.dart';
+import 'package:greyfdr/screens/Auth/business/bus_register.dart';
+// import 'charity_register_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -85,7 +85,7 @@ class RegisterScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const BusinessRegisterScreen(),
+                            builder: (_) => BusinessRegisterScreen(),
                           ),
                         );
                       },
@@ -100,7 +100,7 @@ class RegisterScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CharityRegisterScreen(),
+                            builder: (_) => const BusinessRegisterScreen(),
                           ),
                         );
                       },

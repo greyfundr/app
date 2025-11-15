@@ -18,12 +18,7 @@ dependencies:
   intl: ^0.20.2
   flutter_svg: ^2.2.2
   google_fonts: ^6.3.2
-<<<<<<< HEAD
   image_picker: ^1.2.1
-
-  
-=======
->>>>>>> f34da28 (Add new files)
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
@@ -36,19 +31,18 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icons/app_icon.png"
-  # Remove web and windows, or use proper configuration format
-  # For web, use:
+
   web:
     generate: true
     image_path: "assets/icons/app_icon.png"
-  # For Windows, use:
+
   windows:
     generate: true
     image_path: "assets/icons/app_icon.png"
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/images/login_bg.png
     - assets/images/onboarding1.jpg

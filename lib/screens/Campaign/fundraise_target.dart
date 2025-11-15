@@ -1,39 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'reviewstartcampaign3.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+
+class Participant {
+  final String name;
+  final String username;
+  final String imageUrl;
+
+  Participant({required this.name, required this.username, required this.imageUrl});
+}
 
 class FundraisingScreen extends StatefulWidget {
   final String title;
   final String description;
   const FundraisingScreen({super.key, required this.title, required this.description});
 
-
   @override
   State<FundraisingScreen> createState() => _FundraisingScreenState();
 }
 
 class _FundraisingScreenState extends State<FundraisingScreen> {
-
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
 
-  File? _imageFile;
-  File? _imageFile1;
-  File? _imageFile2;
-  final ImagePicker _picker = ImagePicker();
+  List<Participant> selectedParticipants = [];
 
-
+  final List<Participant> allUsers = [
+    Participant(
+      name: 'Emmanuel Onyejuwa',
+      username: '@onyejuwaemma',
+      imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    ),
+    Participant(
+      name: 'Aderonju Micheal',
+      username: '@deronju',
+      imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+    ),
+    Participant(
+      name: 'Alex Otti',
+      username: '@alext',
+      imageUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
+    ),
+    Participant(
+      name: 'Adaeze Franches',
+      username: '@adafran',
+      imageUrl: 'https://randomuser.me/api/portraits/women/4.jpg',
+    ),
+    Participant(
+      name: 'Samson Inegbedun',
+      username: '@samsoni',
+      imageUrl: 'https://randomuser.me/api/portraits/men/5.jpg',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final String title = widget.title;
     final String description = widget.description;
-    //DateTime startsDate = DateTime.parse(_startDateController.text);
-    //DateTime endsDate = DateTime.parse(_startDateController.text);
-
 
     return Scaffold(
       appBar: AppBar(
@@ -63,7 +87,6 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               TextField(
                 controller: amountController,
                 decoration: InputDecoration(
@@ -86,8 +109,6 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
               ),
               const SizedBox(height: 15),
-
-              // Target amount input
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
@@ -106,10 +127,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Add Bill/Thing button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -125,10 +143,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   child: const Text('ADD BILL/THING'),
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Date section
               const Text(
                 'Date',
                 style: TextStyle(
@@ -137,8 +152,6 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Date inputs
               Row(
                 children: [
                   Expanded(
@@ -176,10 +189,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Upload Images section
               const Text(
                 'Upload Images',
                 style: TextStyle(
@@ -196,25 +206,15 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Image upload buttons
               Row(
                 children: [
-
-                  _imageFile != null
-                      ? _buildImageSelected(_imageFile)
-                      : _buildImageUploadButton(true,_imageFile),
+                  _buildImageUploadButton(true),
                   const SizedBox(width: 12),
-                  _imageFile1 != null
-                      ? _buildImageSelected(_imageFile1)
-                      : _buildImageUploadButton(false,_imageFile1),
+                  _buildImageUploadButton(false),
                   const SizedBox(width: 12),
-                  _imageFile2 != null
-                      ? _buildImageSelected(_imageFile2)
-                      : _buildImageUploadButton(false,_imageFile2),
+                  _buildImageUploadButton(false),
                 ],
               ),
-
               const SizedBox(height: 8),
               const Text(
                 'Please use images of yourself or your cause and not images that might infringe copyright when used.',
@@ -223,10 +223,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   color: Colors.grey,
                 ),
               ),
-
               const SizedBox(height: 24),
 
-              // Team section
+              // Team section with avatars + delete + add more button or add member button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -258,45 +257,109 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Team member
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        shape: BoxShape.circle,
+              selectedParticipants.isEmpty
+                  ? GestureDetector(
+                      onTap: () {
+                        _showAddTeamMemberBottomSheet(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                 color: Colors.teal,
+                               
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.add, color: Color.fromARGB(255, 255, 255, 255)),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Add Team Member',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: const Icon(Icons.add, color: Colors.grey),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Add Team Member',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
+                    )
+                  : SizedBox(
+                      height: 60,
+                      width: (selectedParticipants.length * 40) + 56,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: selectedParticipants.asMap().entries.map((entry) {
+                          int idx = entry.key;
+                          Participant user = entry.value;
+                          return Positioned(
+                            left: idx * 40.0,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: NetworkImage(user.imageUrl),
+                                ),
+                                // Delete button on avatar top-right
+                                Positioned(
+                                  left: -8,
+                                  top: -8,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        selectedParticipants.removeAt(idx);
+                                      });
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 10,
+                                      backgroundColor: Colors.red,
+                                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList()
+                          ..add(
+                            // Add more button next to avatars
+                            Positioned(
+                              left: selectedParticipants.length * 40.0,
+                              child: GestureDetector(
+                                onTap: () {
+                                  _showAddTeamMemberBottomSheet(context);
+                                },
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.add, color: Colors.grey, size: 28),
+                                ),
+                              ),
                             ),
                           ),
-                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 24),
-
-              // Visibility section
               Row(
                 children: [
                   Container(
@@ -323,8 +386,6 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Visibility dropdown
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -348,10 +409,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Review & Post button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -359,7 +417,13 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => Reviewstartcampaign3(title:title,description:description,startDate:_startDateController.text,endDate:_endDateController.text,amount:amountController.text),
+                        builder: (_) => Reviewstartcampaign3(
+                          title: title,
+                          description: description,
+                          startDate: _startDateController.text,
+                          endDate: _endDateController.text,
+                          amount: amountController.text,
+                        ),
                       ),
                     );
                   },
@@ -374,7 +438,6 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   child: const Text('REVIEW & POST'),
                 ),
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -414,7 +477,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     );
   }
 
-  Widget _buildImageUploadButton(bool isMain, File? img) {
+  Widget _buildImageUploadButton(bool isMain) {
     return Container(
       width: 60,
       height: 60,
@@ -424,41 +487,386 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
         color: Colors.white,
       ),
       child: Center(
-        child:  IconButton(
-          icon: Icon(Icons.add_circle_outline), // The icon to display
-          onPressed: () async {await _pickImage(img);
-          },
+        child: Icon(
+          Icons.add_circle_outline,
+          color: isMain ? Colors.teal : Colors.grey.shade400,
+          size: 24,
         ),
       ),
     );
   }
 
-  Widget _buildImageSelected(File? img) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        border: Border.all(color: true ? Colors.teal : Colors.grey.shade300),
+  void _showAddTeamMemberBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Create Team',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRoleCard(
+                    context,
+                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-host-festival-flaticons-lineal-color-flat-icons.png',
+                    role: 'Select Host',
+                    peopleCount: selectedParticipants.length,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showUserSelectionBottomSheet(context);
+                    },
+                  ),
+                  _buildRoleCard(
+                    context,
+                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-champion-sports-flaticons-lineal-color-flat-icons.png',
+                    role: 'Select Champions',
+                    peopleCount: 254,
+                    onTap: null,
+                  ),
+                  _buildRoleCard(
+                    context,
+                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-backers-crowdfunding-flaticons-lineal-color-flat-icons.png',
+                    role: 'Select Backers',
+                    peopleCount: 78,
+                    onTap: null,
+                  ),
+                  _buildRoleCard(
+                    context,
+                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-shorty-party-flaticons-lineal-color-flat-icons.png',
+                    role: 'Select Shorty',
+                    peopleCount: 6,
+                    onTap: null,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('ADD'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRoleCard(
+    BuildContext context, {
+    required String icon,
+    required String role,
+    required int peopleCount,
+    VoidCallback? onTap,
+  }) {
+    String roleLower = role.split(' ').last.toLowerCase();
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        color: Colors.white,
-      ),
-      child: Center(
-        child:  Image.file(
-          img!,
-          height: 150,
-          width: 150,
-          fit: BoxFit.cover,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.lightBlue.shade100,
+                    backgroundImage: NetworkImage(icon),
+                    radius: 18,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    role,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.lightBlue.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                child: Row(
+                  children: [
+                    Row(
+                      children: List.generate(5, (index) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          child: CircleAvatar(
+                            radius: 14,
+                            backgroundImage: NetworkImage(
+                              'https://randomuser.me/api/portraits/men/${index + 10}.jpg',
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$peopleCount People added as $roleLower',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.manage_search, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {},
+                child: const Text(
+                  'Add Offers',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _pickImage(File? img) async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        img = File(pickedFile.path);
-      });
-    }
+  void _showUserSelectionBottomSheet(BuildContext context) {
+    List<Participant> filteredUsers = List.from(allUsers);
+    List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
+    TextEditingController searchController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void _filterUsers(String query) {
+              setModalState(() {
+                filteredUsers = allUsers.where((user) {
+                  return user.name.toLowerCase().contains(query.toLowerCase()) ||
+                      user.username.toLowerCase().contains(query.toLowerCase());
+                }).toList();
+              });
+            }
+
+            bool isSelected(Participant user) {
+              return tempSelectedParticipants.contains(user);
+            }
+
+            void toggleSelection(Participant user) {
+              setModalState(() {
+                if (isSelected(user)) {
+                  tempSelectedParticipants.remove(user);
+                } else {
+                  tempSelectedParticipants.add(user);
+                }
+              });
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selected Participant',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: tempSelectedParticipants.length,
+                      itemBuilder: (context, index) {
+                        final participant = tempSelectedParticipants[index];
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              child: CircleAvatar(
+                                radius: 28,
+                                backgroundImage: NetworkImage(participant.imageUrl),
+                              ),
+                            ),
+                            Positioned(
+                              right: -8,
+                              top: -8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    tempSelectedParticipants.remove(participant);
+                                  });
+                                },
+                                child: const CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Colors.red,
+                                  child: Icon(Icons.close, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DefaultTabController(
+                    length: 5,
+                    child: Column(
+                      children: [
+                        TabBar(
+                          isScrollable: true,
+                          tabs: const [
+                            Tab(text: 'Followers'),
+                            Tab(text: 'Champions'),
+                            Tab(text: 'Backers'),
+                            Tab(text: 'Groups'),
+                            Tab(text: 'Organization'),
+                          ],
+                          labelColor: Colors.teal,
+                          unselectedLabelColor: Colors.grey,
+                        ),
+                        SizedBox(
+                          height: 250,
+                          child: TabBarView(
+                            children: List.generate(5, (_) {
+                              return Column(
+                                children: [
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: searchController,
+                                    onChanged: (val) => _filterUsers(val),
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(Icons.search),
+                                      hintText: 'Search',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: filteredUsers.length,
+                                      itemBuilder: (context, idx) {
+                                        final user = filteredUsers[idx];
+                                        final selected = isSelected(user);
+                                        return ListTile(
+                                          leading: CircleAvatar(
+                                            backgroundImage: NetworkImage(user.imageUrl),
+                                          ),
+                                          title: Text(user.name),
+                                          subtitle: Text(user.username),
+                                          trailing: ElevatedButton(
+                                            onPressed: () {
+                                              toggleSelection(user);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: selected ? Colors.grey : Colors.teal,
+                                            ),
+                                            child: Text(selected ? 'Selected' : 'Select'),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          selectedParticipants = List.from(tempSelectedParticipants);
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('ADD PARTICIPANTS'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
+
 }
+
+
+

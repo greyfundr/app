@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
+// import '../Dashboard/dashboard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../class/auth_service.dart';
 import '../Dashboard/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// import '../Campaign/homeprofile.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
 
-   static final emailController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
+  static final emailController = TextEditingController();
   static final passwordController = TextEditingController();
-
-
-
-
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
-
-    void showErrorDialog(context,String message) {
+    void _showErrorDialog(BuildContext context, String message) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Login Error'),
+            title: const Text('Login Error'),
             content: Text(message),
             actions: <Widget>[
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -58,34 +61,30 @@ class LoginScreen extends StatelessWidget {
         await AuthService().saveToken(token);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Login successful!'),
             duration: Duration(seconds: 2), // Optional: how long it shows
             backgroundColor: Colors.green, // Optional: customize color
           ),
-
         );
         Future.delayed(const Duration(seconds: 3), () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => const ProfileScreen()),
-        );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const ProfileScreen()),
+          );
         });
       } else {
         Map<String, dynamic> responseData = jsonDecode(response.body);
         String message = responseData['msg'];
         print('Response from Node.js: $responseData');
 
-        showErrorDialog(context,message);
-
-
+        _showErrorDialog(context, message);
       }
-
     }
 
-
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Prevents keyboard from overlapping input fields
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -106,13 +105,13 @@ class LoginScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
                   color: Colors.transparent, // transparent over bg
-                  child: Column(
+                  child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
                         "GreyFundr",
                         style: TextStyle(
-                          fontSize: 26,
+                          fontSize: 46,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF00796B),
                         ),
@@ -134,7 +133,9 @@ class LoginScreen extends StatelessWidget {
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        
                         children: [
+                          const SizedBox(height: 10),
                           const Text(
                             "Welcome",
                             style: TextStyle(
@@ -158,6 +159,7 @@ class LoginScreen extends StatelessWidget {
                             decoration: InputDecoration(
                               labelText: "Enter Email or Phone",
                               labelStyle: const TextStyle(color: Colors.grey),
+                              suffixIcon: const Icon(Icons.email, color: Colors.grey), // Added email icon
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -179,12 +181,21 @@ class LoginScreen extends StatelessWidget {
                           // Password
                           TextField(
                             controller: passwordController,
-                            obscureText: true,
+                            obscureText: !_isPasswordVisible, // Toggles based on state
                             decoration: InputDecoration(
                               labelText: "Password",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.visibility_off,
-                                  color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordVisible = !_isPasswordVisible;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -278,26 +289,6 @@ class LoginScreen extends StatelessWidget {
 }
 
 // Curved background clipper
-// class CurvedTopClipper extends CustomClipper<Path> {
-//   @override
-//   Path getClip(Size size) {
-//     var path = Path();
-//     path.lineTo(0, 30);
-//     path.quadraticBezierTo(
-//       size.width / 2, -60, // raised curve
-//       size.width, 30,
-//     );
-//     path.lineTo(size.width, size.height);
-//     path.lineTo(0, size.height);
-//     path.close();
-//     return path;
-//   }
-
-//   @override
-//   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-// }
-
-
 class CurvedTopClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

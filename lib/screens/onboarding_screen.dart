@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'Auth/login_screen.dart';
-import 'Auth/register_screen.dart'; // 👈 make sure this file exists
+import 'Auth/register_screen.dart'; 
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -21,7 +21,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
     {
       "image": "assets/images/onboarding2.jpg",
-      "title": "Donate,\nBack & Champion", // 👈 forced line break
+      "title": "Donate,\nBack & Champion", 
       "subtitle":
           "Bills, Campaigns, Causes you believe in so they can attain success in their endeavors"
     },
@@ -57,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   child: Transform.translate(
     offset: const Offset(0, -180), // shift upwards by 30px
     child: Image.asset(
-      "assets/images/greyfdr.png", // 👈 replace with your actual PNG path
+      "assets/images/greyfdr.png", // 
       width: 250,  // adjust size
       fit: BoxFit.contain,
     ),
@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           const SizedBox(height: 15),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
+                              Navigator.push( 
                                 context,
                                 MaterialPageRoute(
                                     builder: (_) => const RegisterScreen()),
@@ -220,7 +220,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               "Don’t have an account? Sign Up",
                               style: TextStyle(
                                 color: Colors.white,
-                                decoration: TextDecoration.underline,
                               ),
                             ),
                           ),

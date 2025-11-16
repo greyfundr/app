@@ -53,6 +53,7 @@ flutter:
     - assets/images/charity.png
     - assets/images/lifestyle.png
     - assets/images/create.png
+    - assets/images/personal.png
     - assets/images/invoices.png
     - assets/icons/personal.png
     - assets/icons/business.png

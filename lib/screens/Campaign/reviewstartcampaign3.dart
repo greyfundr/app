@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'error_boundary.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import 'reviewstartcampaign4.dart';
@@ -14,9 +15,14 @@ class Reviewstartcampaign3 extends StatefulWidget {
   final String endDate;
   final String amount;
 
-
-  const Reviewstartcampaign3(
-      {super.key, required this.title, required this.description, required this.startDate, required this.endDate, required this.amount});
+  const Reviewstartcampaign3({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.startDate,
+    required this.endDate,
+    required this.amount
+  });
 
   @override
   State<Reviewstartcampaign3> createState() => _ReviewStartCampaign3ScreenState();
@@ -24,10 +30,24 @@ class Reviewstartcampaign3 extends StatefulWidget {
 
 class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   Map<String, dynamic>? user;
+  int _selectedTabIndex = 0;
+  
+  // Editable content
+  late String _editableDescription;
+  List<Map<String, String>> _budgetItems = [];
+  List<Map<String, String>> _offers = [];
+  
+  // Track expanded sections
+  Map<String, bool> _expandedSections = {
+    'ABOUT': true,
+    'BUDGETING': false,
+    'OFFERS': false,
+  };
 
   @override
   void initState() {
     super.initState();
+    _editableDescription = widget.description;
     loadProfile();
   }
 
@@ -39,23 +59,789 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
       print("User ID: ${userData['user']}");
     } else {
       print("Token is expired or invalid");
-
     }
-    // setState(() => user = res['user']);
   }
 
+  void _showEditBottomSheet() {
+    // Temporary variables for editing
+    String tempDescription = _editableDescription;
+    List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
+    List<Map<String, String>> tempOffers = List.from(_offers);
+    
+    // Controllers for new items
+    TextEditingController aboutController = TextEditingController(text: tempDescription);
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Color.fromRGBO(238, 240, 239, 1),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Edit Campaign",
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color.fromRGBO(41, 47, 56, 1),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Content
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.all(16),
+                      children: [
+                        // ABOUT Section
+                        _buildExpandableSection(
+                          title: "ABOUT",
+                          icon: Icons.info_outline,
+                          setModalState: setModalState,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Campaign Description",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromRGBO(41, 47, 56, 0.7),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              TextField(
+                                controller: aboutController,
+                                maxLines: 5,
+                                onChanged: (value) {
+                                  tempDescription = value;
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Enter campaign description...",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: Color.fromRGBO(238, 240, 239, 1),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: Color.fromRGBO(0, 164, 175, 1),
+                                    ),
+                                  ),
+                                ),
+                                style: GoogleFonts.inter(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        SizedBox(height: 16),
+                        
+                        // BUDGETING Section
+                        _buildExpandableSection(
+                          title: "BUDGETING",
+                          icon: Icons.account_balance_wallet_outlined,
+                          setModalState: setModalState,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Budget Items",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromRGBO(41, 47, 56, 0.7),
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              
+                              // Budget items list
+                              ...tempBudgetItems.asMap().entries.map((entry) {
+                                int index = entry.key;
+                                Map<String, String> item = entry.value;
+                                return Container(
+                                  margin: EdgeInsets.only(bottom: 8),
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(247, 247, 249, 1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          item['expense'] ?? '',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          item['cost'] ?? '',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color.fromRGBO(0, 164, 175, 1),
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                        onPressed: () {
+                                          setModalState(() {
+                                            tempBudgetItems.removeAt(index);
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              
+                              SizedBox(height: 8),
+                              
+                              // Add new budget item button
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _showAddBudgetItemDialog(context, setModalState, tempBudgetItems);
+                                },
+                                icon: Icon(Icons.add, size: 18),
+                                label: Text("Add Budget Item"),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Color.fromRGBO(0, 164, 175, 1),
+                                  side: BorderSide(color: Color.fromRGBO(0, 164, 175, 1)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        SizedBox(height: 16),
+                        
+                        // OFFERS Section
+                        _buildExpandableSection(
+                          title: "OFFERS",
+                          icon: Icons.card_giftcard_outlined,
+                          setModalState: setModalState,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Campaign Offers",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromRGBO(41, 47, 56, 0.7),
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              
+                              // Offers list
+                              ...tempOffers.asMap().entries.map((entry) {
+                                int index = entry.key;
+                                Map<String, String> offer = entry.value;
+                                return Container(
+                                  margin: EdgeInsets.only(bottom: 12),
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(247, 247, 249, 1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Color.fromRGBO(238, 240, 239, 1),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "Condition:",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color.fromRGBO(41, 47, 56, 0.7),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                            padding: EdgeInsets.zero,
+                                            constraints: BoxConstraints(),
+                                            onPressed: () {
+                                              setModalState(() {
+                                                tempOffers.removeAt(index);
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        offer['condition'] ?? '',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        "Reward:",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color.fromRGBO(41, 47, 56, 0.7),
+                                        ),
+                                      ),
+                                      Text(
+                                        offer['reward'] ?? '',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color.fromRGBO(0, 164, 175, 1),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              
+                              SizedBox(height: 8),
+                              
+                              // Add new offer button
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _showAddOfferDialog(context, setModalState, tempOffers);
+                                },
+                                icon: Icon(Icons.add, size: 18),
+                                label: Text("Add Offer"),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Color.fromRGBO(0, 164, 175, 1),
+                                  side: BorderSide(color: Color.fromRGBO(0, 164, 175, 1)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Update Button
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Color.fromRGBO(238, 240, 239, 1),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _editableDescription = tempDescription;
+                            _budgetItems = tempBudgetItems;
+                            _offers = tempOffers;
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Campaign updated successfully!'),
+                              backgroundColor: Color.fromRGBO(0, 164, 175, 1),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(0, 164, 175, 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: Text(
+                          "UPDATE",
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required IconData icon,
+    required StateSetter setModalState,
+    required Widget child,
+  }) {
+    bool isExpanded = _expandedSections[title] ?? false;
+    
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Color.fromRGBO(238, 240, 239, 1)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setModalState(() {
+                _expandedSections[title] = !isExpanded;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20, color: Color.fromRGBO(0, 164, 175, 1)),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color.fromRGBO(41, 47, 56, 1),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Color.fromRGBO(142, 150, 163, 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Color.fromRGBO(238, 240, 239, 1)),
+                ),
+              ),
+              child: child,
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> budgetItems) {
+    TextEditingController expenseController = TextEditingController();
+    TextEditingController costController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Add Budget Item",
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: expenseController,
+                decoration: InputDecoration(
+                  labelText: "Expected Expense",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: costController,
+                decoration: InputDecoration(
+                  labelText: "Estimated Cost",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  prefixText: "₦ ",
+                ),
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (expenseController.text.isNotEmpty && costController.text.isNotEmpty) {
+                  setModalState(() {
+                    budgetItems.add({
+                      'expense': expenseController.text,
+                      'cost': "₦${costController.text}",
+                    });
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(0, 164, 175, 1),
+              ),
+              child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddOfferDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> offers) {
+    TextEditingController conditionController = TextEditingController();
+    TextEditingController rewardController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Add Offer",
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: conditionController,
+                decoration: InputDecoration(
+                  labelText: "Condition",
+                  hintText: "e.g., Donate ₦10,000 or more",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: rewardController,
+                decoration: InputDecoration(
+                  labelText: "Reward",
+                  hintText: "e.g., Free t-shirt and certificate",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (conditionController.text.isNotEmpty && rewardController.text.isNotEmpty) {
+                  setModalState(() {
+                    offers.add({
+                      'condition': conditionController.text,
+                      'reward': rewardController.text,
+                    });
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(0, 164, 175, 1),
+              ),
+              child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTabContent() {
+    switch (_selectedTabIndex) {
+      case 0: // ABOUT
+        return Container(
+          padding: EdgeInsets.all(15.0),
+          child: SingleChildScrollView(
+            child: Text(
+              _editableDescription,
+              style: GoogleFonts.inter(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(0, 0, 0, 0.7),
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        );
+      
+      case 1: // BUDGETING
+        return Container(
+          padding: EdgeInsets.all(15.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Campaign Budget Breakdown",
+                  style: GoogleFonts.inter(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w600,
+                    color: Color.fromRGBO(0, 0, 0, 0.8),
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                SizedBox(height: 10),
+                _buildBudgetItem("Total Target", widget.amount),
+                _buildBudgetItem("Platform Fee (5%)", "Calculated at end"),
+                ..._budgetItems.map((item) => 
+                  _buildBudgetItem(item['expense']!, item['cost']!)
+                ),
+                if (_budgetItems.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      "No custom budget items added",
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(0, 0, 0, 0.5),
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      
+      case 2: // OFFERS
+        return Container(
+          padding: EdgeInsets.all(15.0),
+          child: _offers.isEmpty
+              ? Center(
+                  child: Text(
+                    "No offers available yet",
+                    style: GoogleFonts.inter(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w400,
+                      color: Color.fromRGBO(0, 0, 0, 0.5),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _offers.map((offer) {
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Color.fromRGBO(247, 247, 249, 1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              offer['condition']!,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color.fromRGBO(0, 0, 0, 0.8),
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Reward: ${offer['reward']}",
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromRGBO(0, 164, 175, 1),
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+        );
+      
+      case 3: // DONATIONS
+        return Container(
+          padding: EdgeInsets.all(15.0),
+          child: Center(
+            child: Text(
+              "No donations yet. Be the first to donate!",
+              style: GoogleFonts.inter(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(0, 0, 0, 0.5),
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        );
+      
+      case 4: // COMMENTS
+        return Container(
+          padding: EdgeInsets.all(15.0),
+          child: Center(
+            child: Text(
+              "No comments yet",
+              style: GoogleFonts.inter(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(0, 0, 0, 0.5),
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        );
+      
+      default:
+        return Container();
+    }
+  }
+
+  Widget _buildBudgetItem(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11.0,
+              fontWeight: FontWeight.w500,
+              color: Color.fromRGBO(0, 0, 0, 0.6),
+              decoration: TextDecoration.none,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 11.0,
+              fontWeight: FontWeight.w600,
+              color: Color.fromRGBO(0, 0, 0, 0.8),
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String text, int index) {
+    bool isSelected = _selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              style: GoogleFonts.inter(
+                color: isSelected
+                    ? Color.fromRGBO(41, 47, 56, 0.8)
+                    : Color.fromRGBO(142, 150, 163, 0.7),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 9.0,
+                decoration: TextDecoration.none,
+              ),
+            ),
+            SizedBox(height: 3),
+            Container(
+              height: 3,
+              width: text.length * 5.0,
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? Color.fromRGBO(41, 47, 56, 0.8)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-     DateTime startsDate = DateFormat('dd/MM/yyyy').parse(widget.startDate);
-     DateTime endsDate = DateFormat('dd/MM/yyyy').parse(widget.endDate);
-
+    DateTime startsDate = DateFormat('dd/MM/yyyy').parse(widget.startDate);
+    DateTime endsDate = DateFormat('dd/MM/yyyy').parse(widget.endDate);
     Duration difference = endsDate.difference(startsDate);
     int days = difference.inDays;
-    print(days);
     int i = user!['id'];
     String id = i.toString();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -67,7 +853,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
           decoration: BoxDecoration(color: Color.fromRGBO(255, 255, 255, 1.0)),
           child: SingleChildScrollView(
             child: ErrorBoundary(
-              child: SizedBox(
+              child: Container(
                 width: MediaQuery.of(context).size.width,
                 height: 956.0,
                 child: LayoutBuilder(
@@ -78,7 +864,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 333.0,
                         top: 320.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
+                          child: Container(
                             width: 42.0 + 10,
                             child: Align(
                               alignment: Alignment.topCenter,
@@ -87,122 +873,51 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 13.0,
-
                                   decoration: TextDecoration.none,
                                   color: Color.fromRGBO(251, 251, 255, 1.0),
                                 ),
-
                                 textAlign: TextAlign.center,
                               ),
                             ),
                           ),
                         ),
-                      ), //Starus
+                      ),
+                      //Status
                       Positioned(
                         top: constraints.maxHeight * 0.016736401673640166,
                         left: 21.0,
                         child: ErrorBoundary(
-                          child: ErrorBoundary(
-                            child: Container(
-                              decoration: BoxDecoration(),
-                              child: ErrorBoundary(
-                                child: SizedBox(
-                                  width: 54.0,
-                                  height:
-                                      constraints.maxHeight *
-                                      0.021966527196652718,
-                                  child: LayoutBuilder(
-                                    builder:
-                                        (
-                                          BuildContext context,
-                                          constraints,
-                                        ) => Stack(
-                                          children: [
-                                            //Time
-                                            Positioned(
-                                              top:
-                                                  (constraints.maxHeight / 2) -
-                                                  (21.0 / 2 - 3.0),
-                                              left: 0.0,
-                                              child: ErrorBoundary(
-                                                child: SizedBox(
-                                                  width:
-                                                      constraints.maxWidth -
-                                                      0.0 +
-                                                      10,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.topCenter,
-                                                    child: RichText(
-                                                      text: TextSpan(
-                                                        text: "9:4",
-                                                        style: GoogleFonts.inter(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 13.0,
-
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .none,
-                                                          color: Color.fromRGBO(
-                                                            251,
-                                                            251,
-                                                            255,
-                                                            1.0,
-                                                          ),
-                                                        ),
-
-                                                        children: [
-                                                          TextSpan(
-                                                            text: "1",
-                                                            style: GoogleFonts.inter(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              fontSize: 13.0,
-
-                                                              decoration:
-                                                                  TextDecoration
-                                                                      .none,
-                                                              color:
-                                                                  Color.fromRGBO(
-                                                                    251,
-                                                                    251,
-                                                                    255,
-                                                                    1.0,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                          child: Container(
+                            width: 54.0,
+                            height: constraints.maxHeight * 0.021966527196652718,
+                            child: Center(
+                              child: RichText(
+                                text: TextSpan(
+                                  text: "9:41",
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.0,
+                                    decoration: TextDecoration.none,
+                                    color: Color.fromRGBO(251, 251, 255, 1.0),
                                   ),
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
                         ),
-                      ), //Building 1000 borehole for rural community
+                      ),
+                      //Campaign Title
                       Positioned(
                         top: 332.0,
                         left: 16.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
+                          child: Container(
                             width: 276.0 + 2,
                             child: Text(
                               widget.title,
                               style: GoogleFonts.inter(
                                 fontSize: 17.0,
-
                                 fontWeight: FontWeight.w500,
                                 color: Color.fromRGBO(41, 47, 56, 1.0),
                                 decoration: TextDecoration.none,
@@ -210,7 +925,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             ),
                           ),
                         ),
-                      ), //Rectangle 59
+                      ),
+                      //Progress Box Background
                       Positioned(
                         top: 391.0,
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 16.0),
@@ -218,202 +934,232 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           child: Container(
                             clipBehavior: Clip.none,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(6.0),
-                                topRight: Radius.circular(6.0),
-                                bottomLeft: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0),
-                              ),
-                              color: Color.fromRGBO(
-                                238,
-                                240,
-                                239,
-                                0.8100000023841858,
-                              ),
+                              borderRadius: BorderRadius.circular(6.0),
+                              color: Color.fromRGBO(238, 240, 239, 0.81),
                             ),
                             width: 408.0,
                             height: 78.0,
                           ),
                         ),
-                      ), //Organizer
+                      ),
+                      //Organizer Label
                       Positioned(
                         top: 477.0,
                         left: 17.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 47.0 + 10,
-                            child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Text(
-                                "Organizer",
-                                style: GoogleFonts.inter(
-                                  color: Color.fromRGBO(0, 0, 0, 1.0),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 9.0,
-
-                                  decoration: TextDecoration.none,
-                                ),
-
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //See All
-                      Positioned(
-                        left: 389.0,
-                        top: 478.0,
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 33.0 + 10,
-                            child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Text(
-                                "See All  ",
-                                style: GoogleFonts.inter(
-                                  color: Color.fromRGBO(0, 0, 0, 1.0),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 9.0,
-
-                                  decoration: TextDecoration.none,
-                                ),
-
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //Group 73
-                      Positioned(
-                        top: 421.0,
-                        left: 22.0,
-                        child: ErrorBoundary(
-                          child: SvgPicture.asset(
-                            "assets/images/group_73.svg",
-                            width: 392.0,
-                            height: 8.0,
-                          ),
-                        ),
-                      ), //70%
-                      Positioned(
-                        top: 421.0,
-                        left: 396.0,
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 17.0 + 10,
+                          child: Container(
+                            width: 57.0,
                             child: Text(
-                              "0% ",
+                              "Organizer",
                               style: GoogleFonts.inter(
                                 color: Color.fromRGBO(0, 0, 0, 1.0),
                                 fontWeight: FontWeight.w500,
-                                fontSize: 7.0,
-
+                                fontSize: 9.0,
                                 decoration: TextDecoration.none,
                               ),
+                              textAlign: TextAlign.left,
                             ),
                           ),
                         ),
-                      ), //₦347,000 raised of ₦4,000,000
+                      ),
+                      //See All
+                      Positioned(
+                        left: 360.0,
+                        top: 478.0,
+                        child: ErrorBoundary(
+                          child: Text(
+                            "See All",
+                            style: GoogleFonts.inter(
+                              color: Color.fromRGBO(0, 0, 0, 1.0),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10.0,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      //Progress % Text
+                      Positioned(
+                        top: 421.0,
+                        left: 380.0,
+                        child: ErrorBoundary(
+                          child: Text(
+                            "0%",
+                            style: GoogleFonts.inter(
+                              color: Color.fromRGBO(0, 0, 0, 1.0),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 9.0,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      //Raised Amount
                       Positioned(
                         left: 24.0,
                         top: 397.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 182.0 + 2,
-                            child: RichText(
-                              text: TextSpan(
-                                text: "₦ 0 Raised of ",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.0,
-
-                                  fontWeight: FontWeight.w600,
-                                  color: Color.fromRGBO(41, 47, 56, 1.0),
-                                  decoration: TextDecoration.none,
-                                ),
-
-                                children: [
-                                  TextSpan(
-                                    text: widget.amount,
-                                    style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 11.0,
-
-                                      color: Color.fromRGBO(41, 47, 56, 1.0),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //12 Days left
-                      Positioned(
-                        left: 358.0,
-                        top: 397.0,
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 56.0 + 2,
-                            child: Text(
-                              ('$days Days left'),
+                          child: RichText(
+                            text: TextSpan(
+                              text: "₦ 0 Raised of ",
                               style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w400,
-                                fontSize: 9.0,
-
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w600,
                                 color: Color.fromRGBO(41, 47, 56, 1.0),
                                 decoration: TextDecoration.none,
                               ),
+                              children: [
+                                TextSpan(
+                                  text: widget.amount,
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 11.0,
+                                    color: Color.fromRGBO(41, 47, 56, 1.0),
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ), //15 Champions
+                      ),
+                      //Days Left
+                      Positioned(
+                        left: 350.0,
+                        top: 397.0,
+                        child: ErrorBoundary(
+                          child: Text(
+                            '$days Days left',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 9.0,
+                              color: Color.fromRGBO(41, 47, 56, 1.0),
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      //PROGRESS BAR
+                      Positioned(
+                        left: 22.0,
+                        top: 421.0,
+                        child: ErrorBoundary(
+                          child: SizedBox(
+                            width: 350.0,
+                            height: 16.0,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                double targetAmount = double.tryParse(
+                                  widget.amount.replaceAll('₦', '').replaceAll(',', '').trim()
+                                ) ?? 1.0;
+                                double raisedAmount = 0.0;
+                                double progress = targetAmount > 0 ? raisedAmount / targetAmount : 0.0;
+                                progress = progress.clamp(0.0, 1.0);
+                                double indicatorPosition = constraints.maxWidth * progress;
+                                
+                                return Stack(
+                                  children: [
+                                    Positioned(
+                                      left: 0,
+                                      top: 4.0,
+                                      child: Container(
+                                        width: 392.0,
+                                        height: 8.0,
+                                        decoration: BoxDecoration(
+                                          color: Color.fromRGBO(192, 206, 199, 1),
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                    ),
+                                    if (progress > 0)
+                                      Positioned(
+                                        left: 0,
+                                        top: 4.0,
+                                        child: Container(
+                                          width: indicatorPosition,
+                                          height: 8.0,
+                                          decoration: BoxDecoration(
+                                            color: Color.fromRGBO(0, 164, 175, 1.0),
+                                            borderRadius: BorderRadius.circular(4.0),
+                                          ),
+                                        ),
+                                      ),
+                                    Positioned(
+                                      left: indicatorPosition > 0 ? indicatorPosition - 8.0 : 0,
+                                      top: 0,
+                                      child: Container(
+                                        width: 16.0,
+                                        height: 16.0,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: progress > 0 
+                                              ? Color.fromRGBO(0, 164, 175, 1.0)
+                                              : Color.fromRGBO(142, 150, 163, 1.0),
+                                          border: Border.all(
+                                            color: Color.fromRGBO(255, 255, 255, 1.0),
+                                            width: 2.0,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color.fromRGBO(0, 0, 0, 0.15),
+                                              blurRadius: 4.0,
+                                              offset: Offset(0, 2.0),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            progress > 0 ? '${(progress * 100).toInt()}%' : '',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 6.0,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color.fromRGBO(255, 255, 255, 1.0),
+                                              decoration: TextDecoration.none,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      //Champions Count
                       Positioned(
                         left: 162.0,
                         top: 441.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 83.0 + 10,
-                            child: Text(
-                              "0 Champions",
-                              style: GoogleFonts.inter(
-                                color: Color.fromRGBO(41, 47, 56, 0.8),
-                                fontSize: 11.0,
-
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.none,
-                              ),
+                          child: Text(
+                            "0 Champions",
+                            style: GoogleFonts.inter(
+                              color: Color.fromRGBO(41, 47, 56, 0.8),
+                              fontSize: 11.0,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                         ),
-                      ), //100 Donors
+                      ),
+                      //Donors Count
                       Positioned(
                         top: 439.0,
                         left: 44.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 67.0 + 10,
-                            child: Text(
-                              "0 Donors                ",
-                              style: GoogleFonts.inter(
-                                color: Color.fromRGBO(41, 47, 56, 0.8),
-                                fontSize: 11.0,
-
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.none,
-                              ),
+                          child: Text(
+                            "0 Donors",
+                            style: GoogleFonts.inter(
+                              color: Color.fromRGBO(41, 47, 56, 0.8),
+                              fontSize: 11.0,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                         ),
-                      ), //vuesax/linear/people
-                      Positioned(
-                        left: 22.0,
-                        top: 441.0,
-                        child: ErrorBoundary(
-                          child: ErrorBoundary(
-                            child: Container(decoration: BoxDecoration()),
-                          ),
-                        ),
-                      ), //vuesax/linear/award
+                      ),
+                      //Award Icon
                       Positioned(
                         left: 140.0,
                         top: 441.0,
@@ -424,414 +1170,119 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             width: 18.0,
                           ),
                         ),
-                      ), //vuesax/linear/timer
-                      Positioned(
-                        left: 339.0,
-                        top: 398.0,
-                        child: ErrorBoundary(
-                          child: ErrorBoundary(
-                            child: Container(decoration: BoxDecoration()),
-                          ),
-                        ),
-                      ), //Rectangle 64
-                      Positioned(
-                        top: 605.0,
-                        left: 18.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            height: 134.0,
-                            decoration: BoxDecoration(
-                              color: Color.fromRGBO(241, 241, 247, 1.0),
-                            ),
-                            width: 402.0,
-                          ),
-                        ),
-                      ), //Welcome to [Charity Name], where together we can make a difference! We are dedicated to empowering lives and creating positive change in our community. Whether you’re here to volunteer, donate, or spread the word, your support helps us provide essential resources to those in need. Thank you for joining us on this journey of compassion, hope, and transformation. Together, we can build a brighter future for all! and shelter to those facing hardship. Your involvement fuels our mission to create lasting impact, one life at a time. Together, we can transform challenges into opportunities, and inspire hope for a brighter, more
-                      Positioned(
-                        top: 610.0,
-                        left: 27.0,
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 386.0 + 2,
-                            child: Text(
-                              "Welcome to [Charity Name], where together we can make a difference! We are dedicated to empowering lives and creating positive change in our community. Whether you’re here to volunteer, donate, or spread the word, your support helps us provide essential resources to those in need. Thank you for joining us on this journey of compassion, hope, and transformation. Together, we can build a brighter future for all!  and shelter to those facing hardship. Your involvement fuels our mission to create lasting impact, one life at a time. Together, we can transform challenges into opportunities, and inspire hope for a brighter, more ",
-                              style: GoogleFonts.inter(
-                                fontSize: 10.0,
-
-                                fontWeight: FontWeight.w400,
-                                color: Color.fromRGBO(0, 0, 0, 0.5),
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //Frame 15
+                      ),
+                      //TAB SECTION - HEADER
                       Positioned(
                         top: 581.0,
+                        left: 15.0,
+                        child: ErrorBoundary(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(241, 241, 247, 1.0),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(6.0),
+                                topRight: Radius.circular(6.0),
+                              ),
+                            ),
+                            height: 35.0,
+                            width: 380.0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildTabButton("ABOUT", 0),
+                                _buildTabButton("BUDGETING", 1),
+                                _buildTabButton("OFFERS", 2),
+                                _buildTabButton("DONATIONS", 3),
+                                _buildTabButton("COMMENTS", 4),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      //TAB CONTENT AREA
+                      Positioned(
+                        top: 611.0,
                         left: 18.0,
                         child: ErrorBoundary(
                           child: Container(
-                            decoration: BoxDecoration(),
-                            child: ErrorBoundary(
-                              child: SizedBox(
-                                height: 25.0,
-                                width: 402.0,
-                                child: LayoutBuilder(
-                                  builder:
-                                      (
-                                        BuildContext context,
-                                        constraints,
-                                      ) => Stack(
-                                        children: [
-                                          //Rectangle 56
-                                          Positioned(
-                                            left: 0.0,
-                                            top: 0.0,
-                                            child: ErrorBoundary(
-                                              child: Container(
-                                                clipBehavior: Clip.none,
-                                                height: 25.0,
-                                                decoration: BoxDecoration(
-                                                  color: Color.fromRGBO(
-                                                    241,
-                                                    241,
-                                                    247,
-                                                    1.0,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                        topLeft:
-                                                            Radius.circular(
-                                                              6.0,
-                                                            ),
-                                                        topRight:
-                                                            Radius.circular(
-                                                              6.0,
-                                                            ),
-                                                        bottomLeft:
-                                                            Radius.circular(
-                                                              6.0,
-                                                            ),
-                                                        bottomRight:
-                                                            Radius.circular(
-                                                              6.0,
-                                                            ),
-                                                      ),
-                                                ),
-                                                width: 404.0,
-                                              ),
-                                            ),
-                                          ), //ABOUT
-                                          Positioned(
-                                            top: 6.0,
-                                            left: 3.0,
-                                            child: ErrorBoundary(
-                                              child: SizedBox(
-                                                width: 36.0 + 10,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  child: Text(
-                                                    "ABOUT",
-                                                    style: GoogleFonts.inter(
-                                                      color: Color.fromRGBO(
-                                                        41,
-                                                        47,
-                                                        56,
-                                                        0.8,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 9.0,
-
-                                                      decoration:
-                                                          TextDecoration.none,
-                                                    ),
-
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ), //BUDJETING
-                                          Positioned(
-                                            left: 85.0,
-                                            top: 6.0,
-                                            child: ErrorBoundary(
-                                              child: SizedBox(
-                                                width: 57.0 + 10,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  child: Text(
-                                                    "BUDJETING",
-                                                    style: GoogleFonts.inter(
-                                                      color: Color.fromRGBO(
-                                                        142,
-                                                        150,
-                                                        163,
-                                                        0.7,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 9.0,
-
-                                                      decoration:
-                                                          TextDecoration.none,
-                                                    ),
-
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ), //OFFERS
-                                          Positioned(
-                                            top: 6.0,
-                                            left: 192.0,
-                                            child: ErrorBoundary(
-                                              child: SizedBox(
-                                                width: 39.0 + 10,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  child: Text(
-                                                    "OFFERS",
-                                                    style: GoogleFonts.inter(
-                                                      color: Color.fromRGBO(
-                                                        142,
-                                                        150,
-                                                        163,
-                                                        0.7,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 9.0,
-
-                                                      decoration:
-                                                          TextDecoration.none,
-                                                    ),
-
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ), //DONATIONS
-                                          Positioned(
-                                            left: 271.0,
-                                            top: 6.0,
-                                            child: ErrorBoundary(
-                                              child: SizedBox(
-                                                width: 60.0 + 10,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  child: Text(
-                                                    "DONATIONS",
-                                                    style: GoogleFonts.inter(
-                                                      color: Color.fromRGBO(
-                                                        142,
-                                                        150,
-                                                        163,
-                                                        0.7,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 9.0,
-
-                                                      decoration:
-                                                          TextDecoration.none,
-                                                    ),
-
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ), //COMMENTS
-                                          Positioned(
-                                            left: 359.0,
-                                            top: 6.0,
-                                            child: ErrorBoundary(
-                                              child: SizedBox(
-                                                width: 60.0 + 10,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  child: Text(
-                                                    "COMMENTS",
-                                                    style: GoogleFonts.inter(
-                                                      color: Color.fromRGBO(
-                                                        142,
-                                                        150,
-                                                        163,
-                                                        0.7,
-                                                      ),
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 9.0,
-
-                                                      decoration:
-                                                          TextDecoration.none,
-                                                    ),
-
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ), //Rectangle 65
-                                          Positioned(
-                                            left: 0.0,
-                                            top: 23.0,
-                                            child: ErrorBoundary(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: Color.fromRGBO(
-                                                    217,
-                                                    217,
-                                                    217,
-                                                    1.0,
-                                                  ),
-                                                ),
-                                                width: 62.0,
-                                                height: 7.0,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                            height: 128.0,
+                            width: 380.0,
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(241, 241, 247, 1.0),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(6.0),
+                                bottomRight: Radius.circular(6.0),
+                              ),
+                            ),
+                            child: _buildTabContent(),
+                          ),
+                        ),
+                      ),
+                      //Customise Button
+                      Positioned(
+                        left: 44.0,
+                        top: 769.0,
+                        child: ErrorBoundary(
+                          child: Container(
+                            height: 43.0,
+                            width: 162.0,
+                            clipBehavior: Clip.none,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Color.fromRGBO(255, 83, 79, 1.0),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(6.0),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "CUSTOMISE",
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13.0,
+                                  color: Color.fromRGBO(252, 100, 58, 1.0),
+                                  decoration: TextDecoration.none,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ), //Rectangle 66
-                      Positioned(
-                        left: 44.0,
-                        top: 769.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            height: 43.0,
-                            clipBehavior: Clip.none,
-                            width: 162.0,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Color.fromRGBO(255, 83, 79, 1.0),
-                                width: 1,
-                                style: BorderStyle.solid,
-                                strokeAlign: BorderSide.strokeAlignInside,
-                              ),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(6.0),
-                                topRight: Radius.circular(6.0),
-                                bottomLeft: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //Group 139
-                      Positioned(
-                        left: 44.0,
-                        top: 769.0,
-                        child: ErrorBoundary(
-                          child: SvgPicture.asset(
-                            "assets/images/group_139.svg",
-                            height: 43.0,
-                            width: 162.0,
-                          ),
-                        ),
-                      ), //CUSTOMISE
-                      Positioned(
-                        left: (constraints.maxWidth / 2) - (440.0 / 2 - 82.0),
-                        top: 784.0,
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 86.0 + 10,
-                            child: Text(
-                              "CUSTOMISE ",
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13.0,
-
-                                color: Color.fromRGBO(252, 100, 58, 1.0),
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //Rectangle 66
+                      ),
+                      //Edit Campaign Button
                       Positioned(
                         left: 234.0,
                         top: 769.0,
                         child: ErrorBoundary(
-                          child: Container(
-                            height: 43.0,
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(6.0),
-                                topRight: Radius.circular(6.0),
-                                bottomLeft: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0),
+                          child: InkWell(
+                            onTap: _showEditBottomSheet,
+                            child: Container(
+                              height: 43.0,
+                              width: 162.0,
+                              clipBehavior: Clip.none,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6.0),
+                                border: Border.all(
+                                  color: Color.fromRGBO(34, 171, 225, 1.0),
+                                  width: 1,
+                                ),
                               ),
-                              border: Border.all(
-                                color: Color.fromRGBO(34, 171, 225, 1.0),
-                                width: 1,
-                                style: BorderStyle.solid,
-                                strokeAlign: BorderSide.strokeAlignInside,
-                              ),
-                            ),
-                            width: 162.0,
-                          ),
-                        ),
-                      ), //Rectangle 67
-                      Positioned(
-                        left: 234.0,
-                        top: 769.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            height: 43.0,
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(6.0),
-                                topRight: Radius.circular(6.0),
-                                bottomLeft: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0),
-                              ),
-                              border: Border.all(
-                                color: Color.fromRGBO(34, 171, 225, 1.0),
-                                width: 1,
-                                style: BorderStyle.solid,
-                                strokeAlign: BorderSide.strokeAlignInside,
-                              ),
-                            ),
-                            width: 162.0,
-                          ),
-                        ),
-                      ), //EDIT CAMPAIGN
-                      Positioned(
-                        top: (constraints.maxHeight / 2) - (956.0 / 2 - 784.0),
-                        left: (constraints.maxWidth / 2) - (440.0 / 2 - 258.0),
-                        child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 114.0 + 10,
-                            child: Text(
-                              "EDIT CAMPAIGN",
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13.0,
-
-                                decoration: TextDecoration.none,
-                                color: Color.fromRGBO(34, 171, 225, 1.0),
+                              child: Center(
+                                child: Text(
+                                  "EDIT CAMPAIGN",
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.0,
+                                    decoration: TextDecoration.none,
+                                    color: Color.fromRGBO(34, 171, 225, 1.0),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ), //Frame 17
+                      ),
+                      
+                      //Organizer Card
                       Positioned(
                         top: 491.0,
                         left: 17.0,
@@ -840,211 +1291,93 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             clipBehavior: Clip.none,
                             decoration: BoxDecoration(
                               color: Color.fromRGBO(247, 247, 249, 1.0),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10.0),
-                                topRight: Radius.circular(10.0),
-                                bottomLeft: Radius.circular(10.0),
-                                bottomRight: Radius.circular(10.0),
-                              ),
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
-                            child: ErrorBoundary(
-                              child: SizedBox(
-                                height: 73.0,
-                                width: 404.0,
-                                child: LayoutBuilder(
-                                  builder: (BuildContext context, constraints) => Stack(
-                                    children: [
-                                      //Rectangle 47
-                                      Positioned(
-                                        top: 1.0,
-                                        left: 3.0,
-                                        child: ErrorBoundary(
-                                          child: Container(
-                                            width: 388.0,
-                                            height: 60.0,
-                                            clipBehavior: Clip.none,
-                                            decoration: BoxDecoration(
-                                              color: Color.fromRGBO(
-                                                251,
-                                                251,
-                                                255,
-                                                1.0,
-                                              ),
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(10.0),
-                                                topRight: Radius.circular(10.0),
-                                                bottomLeft: Radius.circular(
-                                                  10.0,
-                                                ),
-                                                bottomRight: Radius.circular(
-                                                  10.0,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ), //Ellipse 29
-                                      Positioned(
-                                        top: 7.0,
-                                        left: 13.0,
-
-                                          child: Image.asset(
-                                            'assets/images/avatar.png',
-                                            height: 48.69182586669922,
-                                            width: 49.0,
-                                          ),
-
-                                      ), //DAN_BADAMOSI
-                                      Positioned(
-                                        top: 15.0,
-                                        left: 71.0,
-                                        child: ErrorBoundary(
-                                          child: SizedBox(
-                                            width: 120.0 + 10,
-                                            child: Align(
-                                              alignment: Alignment.topCenter,
-                                              child: Text(
-                                                "${user!['first_name']} - ${user!['last_name']}",
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 10.0,
-
-                                                  color: Color.fromRGBO(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    1.0,
-                                                  ),
-                                                  fontWeight: FontWeight.w500,
-                                                  decoration:
-                                                      TextDecoration.none,
-                                                ),
-
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ), //Donate for the people or Borno State, where flood destroys life, properties and split families
-                                      Positioned(
-                                        top: 30.849050521850586,
-                                        left: 71.0,
-                                        child: ErrorBoundary(
-                                          child: SizedBox(
-                                            width: 217.0 + 2,
-                                            child: Text(
-                                              widget.description,
-                                              style: GoogleFonts.inter(
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 8.0,
-
-                                                color: Color.fromRGBO(
-                                                  4,
-                                                  17,
-                                                  36,
-                                                  0.5,
-                                                ),
-                                                decoration: TextDecoration.none,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ), //Rectangle 43
-                                      Positioned(
-                                        left: 305.0,
-                                        top: 18.924522399902344,
-                                        child: ErrorBoundary(
-                                          child: Container(
-                                            height: 27.82390022277832,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(20.0),
-                                                topRight: Radius.circular(20.0),
-                                                bottomLeft: Radius.circular(
-                                                  20.0,
-                                                ),
-                                                bottomRight: Radius.circular(
-                                                  20.0,
-                                                ),
-                                              ),
-                                              color: Color.fromRGBO(
-                                                238,
-                                                240,
-                                                239,
-                                                0.8100000023841858,
-                                              ),
-                                            ),
-                                            clipBehavior: Clip.none,
-                                            width: 70.0,
-                                          ),
-                                        ),
-                                      ), //Donate
-                                      Positioned(
-                                        left: 322.0,
-                                        top: 24.886748790740967,
-                                        child: ErrorBoundary(
-                                          child: SizedBox(
-                                            width: 35.0 + 10,
-                                            child: Align(
-                                              alignment: Alignment.topCenter,
-                                              child: Text(
-                                                "Donate",
-                                                style: GoogleFonts.inter(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 9.0,
-
-                                                  color: Color.fromRGBO(
-                                                    41,
-                                                    47,
-                                                    56,
-                                                    1.0,
-                                                  ),
-                                                  decoration:
-                                                      TextDecoration.none,
-                                                ),
-
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ), //Rectangle 71
-                                      Positioned(
-                                        top: 14.0,
-                                        left: 399.0,
-                                        child: ErrorBoundary(
-                                          child: Container(
-                                            width: 5.0,
-                                            clipBehavior: Clip.none,
-                                            height: 41.0,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(20.0),
-                                                topRight: Radius.circular(20.0),
-                                                bottomLeft: Radius.circular(
-                                                  20.0,
-                                                ),
-                                                bottomRight: Radius.circular(
-                                                  20.0,
-                                                ),
-                                              ),
-                                              color: Color.fromRGBO(
-                                                217,
-                                                217,
-                                                217,
-                                                1.0,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                            height: 73.0,
+                            width: 404.0,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  top: 1.0,
+                                  left: 3.0,
+                                  child: Container(
+                                    width: 388.0,
+                                    height: 60.0,
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(251, 251, 255, 1.0),
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                Positioned(
+                                  top: 7.0,
+                                  left: 13.0,
+                                  child: Image.asset(
+                                    'assets/images/personal.png',
+                                    height: 48.69182586669922,
+                                    width: 49.0,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 15.0,
+                                  left: 71.0,
+                                  child: Text(
+                                    "${user!['first_name']} ${user!['last_name']}",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.0,
+                                      color: Color.fromRGBO(0, 0, 0, 1.0),
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 30.849050521850586,
+                                  left: 71.0,
+                                  child: Container(
+                                    width: 217.0,
+                                    child: Text(
+                                      _editableDescription,
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 12.0,
+                                        color: Color.fromRGBO(4, 17, 36, 0.5),
+                                        decoration: TextDecoration.none,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 305.0,
+                                  top: 18.924522399902344,
+                                  child: Container(
+                                    height: 27.82390022277832,
+                                    width: 70.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      color: Color.fromRGBO(238, 240, 239, 0.81),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Donate",
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12.0,
+                                          color: Color.fromRGBO(41, 47, 56, 1.0),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ), //Union
+                      ),
+                      //Header Union Background
                       Positioned(
                         left: 0.0,
                         top: 0.0,
@@ -1055,129 +1388,52 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             width: 440.0,
                           ),
                         ),
-                      ), //arrow_back
-                      Positioned(
-                        top: constraints.maxHeight * 0.06276150627615062,
-                        left: constraints.maxWidth * 0.03636363636363636,
-                        child: ErrorBoundary(
-                          child: ErrorBoundary(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    spreadRadius: 0.0,
-                                    color: Color.fromRGBO(0, 0, 0, 0.25),
-                                    blurRadius: 4.0,
-                                    offset: Offset(0.0, 4.0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ), //Frame 178
+                      ),
+                      //Submit Button
                       Positioned(
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 90.0),
                         top: 827.0,
                         child: ErrorBoundary(
-                          child: Container(
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(6.0),
-                                topRight: Radius.circular(6.0),
-                                bottomLeft: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Reviewstartcampaign4(
+                                    title: widget.title,
+                                    description: widget.description,
+                                    startDate: widget.startDate,
+                                    endDate: widget.endDate,
+                                    amount: widget.amount,
+                                    id: id,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              clipBehavior: Clip.none,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6.0),
+                                color: Color.fromRGBO(0, 164, 175, 1.0),
                               ),
-                              color: Color.fromRGBO(0, 164, 175, 1.0),
-                            ),
-                            child: InkWell(
-                              onTap: () {},
-                              child: ErrorBoundary(
-                                child: InkWell(
-                                  onTap: () {},
-                                  child: Container(
-                                    height: 45.0,
-                                    padding: EdgeInsets.all(10.0),
-                                    width: 260.0,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        ErrorBoundary(
-                                          child: //Group 141
-                                          SizedBox(
-                                            width: 168.0,
-                                            height: 16.0,
-                                            child: LayoutBuilder(
-                                              builder:
-                                                  (
-                                                    BuildContext context,
-                                                    constraints,
-                                                  ) => Stack(
-                                                    children: [
-                                                      //SUBMIT FOR APPROVAL
-                                                      Positioned(
-                                                        top: 0.0,
-                                                        left:
-                                                            (constraints
-                                                                    .maxWidth /
-                                                                2) -
-                                                            (168.0 / 2 - 0.0),
-                                                        child: ErrorBoundary(
-                                                          child: InkWell(
-                                                            onTap: () {
-                                                              Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                  builder: (context) =>
-                                                                      Reviewstartcampaign4(title:widget.title,description:widget.description,startDate:widget.startDate,endDate:widget.endDate,amount:widget.amount, id: id),
-                                                                ),
-                                                              );
-                                                            },
-                                                          child: SizedBox(
-                                                            width: 168.0 + 2,
-                                                            child: Text(
-
-                                                              "SUBMIT FOR APPROVAL",
-                                                              style: GoogleFonts.inter(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                fontSize: 13.0,
-
-                                                                color:
-                                                                    Color.fromRGBO(
-                                                                      255,
-                                                                      255,
-                                                                      255,
-                                                                      1.0,
-                                                                    ),
-                                                                decoration:
-                                                                    TextDecoration
-                                                                        .none,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              height: 45.0,
+                              width: 260.0,
+                              child: Center(
+                                child: Text(
+                                  "SUBMIT FOR APPROVAL",
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.0,
+                                    color: Color.fromRGBO(255, 255, 255, 1.0),
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ), //Vector 33
+                      ),
+                      //Divider Line
                       Positioned(
                         left: 1.5,
                         top: 763.5,
@@ -1187,22 +1443,19 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             width: 435.5,
                           ),
                         ),
-                      ), //END OF CAMPAIGN
+                      ),
+                      //End of Campaign Text
                       Positioned(
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 173.0),
                         top: 748.0,
                         child: ErrorBoundary(
-                          child: SizedBox(
-                            width: 94.0 + 2,
-                            child: Text(
-                              "END OF CAMPAIGN",
-                              style: GoogleFonts.inter(
-                                color: Color.fromRGBO(142, 150, 163, 0.9),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 9.0,
-
-                                decoration: TextDecoration.none,
-                              ),
+                          child: Text(
+                            "END OF CAMPAIGN",
+                            style: GoogleFonts.inter(
+                              color: Color.fromRGBO(142, 150, 163, 0.9),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9.0,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                         ),

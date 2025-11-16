@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'reviewstartcampaign3.dart';
 
 class Participant {
@@ -23,8 +25,10 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
 
   List<Participant> selectedParticipants = [];
+  List<File> selectedImages = []; // Store selected images
 
   final List<Participant> allUsers = [
     Participant(
@@ -53,6 +57,32 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
       imageUrl: 'https://randomuser.me/api/portraits/men/5.jpg',
     ),
   ];
+
+  Future<void> _pickImage() async {
+    if (selectedImages.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 3 images allowed')),
+      );
+      return;
+    }
+
+    final XFile? image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (image != null) {
+      setState(() {
+        selectedImages.add(File(image.path));
+      });
+    }
+  }
+
+  void _deleteImage(int index) {
+    setState(() {
+      selectedImages.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -208,11 +238,14 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _buildImageUploadButton(true),
+                  // First box - always shows add icon (main image)
+                  _buildImageUploadButton(0, true),
                   const SizedBox(width: 12),
-                  _buildImageUploadButton(false),
+                  // Second box
+                  _buildImageUploadButton(1, false),
                   const SizedBox(width: 12),
-                  _buildImageUploadButton(false),
+                  // Third box
+                  _buildImageUploadButton(2, false),
                 ],
               ),
               const SizedBox(height: 8),
@@ -477,22 +510,66 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     );
   }
 
-  Widget _buildImageUploadButton(bool isMain) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        border: Border.all(color: isMain ? Colors.teal : Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.white,
-      ),
-      child: Center(
-        child: Icon(
-          Icons.add_circle_outline,
-          color: isMain ? Colors.teal : Colors.grey.shade400,
-          size: 24,
+  Widget _buildImageUploadButton(int index, bool isMain) {
+    // Check if we have an image at this index
+    bool hasImage = index < selectedImages.length;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        GestureDetector(
+          onTap: hasImage ? null : _pickImage,
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isMain ? Colors.teal : Colors.grey.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: hasImage
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      selectedImages[index],
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.add_circle_outline,
+                      color: isMain ? Colors.teal : Colors.grey.shade400,
+                      size: 24,
+                    ),
+                  ),
+          ),
         ),
-      ),
+        // Delete button positioned outside on top-right
+        if (hasImage)
+          Positioned(
+            right: -8,
+            top: -8,
+            child: GestureDetector(
+              onTap: () => _deleteImage(index),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -865,8 +942,4 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
       },
     );
   }
-
 }
-
-
-

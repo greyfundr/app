@@ -8,11 +8,7 @@ import '../Campaign/main_campaign.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
 import 'kyc.dart';
-
-
-
-// import 'kyc.dart';
-// import 'create/createnew.dart';
+import 'notification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,17 +18,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-
- Map<String, dynamic>? user;
-  
+  Map<String, dynamic>? user;
   int _selectedIndex = 0;
 
-   @override
+  @override
   void initState() {
     super.initState();
     loadProfile();
   }
-
 
   void loadProfile() async {
     String? token = await AuthService().getToken();
@@ -42,9 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print("User ID: ${userData['user']}");
     } else {
       print("Token is expired or invalid");
-
     }
-   // setState(() => user = res['user']);
   }
 
   Future<void> logout() async {
@@ -57,12 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
+      (route) => false,
     );
   }
-
-
-  
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -96,6 +84,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _openSettingsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SettingsActivityPage(
+          user: user,
+          onLogout: logout,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,8 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             CircleAvatar(
                               radius: 25,
                               backgroundImage: user!['profile_pic'] != null
-                                  ? const AssetImage('assets/images/avatar.png')
-                                  : const AssetImage('assets/images/avatar.png')
+                                  ? const AssetImage('assets/images/personal.png')
+                                  : const AssetImage('assets/images/personal.png')
                                       as ImageProvider,
                             ),
                             const SizedBox(width: 10),
@@ -142,20 +142,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Row(
                           children: [
                             IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.notifications_none),
-                            ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationScreen()),
+    );
+  },
+  icon: const Icon(Icons.notifications_none),
+),
                             IconButton(
-                              onPressed: logout,
-                              icon: const Icon(Icons.logout, color: Colors.red),
+                              onPressed: _openSettingsPage,
+                              icon: const Icon(Icons.menu),
                             ),
                           ],
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
-
                     InkWell(
                       onTap: () {
                         Navigator.push(
@@ -179,14 +182,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                            Icon(Icons.arrow_forward_ios,
+                                color: Colors.white, size: 16),
                           ],
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 25),
-
                     GridView.count(
                       crossAxisCount: 2,
                       shrinkWrap: true,
@@ -194,20 +196,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisSpacing: 13,
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        _buildFeatureCard('Lifestyle', 'assets/images/lifestyle.png', null),
-                        _buildFeatureCard('Invoices', 'assets/images/invoices.png', null),
-                        _buildFeatureCard('Create New', 'assets/images/create.png', () {
+                        _buildFeatureCard(
+                            'Lifestyle', 'assets/images/lifestyle.png', null),
+                        _buildFeatureCard(
+                            'Invoices', 'assets/images/invoices.png', null),
+                        _buildFeatureCard('Create New',
+                            'assets/images/create.png', () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CampaignScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const CampaignScreen()),
                           );
                         }),
-                        _buildFeatureCard('Charity', 'assets/images/charity.png', null),
+                        _buildFeatureCard(
+                            'Charity', 'assets/images/charity.png', null),
                       ],
                     ),
-
                     const SizedBox(height: 25),
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -267,7 +272,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
@@ -282,7 +286,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildFeatureCard(String title, String imagePath, VoidCallback? onTap) {
+  Widget _buildFeatureCard(
+      String title, String imagePath, VoidCallback? onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -293,12 +298,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Center(
           child: Image.asset(
-            imagePath, 
-            height: 200, 
+            imagePath,
+            height: 200,
             fit: BoxFit.contain,
           ),
         ),
       ),
+    );
+  }
+}
+
+// === Settings and Activity Page ===
+class SettingsActivityPage extends StatelessWidget {
+  final Map<String, dynamic>? user;
+  final VoidCallback onLogout;
+
+  const SettingsActivityPage({
+    super.key,
+    required this.user,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Settings and Activity',
+          style: TextStyle(color: Colors.black, fontSize: 18),
+        ),
+      ),
+      body: ListView(
+        children: [
+          const SizedBox(height: 10),
+          
+          // Account Section
+          _buildSectionHeader('Account'),
+          _buildMenuItem(
+            icon: Icons.person_outline,
+            title: 'Edit Profile',
+            onTap: () {
+              // Navigate to edit profile
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.lock_outline,
+            title: 'Change Password',
+            onTap: () {
+              // Navigate to change password
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy',
+            onTap: () {
+              // Navigate to privacy settings
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.security_outlined,
+            title: 'Security',
+            onTap: () {
+              // Navigate to security settings
+            },
+          ),
+
+          const Divider(height: 32),
+
+          // Activity Section
+          _buildSectionHeader('Activity'),
+          _buildMenuItem(
+            icon: Icons.history,
+            title: 'Transaction History',
+            onTap: () {
+              // Navigate to transaction history
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            onTap: () {
+              // Navigate to notifications settings
+            },
+          ),
+
+          const Divider(height: 32),
+
+          // Support Section
+          _buildSectionHeader('Support'),
+          _buildMenuItem(
+            icon: Icons.help_outline,
+            title: 'Help Center',
+            onTap: () {
+              // Navigate to help center
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.info_outline,
+            title: 'About',
+            onTap: () {
+              // Navigate to about page
+            },
+          ),
+          _buildMenuItem(
+            icon: Icons.description_outlined,
+            title: 'Terms and Conditions',
+            onTap: () {
+              // Navigate to terms
+            },
+          ),
+
+          const Divider(height: 32),
+
+          // Logout Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.logout, color: Colors.red),
+              ),
+              title: const Text(
+                'Log Out',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onTap: () {
+                _showLogoutDialog(context);
+              },
+            ),
+          ),
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: Colors.black87, size: 22),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 16),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text('Log Out'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close settings page
+                onLogout(); // Perform logout
+              },
+              child: const Text(
+                'Log Out',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -318,7 +534,6 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus the text field when modal opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -333,13 +548,8 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
 
   String _formatNumber(String value) {
     if (value.isEmpty) return '';
-    
-    // Remove all non-digits
     String digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-    
     if (digitsOnly.isEmpty) return '';
-    
-    // Format with commas
     final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
     return digitsOnly.replaceAllMapped(formatter, (Match m) => '${m[1]},');
   }
@@ -351,11 +561,7 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
       );
       return;
     }
-    
-    // Remove commas to get actual number
     String actualAmount = _amountController.text.replaceAll(',', '');
-    
-    // Here you can process the amount
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Adding ₦$actualAmount to wallet')),
@@ -402,8 +608,6 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            
-            // Amount Input Field
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF00C9C3),
@@ -439,20 +643,17 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
                     if (newValue.text.isEmpty) {
                       return newValue;
                     }
-                    
                     String formatted = _formatNumber(newValue.text);
                     return TextEditingValue(
                       text: formatted,
-                      selection: TextSelection.collapsed(offset: formatted.length),
+                      selection:
+                          TextSelection.collapsed(offset: formatted.length),
                     );
                   }),
                 ],
               ),
             ),
-            
             const SizedBox(height: 24),
-            
-            // Continue Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -476,7 +677,6 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
                 ),
               ),
             ),
-            
             const SizedBox(height: 16),
           ],
         ),

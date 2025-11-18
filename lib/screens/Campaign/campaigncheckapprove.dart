@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../class/api_service.dart';
+import 'dart:async';
 
 class CampaignApprovalPage extends StatefulWidget {
   final bool isApproved;
   final int stakeholdersApproved;
-  final int totalStakeholders;
+  final int id;
 
   const CampaignApprovalPage({
     Key? key,
     this.isApproved = false,
     this.stakeholdersApproved = 0,
-    this.totalStakeholders = 4,
+
+    required this.id,
   }) : super(key: key);
 
   @override
@@ -19,18 +22,46 @@ class CampaignApprovalPage extends StatefulWidget {
 class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
   late bool _isApproved;
   late int _stakeholdersApproved;
+  late int totalStakeholders;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _timer = Timer.periodic(Duration(seconds: 10), (Timer t) =>
+        loadCampaignApproval()); // Your function
+
     _isApproved = widget.isApproved;
     _stakeholdersApproved = widget.stakeholdersApproved;
+
+  }
+
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+
+  Future<void> loadCampaignApproval() async {
+    String ids = widget.id.toString();
+    dynamic token = await ApiService().getCampaignApproval(ids) ;
+    int champions = (token[0]['champions']);
+    int hosts = (token[0]['host']);
+    int approved = (token[0]['approved']);
+    int waiting = (champions + hosts);
+    setState(() => totalStakeholders = waiting);
+    print(waiting);
+    await Future.delayed(const Duration(seconds: 2));
+    List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
+    //setState(() => categories = tasks);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool allStakeholdersApproved = 
-        _stakeholdersApproved >= widget.totalStakeholders;
+    final bool allStakeholdersApproved =
+        _stakeholdersApproved >= totalStakeholders;
     final bool campaignLive = _isApproved && allStakeholdersApproved;
 
     return Scaffold(
@@ -47,12 +78,12 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            
+
             // Top Icon and Status
             _buildStatusHeader(campaignLive),
-            
+
             const SizedBox(height: 20),
-            
+
             // Progress Steps
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -73,10 +104,10 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     'Pending approval from Stakeholder(s)',
                     allStakeholdersApproved,
                     trailing: Text(
-                      '$_stakeholdersApproved/${widget.totalStakeholders}',
+                      '$_stakeholdersApproved/$totalStakeholders',
                       style: TextStyle(
-                        color: allStakeholdersApproved 
-                            ? const Color(0xFF00ACC1) 
+                        color: allStakeholdersApproved
+                            ? const Color(0xFF00ACC1)
                             : Colors.grey,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -85,23 +116,23 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                   ),
                   const SizedBox(height: 16),
                   _buildStepItem(
-                    campaignLive 
-                        ? 'Hurray! Your Campaign is LIVE' 
+                    campaignLive
+                        ? 'Hurray! Your Campaign is LIVE'
                         : 'Awaiting approval from Greyfundr',
                     campaignLive,
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 10),
-            
+
             // Wave Divider
             CustomPaint(
               size: const Size(double.infinity, 60),
               painter: WavePainter(campaignLive),
             ),
-            
+
             // Bottom Section
             Container(
               color: const Color.fromARGB(255, 255, 254, 254),
@@ -119,7 +150,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   _buildActionButton(
                     icon: Icons.content_copy_rounded,
                     label: 'Copy Link',
@@ -129,7 +160,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   _buildActionButton(
                     icon: Icons.share_rounded,
                     label: 'Send/Share and More',
@@ -139,7 +170,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   _buildActionButton(
                     icon: Icons.group_add_rounded,
                     label: 'Create Team',
@@ -149,7 +180,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   _buildActionButton(
                     icon: Icons.grid_view_rounded,
                     label: 'More Options',
@@ -158,9 +189,9 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                       // Handle more options
                     },
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Back to Donation Button
                   SizedBox(
                     width: double.infinity,
@@ -202,22 +233,22 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: campaignLive 
-                ? const Color(0xFFE0F7FA) 
+            color: campaignLive
+                ? const Color(0xFFE0F7FA)
                 : const Color(0xFFF5F5F5),
             shape: BoxShape.circle,
           ),
           child: campaignLive
               ? const Icon(
-                  Icons.check,
-                  size: 30,
-                  color: Color(0xFFB0BEC5),
-                )
+            Icons.check,
+            size: 30,
+            color: Color(0xFFB0BEC5),
+          )
               : const Icon(
-                  Icons.schedule,
-                  size: 30,
-                  color: Color(0xFFB0BEC5),
-                ),
+            Icons.schedule,
+            size: 30,
+            color: Color(0xFFB0BEC5),
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -225,8 +256,8 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: campaignLive 
-                ? const Color(0xFF00ACC1) 
+            color: campaignLive
+                ? const Color(0xFF00ACC1)
                 : Colors.black87,
           ),
         ),
@@ -241,8 +272,8 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: isCompleted 
-                ? const Color(0xFF00ACC1) 
+            color: isCompleted
+                ? const Color(0xFF00ACC1)
                 : const Color(0xFFE0E0E0),
             shape: BoxShape.circle,
           ),
@@ -282,8 +313,8 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: isActive 
-                  ? const Color(0xFF00ACC1) 
+              color: isActive
+                  ? const Color(0xFF00ACC1)
                   : const Color(0xFFBDBDBD),
               shape: BoxShape.circle,
             ),
@@ -316,8 +347,8 @@ class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = isActive 
-          ? const Color(0xFF00ACC1) 
+      ..color = isActive
+          ? const Color(0xFF00ACC1)
           : const Color(0xFFBDBDBD)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;

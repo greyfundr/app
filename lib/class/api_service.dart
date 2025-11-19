@@ -31,10 +31,28 @@ class ApiService {
     final String url = '$baseUrl/posts/$id';
     try {
       final response = await _dio.get(
-        'http://localhost:3000/campaign/getApprovalStatus/$id');
+        '$baseUrl/campaign/getApprovalStatus/$id');
 
       if (response.statusCode == 200) {
         dynamic category = response.data["campaign"];
+
+        return category;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return category;
+  }
+
+  Future <dynamic>  getUserNotification(String id) async {
+    Map<String, dynamic>? category;
+    final String url = '$baseUrl/posts/$id';
+    try {
+      final response = await _dio.get(
+          '$baseUrl/notifications/notifications/$id');
+
+      if (response.statusCode == 200) {
+        dynamic category = response.data;
 
         return category;
       }
@@ -49,7 +67,7 @@ class ApiService {
     final String url = '$baseUrl/posts/$id';
     try {
       final response = await _dio.get(
-          'http://localhost:3000/campaign/getApprovalStatus/$id');
+          '$baseUrl/campaign/getApprovalStatus/$id');
 
       if (response.statusCode == 200) {
         dynamic category = response.data["campaign"];

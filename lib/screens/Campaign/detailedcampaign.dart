@@ -34,10 +34,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String endDate = '';
   int champion = 0;
   int donor = 0;
+  String image = '';
   String first = '';
   String last = '';
   String profile = '';
   int _selectedIndex = 1; // Bills tab active
+  double percentage = 0.00;
 
   final List<String> mainTabs = [
     "ABOUT",
@@ -50,7 +52,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/searchCampaign';
+      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);
@@ -71,7 +73,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           endDate = responseData['end_date'] ?? '';
           champion = responseData['champions'] ?? 0;
           donor = responseData['donors'] ?? 0;
+          image = responseData['image'] ?? 0;
+          image = image.replaceAll('\\', '/');
         });
+        double percent = int.parse(responseData['current_amount'])/int.parse(responseData['goal_amount']);
+        percentage = percent;
 
         final creatorId = responseData['creator_id'];
 
@@ -557,7 +563,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                       bottomRight: Radius.circular(20),
                     ),
                     child: Image.asset(
-                      'assets/images/onboarding2.jpg',
+                      image,
                       height: 240,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -597,7 +603,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                     const SizedBox(height: 6),
                     LinearPercentIndicator(
                       lineHeight: 8,
-                      percent: 0.70,
+                      percent: percentage,
                       progressColor: Colors.teal,
                       backgroundColor: Colors.grey.shade200,
                       barRadius: const Radius.circular(8),
@@ -669,7 +675,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                       backgroundImage: profile.isNotEmpty &&
                           profile.startsWith('http')
                           ? NetworkImage(profile) as ImageProvider
-                          : const AssetImage('assets/images/organizer.jpg'),
+                          : AssetImage(profile),
                       radius: 22,
                     ),
                     const SizedBox(width: 12),

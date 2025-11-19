@@ -3,19 +3,15 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'reviewstartcampaign3.dart';
+import '../../class/campaign.dart';
+import '../../class/participants.dart';
+import '../../class/api_service.dart';
 
-class Participant {
-  final String name;
-  final String username;
-  final String imageUrl;
-
-  Participant({required this.name, required this.username, required this.imageUrl});
-}
 
 class FundraisingScreen extends StatefulWidget {
-  final String title;
-  final String description;
-  const FundraisingScreen({super.key, required this.title, required this.description});
+  final Campaign campaign;
+
+  const FundraisingScreen({super.key, required this.campaign});
 
   @override
   State<FundraisingScreen> createState() => _FundraisingScreenState();
@@ -30,33 +26,38 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   List<Participant> selectedParticipants = [];
   List<File> selectedImages = []; // Store selected images
 
-  final List<Participant> allUsers = [
-    Participant(
-      name: 'Emmanuel Onyejuwa',
-      username: '@onyejuwaemma',
-      imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
-    ),
-    Participant(
-      name: 'Aderonju Micheal',
-      username: '@deronju',
-      imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
-    ),
-    Participant(
-      name: 'Alex Otti',
-      username: '@alext',
-      imageUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
-    ),
-    Participant(
-      name: 'Adaeze Franches',
-      username: '@adafran',
-      imageUrl: 'https://randomuser.me/api/portraits/women/4.jpg',
-    ),
-    Participant(
-      name: 'Samson Inegbedun',
-      username: '@samsoni',
-      imageUrl: 'https://randomuser.me/api/portraits/men/5.jpg',
-    ),
-  ];
+  List<Participant> allUsers = [ ];
+
+  @override
+  void initState() {
+    super.initState();
+    loadUsers();
+
+  }
+
+  Future<void> loadUsers() async {
+    dynamic token = await ApiService().getUsers() ;
+    List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
+
+    tasks.forEach((obj) {
+
+
+      if(obj['first_name'] != null)
+        {
+        Participant p = new Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
+        print(p);
+        setState(() => allUsers.add(p));
+
+    }
+
+    });
+
+    //setState(() => allUsers = tasks.cast<Participant>());
+    print(allUsers);
+    await Future.delayed(const Duration(seconds: 2));
+
+    //setState(() => categories = tasks);
+  }
 
   Future<void> _pickImage() async {
     if (selectedImages.length >= 3) {
@@ -86,8 +87,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String title = widget.title;
-    final String description = widget.description;
+    final String title = widget.campaign.title;
+    final String description = widget.campaign.description;
 
     return Scaffold(
       appBar: AppBar(
@@ -292,105 +293,105 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
               selectedParticipants.isEmpty
                   ? GestureDetector(
-                      onTap: () {
-                        _showAddTeamMemberBottomSheet(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
+                onTap: () {
+                  _showAddTeamMemberBottomSheet(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.teal,
+
+                          shape: BoxShape.circle,
                         ),
-                        child: Row(
+                        child: const Icon(Icons.add, color: Color.fromARGB(255, 255, 255, 255)),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                 color: Colors.teal,
-                               
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.add, color: Color.fromARGB(255, 255, 255, 255)),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Add Team Member',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              'Add Team Member',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    )
+                    ],
+                  ),
+                ),
+              )
                   : SizedBox(
-                      height: 60,
-                      width: (selectedParticipants.length * 40) + 56,
+                height: 60,
+                width: (selectedParticipants.length * 40) + 56,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: selectedParticipants.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    Participant user = entry.value;
+                    return Positioned(
+                      left: idx * 40.0,
                       child: Stack(
                         clipBehavior: Clip.none,
-                        children: selectedParticipants.asMap().entries.map((entry) {
-                          int idx = entry.key;
-                          Participant user = entry.value;
-                          return Positioned(
-                            left: idx * 40.0,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundImage: NetworkImage(user.imageUrl),
-                                ),
-                                // Delete button on avatar top-right
-                                Positioned(
-                                  left: -8,
-                                  top: -8,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectedParticipants.removeAt(idx);
-                                      });
-                                    },
-                                    child: CircleAvatar(
-                                      radius: 10,
-                                      backgroundColor: Colors.red,
-                                      child: const Icon(Icons.close, size: 14, color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList()
-                          ..add(
-                            // Add more button next to avatars
-                            Positioned(
-                              left: selectedParticipants.length * 40.0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  _showAddTeamMemberBottomSheet(context);
-                                },
-                                child: Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.add, color: Colors.grey, size: 28),
-                                ),
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundImage: AssetImage(user.imageUrl),
+                          ),
+                          // Delete button on avatar top-right
+                          Positioned(
+                            left: -8,
+                            top: -8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedParticipants.removeAt(idx);
+                                });
+                              },
+                              child: CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.red,
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    );
+                  }).toList()
+                    ..add(
+                      // Add more button next to avatars
+                      Positioned(
+                        left: selectedParticipants.length * 40.0,
+                        child: GestureDetector(
+                          onTap: () {
+                            _showAddTeamMemberBottomSheet(context);
+                          },
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.add, color: Colors.grey, size: 28),
+                          ),
+                        ),
                       ),
                     ),
+                ),
+              ),
 
               const SizedBox(height: 24),
               Row(
@@ -447,15 +448,19 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    widget.campaign.setCampaignDetails(
+                      _startDateController.text,
+                      _endDateController.text,
+                      selectedImages[0],
+                      amountController.text,
+                      selectedParticipants,
+                      selectedImages
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => Reviewstartcampaign3(
-                          title: title,
-                          description: description,
-                          startDate: _startDateController.text,
-                          endDate: _endDateController.text,
-                          amount: amountController.text,
+                          campaign: widget.campaign
                         ),
                       ),
                     );
@@ -531,21 +536,21 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             ),
             child: hasImage
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      selectedImages[index],
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
-                  )
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                selectedImages[index],
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+              ),
+            )
                 : Center(
-                    child: Icon(
-                      Icons.add_circle_outline,
-                      color: isMain ? Colors.teal : Colors.grey.shade400,
-                      size: 24,
-                    ),
-                  ),
+              child: Icon(
+                Icons.add_circle_outline,
+                color: isMain ? Colors.teal : Colors.grey.shade400,
+                size: 24,
+              ),
+            ),
           ),
         ),
         // Delete button positioned outside on top-right
@@ -655,12 +660,12 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   }
 
   Widget _buildRoleCard(
-    BuildContext context, {
-    required String icon,
-    required String role,
-    required int peopleCount,
-    VoidCallback? onTap,
-  }) {
+      BuildContext context, {
+        required String icon,
+        required String role,
+        required int peopleCount,
+        VoidCallback? onTap,
+      }) {
     String roleLower = role.split(' ').last.toLowerCase();
 
     return Card(
@@ -820,7 +825,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               child: CircleAvatar(
                                 radius: 28,
-                                backgroundImage: NetworkImage(participant.imageUrl),
+                                backgroundImage: AssetImage(participant.imageUrl),
                               ),
                             ),
                             Positioned(
@@ -888,7 +893,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                                         final selected = isSelected(user);
                                         return ListTile(
                                           leading: CircleAvatar(
-                                            backgroundImage: NetworkImage(user.imageUrl),
+                                            backgroundImage: AssetImage(user.imageUrl),
                                           ),
                                           title: Text(user.name),
                                           subtitle: Text(user.username),

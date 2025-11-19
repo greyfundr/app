@@ -7,21 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import 'reviewstartcampaign4.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'campaigncheckapproved.dart';
+import '../../class/campaign.dart';
 
 class Reviewstartcampaign3 extends StatefulWidget {
-  final String title;
-  final String description;
-  final String startDate;
-  final String endDate;
-  final String amount;
+  final Campaign campaign;
 
   const Reviewstartcampaign3({
     super.key,
-    required this.title,
-    required this.description,
-    required this.startDate,
-    required this.endDate,
-    required this.amount
+    required this.campaign
   });
 
   @override
@@ -47,7 +43,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   @override
   void initState() {
     super.initState();
-    _editableDescription = widget.description;
+    _editableDescription = widget.campaign.description;
+    _offers = widget.campaign.savedAutoOffers;
     loadProfile();
   }
 
@@ -60,6 +57,54 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     } else {
       print("Token is expired or invalid");
     }
+  }
+
+  void createCampaign() async {
+
+    final response = await http.post(
+      Uri.parse('https://greyfoundr-backend.onrender.com/campaign/create'),
+      body: {
+        'title': widget.campaign.title,
+        'description': widget.campaign.description,
+        'startDate': widget.campaign.startDate,
+        'endDate': widget.campaign.endDate,
+        'amount': widget.campaign.amount,
+        'id': user?['id'].toString(),
+        'stakeholders':json.encode(widget.campaign.participants),
+        'images': widget.campaign.imageUrl?.path
+
+      },
+    );
+    if (response.statusCode == 200) {
+      // Handle successful login
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['msg'];
+      int id = responseData['id'];
+      print(responseData);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Campaign Saved successful!'),
+          duration: Duration(seconds: 2), // Optional: how long it shows
+          backgroundColor: Colors.green, // Optional: customize color
+        ),
+      );
+      Future.delayed(const Duration(seconds: 3), () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => CampaignApprovalPage(id:id)),
+        );
+      });
+    } else {
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['msg'];
+      print('Response from Node.js: $responseData');
+
+
+
+
+    }
+
   }
 
   void _showEditBottomSheet() {
@@ -641,7 +686,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                   ),
                 ),
                 SizedBox(height: 10),
-                _buildBudgetItem("Total Target", widget.amount),
+                _buildBudgetItem("Total Target", widget.campaign.amount),
                 _buildBudgetItem("Platform Fee (5%)", "Calculated at end"),
                 ..._budgetItems.map((item) => 
                   _buildBudgetItem(item['expense']!, item['cost']!)
@@ -835,8 +880,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
       );
     }
 
-    DateTime startsDate = DateFormat('dd/MM/yyyy').parse(widget.startDate);
-    DateTime endsDate = DateFormat('dd/MM/yyyy').parse(widget.endDate);
+    DateTime startsDate = DateFormat('dd/MM/yyyy').parse(widget.campaign.startDate);
+    DateTime endsDate = DateFormat('dd/MM/yyyy').parse(widget.campaign.endDate);
     Duration difference = endsDate.difference(startsDate);
     int days = difference.inDays;
     int i = user!['id'];
@@ -844,7 +889,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.campaign.title),
         centerTitle: true,
         leading: const BackButton(),
       ),
@@ -915,7 +960,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           child: Container(
                             width: 276.0 + 2,
                             child: Text(
-                              widget.title,
+                              widget.campaign.title,
                               style: GoogleFonts.inter(
                                 fontSize: 17.0,
                                 fontWeight: FontWeight.w500,
@@ -1010,7 +1055,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: widget.amount,
+                                  text: widget.campaign.amount,
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 11.0,
@@ -1050,7 +1095,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 double targetAmount = double.tryParse(
-                                  widget.amount.replaceAll('₦', '').replaceAll(',', '').trim()
+                                  widget.campaign.amount.replaceAll('₦', '').replaceAll(',', '').trim()
                                 ) ?? 1.0;
                                 double raisedAmount = 0.0;
                                 double progress = targetAmount > 0 ? raisedAmount / targetAmount : 0.0;
@@ -1382,8 +1427,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 0.0,
                         top: 0.0,
                         child: ErrorBoundary(
-                          child: SvgPicture.asset(
-                            "assets/images/union_1.svg",
+                          child: Image.file(
+                            widget.campaign.imageUrl!,
                             height: 321.357421875,
                             width: 440.0,
                           ),
@@ -1395,21 +1440,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         top: 827.0,
                         child: ErrorBoundary(
                           child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Reviewstartcampaign4(
-                                    title: widget.title,
-                                    description: widget.description,
-                                    startDate: widget.startDate,
-                                    endDate: widget.endDate,
-                                    amount: widget.amount,
-                                    id: id,
-                                  ),
-                                ),
-                              );
-                            },
+                            onTap: createCampaign,
                             child: Container(
                               clipBehavior: Clip.none,
                               decoration: BoxDecoration(

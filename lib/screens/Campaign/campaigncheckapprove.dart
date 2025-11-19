@@ -21,8 +21,8 @@ class CampaignApprovalPage extends StatefulWidget {
 
 class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
   late bool _isApproved;
-  late int _stakeholdersApproved;
-  late int totalStakeholders;
+  late int _stakeholdersApproved = 0;
+  late int totalStakeholders = 0;
   Timer? _timer;
 
   @override
@@ -32,7 +32,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
         loadCampaignApproval()); // Your function
 
     _isApproved = widget.isApproved;
-    _stakeholdersApproved = widget.stakeholdersApproved;
+
 
   }
 

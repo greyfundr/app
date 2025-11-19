@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import '../../class/auth_service.dart';
+import '../../class/api_service.dart';
+import '../../class/jwt_helper.dart';
 // Import this file in your profile_screen.dart:
 // import 'notification_screen.dart';
 
@@ -13,10 +15,15 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late int id;
+  List<NotificationItem> notify = [];
 
   @override
   void initState() {
     super.initState();
+    id = 0;
+    loadProfile();
+
     _tabController = TabController(length: 4, vsync: this);
   }
 
@@ -24,6 +31,46 @@ class _NotificationScreenState extends State<NotificationScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => id = userData['user']['id']);
+      print(userData['user']['id']);
+      loadNotifications();
+      print("User ID: ${userData['user']}");
+    } else {
+      print("Token is expired or invalid");
+
+    }
+    // setState(() => user = res['user']);
+  }
+
+  Future<void> loadNotifications() async {
+    String ids = id.toString();
+    print(ids);
+    dynamic token = await ApiService().getUserNotification(ids) ;
+    List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
+    token.forEach((obj) {
+      NotificationItem p = new NotificationItem(
+          icon: Icons.security,
+          iconColor: Colors.orange,
+          title: obj['type'],
+          message: obj['message'],
+          time: obj['created_at'], isRead: false);
+
+
+      setState(() => notify.add(p));
+
+    });
+
+    print(notify);
+    //setState(() => totalStakeholders = waiting);
+
+
+    //setState(() => categories = tasks);
   }
 
   @override
@@ -86,11 +133,11 @@ class _NotificationScreenState extends State<NotificationScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          AllNotificationsTab(),
-          TransactionsTab(),
-          CampaignsTab(),
-          SystemTab(),
+        children: [
+          const AllNotificationsTab(),
+          const TransactionsTab(),
+          CampaignsTab(Notify: notify),
+          const SystemTab(),
         ],
       ),
     );
@@ -213,44 +260,13 @@ class TransactionsTab extends StatelessWidget {
 
 // === Campaigns Tab ===
 class CampaignsTab extends StatelessWidget {
-  const CampaignsTab({super.key});
+  final List<NotificationItem> Notify;
+  const CampaignsTab({super.key, required this.Notify});
 
   @override
   Widget build(BuildContext context) {
-    final campaigns = [
-      NotificationItem(
-        icon: Icons.campaign,
-        iconColor: Colors.orange,
-        title: 'Campaign Update',
-        message: 'Your campaign "Help John Medical Bill" received a new donation of ₦10,000',
-        time: '5 hours ago',
-        isRead: false,
-      ),
-      NotificationItem(
-        icon: Icons.check_circle,
-        iconColor: Colors.green,
-        title: 'Campaign Goal Reached',
-        message: 'Congratulations! Your campaign has reached 100% of its goal',
-        time: '2 days ago',
-        isRead: true,
-      ),
-      NotificationItem(
-        icon: Icons.campaign_outlined,
-        iconColor: Colors.blue,
-        title: 'New Campaign Created',
-        message: 'Your campaign "Community Water Project" was created successfully',
-        time: '1 week ago',
-        isRead: true,
-      ),
-      NotificationItem(
-        icon: Icons.favorite,
-        iconColor: Colors.pink,
-        title: 'Campaign Milestone',
-        message: 'Your campaign reached 50% of the goal!',
-        time: '2 weeks ago',
-        isRead: true,
-      ),
-    ];
+    print(Notify);
+    final campaigns = Notify;
 
     if (campaigns.isEmpty) {
       return _buildEmptyState('No campaign notifications');
@@ -394,6 +410,22 @@ Widget _buildNotificationItem(NotificationItem item) {
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Approve',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.green[500],
+            ),
+          ),
+
+          Text(
+            'Decline',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.green[500],
             ),
           ),
         ],

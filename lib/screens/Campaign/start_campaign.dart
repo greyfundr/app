@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'fundraise_target.dart';
+import '../../class/campaign.dart';
 
 class CampaignScreen extends StatefulWidget {
   const CampaignScreen({super.key});
@@ -27,8 +28,8 @@ class _CampaignScreenState extends State<CampaignScreen> {
     {'label': 'Animal', 'icon': 'assets/icons/animal.png'},
     {'label': 'Social', 'icon': 'assets/icons/social.png'},
     {'label': 'Disaster', 'icon': 'assets/icons/disaster.png'},
-     {'label': 'Religion', 'icon': 'assets/icons/religion.png'},
-      {'label': 'Business', 'icon': 'assets/icons/business1.png'},
+    {'label': 'Religion', 'icon': 'assets/icons/religion.png'},
+    {'label': 'Business', 'icon': 'assets/icons/business1.png'},
   ];
 
   @override
@@ -500,7 +501,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
                   hintText: '',
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), 
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.grey),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -550,11 +551,11 @@ class _CampaignScreenState extends State<CampaignScreen> {
               // Select Category or Show Selected
               selectedCategory == null
                   ? _buildExpandableOption(
-                      icon: Icons.add_circle,
-                      title: 'Select Category',
-                      subtitle: 'What Kind of Fundraiser are you creating?',
-                      onTap: _showCategoryBottomSheet,
-                    )
+                icon: Icons.add_circle,
+                title: 'Select Category',
+                subtitle: 'What Kind of Fundraiser are you creating?',
+                onTap: _showCategoryBottomSheet,
+              )
                   : _buildSelectedCategoryWidget(),
 
               const SizedBox(height: 16),
@@ -579,12 +580,12 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    Campaign campaign = new Campaign(_titleController.text,_descriptionController.text,selectedCategory!,savedManualOffers,savedAutoOffers);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => FundraisingScreen(
-                          title: _titleController.text,
-                          description: _descriptionController.text,
+                            campaign: campaign
                         ),
                       ),
                     );
@@ -927,22 +928,22 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                         // Convert controllers to string maps
                         List<Map<String, String>> autoOffersData = autoOffers
                             .map((offer) => {
-                                  'condition': offer['condition']!.text,
-                                  'reward': offer['reward']!.text,
-                                })
+                          'condition': offer['condition']!.text,
+                          'reward': offer['reward']!.text,
+                        })
                             .where((offer) =>
-                                offer['condition']!.isNotEmpty ||
-                                offer['reward']!.isNotEmpty)
+                        offer['condition']!.isNotEmpty ||
+                            offer['reward']!.isNotEmpty)
                             .toList();
 
                         List<Map<String, String>> manualOffersData = manualOffers
                             .map((offer) => {
-                                  'condition': offer['condition']!.text,
-                                  'reward': offer['reward']!.text,
-                                })
+                          'condition': offer['condition']!.text,
+                          'reward': offer['reward']!.text,
+                        })
                             .where((offer) =>
-                                offer['condition']!.isNotEmpty ||
-                                offer['reward']!.isNotEmpty)
+                        offer['condition']!.isNotEmpty ||
+                            offer['reward']!.isNotEmpty)
                             .toList();
 
                         widget.onSave(autoOffersData, manualOffersData);

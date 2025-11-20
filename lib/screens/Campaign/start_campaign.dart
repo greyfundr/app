@@ -141,8 +141,10 @@ class _CampaignScreenState extends State<CampaignScreen> {
   }
 
   Widget _buildSelectedCategoryWidget() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+  return FractionallySizedBox(
+    widthFactor: 0.5,  // This makes the container take 50% of the parent's width
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
@@ -202,8 +204,9 @@ class _CampaignScreenState extends State<CampaignScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSavedOffersList() {
     return Column(
@@ -543,7 +546,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                maxLines: 5,
+                maxLines: 4,
               ),
 
               const SizedBox(height: 24),
@@ -754,7 +757,7 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'define what your CHAMPIONS, BACKERS, and SHORTY will get if they complete a task',
+                  'define what your CHAMPIONS, AND BACKERS will get if they complete a task',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,

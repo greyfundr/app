@@ -9,6 +9,7 @@ import 'homeprofile.dart';
 import 'billscreen.dart';
 import 'kyc.dart';
 import 'notification_screen.dart';
+import 'campaign_search_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -208,8 +209,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 builder: (_) => const CampaignScreen()),
                           );
                         }),
-                        _buildFeatureCard(
-                            'Charity', 'assets/images/charity.png', null),
+
+                            _buildFeatureCard('Charity',
+                            'assets/images/charity.png', () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const CampaignSearchPage()),
+                          );
+                        }),
                       ],
                     ),
                     const SizedBox(height: 25),
@@ -278,9 +286,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Bills'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

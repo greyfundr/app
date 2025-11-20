@@ -2,11 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/services.dart'; // Add this import for TextInputFormatter
 import 'reviewstartcampaign3.dart';
 import '../../class/campaign.dart';
 import '../../class/participants.dart';
 import '../../class/api_service.dart';
 
+// Add this custom formatter class for comma-separated numbers
+class NumberTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    // Remove any non-digit characters except for the decimal point if needed (but assuming integers for fundraising)
+    final String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (newText.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    final int? value = int.tryParse(newText);
+    if (value == null) {
+      return oldValue;
+    }
+
+    final String formatted = NumberFormat('#,###').format(value);
+
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class FundraisingScreen extends StatefulWidget {
   final Campaign campaign;
@@ -26,43 +55,34 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   List<Participant> selectedParticipants = [];
   List<File> selectedImages = []; // Store selected images
 
-  List<Participant> allUsers = [ ];
+  List<Participant> allUsers = [];
 
   @override
   void initState() {
     super.initState();
     loadUsers();
-
   }
 
   Future<void> loadUsers() async {
-    dynamic token = await ApiService().getUsers() ;
+    dynamic token = await ApiService().getUsers();
     List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
 
     tasks.forEach((obj) {
-
-
-      if(obj['first_name'] != null)
-        {
-        Participant p = new Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
+      if (obj['first_name'] != null) {
+        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
         print(p);
         setState(() => allUsers.add(p));
-
-    }
-
+      }
     });
 
-    //setState(() => allUsers = tasks.cast<Participant>());
     print(allUsers);
     await Future.delayed(const Duration(seconds: 2));
-
-    //setState(() => categories = tasks);
   }
 
   Future<void> _pickImage() async {
-    if (selectedImages.length >= 3) {
+    if (selectedImages.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maximum 3 images allowed')),
+        const SnackBar(content: Text('Maximum 5 images allowed')),
       );
       return;
     }
@@ -120,6 +140,10 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: amountController,
+                keyboardType: TextInputType.number, // Ensures numeric keyboard
+                inputFormatters: [
+                  NumberTextInputFormatter(), // Custom formatter for comma separation and digit-only input
+                ],
                 decoration: InputDecoration(
                   labelText: "N",
                   labelStyle: const TextStyle(color: Colors.grey),
@@ -158,22 +182,22 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('ADD BILL/THING'),
-                ),
-              ),
+              const SizedBox(height: 5),
+              // SizedBox(
+              //   width: double.infinity,
+              //   child: ElevatedButton(
+              //     onPressed: () {},
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.deepOrange,
+              //       foregroundColor: Colors.white,
+              //       padding: const EdgeInsets.symmetric(vertical: 16),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(8),
+              //       ),
+              //     ),
+              //     child: const Text('ADD BILL LISTING'),
+              //   ),
+              // ),
               const SizedBox(height: 24),
               const Text(
                 'Date',
@@ -247,6 +271,12 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   const SizedBox(width: 12),
                   // Third box
                   _buildImageUploadButton(2, false),
+                  const SizedBox(width: 12),
+                  // Fourth box
+                  _buildImageUploadButton(3, false),
+                   const SizedBox(width: 12),
+                  // Fourth box
+                  _buildImageUploadButton(4, false),
                 ],
               ),
               const SizedBox(height: 8),
@@ -270,20 +300,12 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'See More',
-                      style: TextStyle(
-                        color: Colors.teal,
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
               const SizedBox(height: 4),
               const Text(
-                'Add up to 3 people to manage your goal, add updates and respond to comments',
+                'Add one or more people to manage your goal, add updates and respond to comments',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -436,11 +458,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                         color: Colors.grey,
                       ),
                     ),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      color: Colors.grey,
-                    ),
-                  ],
+                   
+                  ], 
                 ),
               ),
               const SizedBox(height: 24),
@@ -604,7 +623,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   const SizedBox(height: 16),
                   _buildRoleCard(
                     context,
-                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-host-festival-flaticons-lineal-color-flat-icons.png',
+                    icon: 'https://i.postimg.cc/QtRkSW5F/host.png',
                     role: 'Select Host',
                     peopleCount: selectedParticipants.length,
                     onTap: () {
@@ -614,25 +633,25 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   ),
                   _buildRoleCard(
                     context,
-                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-champion-sports-flaticons-lineal-color-flat-icons.png',
+                    icon: 'https://i.postimg.cc/gJwHvKwq/chanpion.png',
                     role: 'Select Champions',
-                    peopleCount: 254,
-                    onTap: null,
+                    peopleCount: 4,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showUserSelectionBottomSheet(context);
+                    },
                   ),
                   _buildRoleCard(
                     context,
-                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-backers-crowdfunding-flaticons-lineal-color-flat-icons.png',
+                    icon: 'https://i.postimg.cc/ydwXnS9J/backer.png',
                     role: 'Select Backers',
-                    peopleCount: 78,
-                    onTap: null,
+                    peopleCount: 4,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showUserSelectionBottomSheet(context);
+                    },
                   ),
-                  _buildRoleCard(
-                    context,
-                    icon: 'https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-shorty-party-flaticons-lineal-color-flat-icons.png',
-                    role: 'Select Shorty',
-                    peopleCount: 6,
-                    onTap: null,
-                  ),
+                 
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -647,7 +666,13 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('ADD'),
+                      child: const Text('ADD',
+                      style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color.fromARGB(255, 255, 255, 255),
+                    ),
+                      ),
                     ),
                   ),
                 ],
@@ -756,51 +781,53 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   }
 
   void _showUserSelectionBottomSheet(BuildContext context) {
-    List<Participant> filteredUsers = List.from(allUsers);
-    List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
-    TextEditingController searchController = TextEditingController();
+  List<Participant> filteredUsers = List.from(allUsers);
+  List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
+  TextEditingController searchController = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            void _filterUsers(String query) {
-              setModalState(() {
-                filteredUsers = allUsers.where((user) {
-                  return user.name.toLowerCase().contains(query.toLowerCase()) ||
-                      user.username.toLowerCase().contains(query.toLowerCase());
-                }).toList();
-              });
-            }
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,  // Keeps it scroll-controlled for custom height
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          void _filterUsers(String query) {
+            setModalState(() {
+              filteredUsers = allUsers.where((user) {
+                return user.name.toLowerCase().contains(query.toLowerCase()) ||
+                    user.username.toLowerCase().contains(query.toLowerCase());
+              }).toList();
+            });
+          }
 
-            bool isSelected(Participant user) {
-              return tempSelectedParticipants.contains(user);
-            }
+          bool isSelected(Participant user) {
+            return tempSelectedParticipants.contains(user);
+          }
 
-            void toggleSelection(Participant user) {
-              setModalState(() {
-                if (isSelected(user)) {
-                  tempSelectedParticipants.remove(user);
-                } else {
-                  tempSelectedParticipants.add(user);
-                }
-              });
-            }
+          void toggleSelection(Participant user) {
+            setModalState(() {
+              if (isSelected(user)) {
+                tempSelectedParticipants.remove(user);
+              } else {
+                tempSelectedParticipants.add(user);
+              }
+            });
+          }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 20,
+            ),
+            child: SizedBox(  // Added SizedBox to constrain height to 75%
+              height: MediaQuery.of(context).size.height * 0.75,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -810,7 +837,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 20),
                   SizedBox(
                     height: 60,
                     child: ListView.builder(
@@ -821,6 +848,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
+                            const SizedBox(height: 12),
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               child: CircleAvatar(
@@ -828,6 +856,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                                 backgroundImage: AssetImage(participant.imageUrl),
                               ),
                             ),
+                            const SizedBox(height: 12),
                             Positioned(
                               right: -8,
                               top: -8,
@@ -867,7 +896,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                           unselectedLabelColor: Colors.grey,
                         ),
                         SizedBox(
-                          height: 250,
+                          height: 350,
                           child: TabBarView(
                             children: List.generate(5, (_) {
                               return Column(
@@ -941,10 +970,11 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   const SizedBox(height: 16),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 }

@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
-import '../Campaign/main_campaign.dart';
+// import '../Campaign/main_campaign.dart';
+import '../create/createnew.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
 import 'kyc.dart';
@@ -206,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CampaignScreen()),
+                                builder: (_) => const CreateNewPage()),
                           );
                         }),
 

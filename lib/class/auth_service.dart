@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final Dio _dio = Dio();
-  final String baseUrl = "https://yourapi.com";
+  final String baseUrl = "https://api.greyfundr.com";
 
 
   Future<bool> login(String email, String password) async {

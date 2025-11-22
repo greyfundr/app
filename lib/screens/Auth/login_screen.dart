@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     void login() async {
       SharedPreferences.setMockInitialValues({});
       final response = await http.post(
-        Uri.parse('https://greyfoundr-backend.onrender.com/auth/login'),
+        Uri.parse('https://api.greyfundr.com/auth/login'),
         body: {
           'email': emailController.text,
           'password': passwordController.text,

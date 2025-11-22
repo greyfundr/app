@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
-// import '../Campaign/main_campaign.dart';
+import 'editprofile.dart'; 
 import '../create/createnew.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
@@ -354,7 +354,11 @@ class SettingsActivityPage extends StatelessWidget {
             icon: Icons.person_outline,
             title: 'Edit Profile',
             onTap: () {
-              // Navigate to edit profile
+             Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const EditProfilePage()),
+                          );
             },
           ),
           _buildMenuItem(

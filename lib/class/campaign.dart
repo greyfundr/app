@@ -6,15 +6,17 @@ import 'dart:convert';
 class Campaign {
    String title = '';
    String description = '';
-   File? imageUrl;
+   String imageUrl = '';
    String startDate = '';
    String endDate = '';
-   String amount = '';
+   double amount = 0.0;
    String category = '';
    List<Participant> participants = [];
    List<File> images = [];
    List<Map<String, String>> savedAutoOffers = [];
    List<Map<String, String>> savedManualOffers = [];
+   DateTime? created_at;
+   double currentAmount = 0.0;
 
    Campaign(String name, String desc, String aCategory, List<Map<String, String>> mOffers, List<Map<String, String>> aOffers) {
      title = name;
@@ -30,7 +32,7 @@ class Campaign {
 
    }
 
-   void setCampaignDetails(String startDate, String endDate, File mainImage, String amount,List<Participant> participant,List<File> image) {
+   void setCampaignDetails(String startDate, String endDate, String mainImage, double amount,List<Participant> participant,List<File> image) {
      this.startDate = startDate;
      this.endDate= endDate;
      imageUrl = mainImage;
@@ -58,4 +60,7 @@ class Campaign {
      // You can add logic here, like validation or updating the UI state in Flutter
 
    }
+
+
+
 }

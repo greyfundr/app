@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../class/api_service.dart';
+import '../../class/jwt_helper.dart';
+import '../../class/campaign.dart';
 
 class CampaignSearchPage extends StatefulWidget {
   const CampaignSearchPage({super.key});
@@ -13,6 +16,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
   String _selectedTimePeriod = 'All Time';
   List<Campaign> _filteredCampaigns = [];
   List<Campaign> _allCampaigns = [];
+  bool isLoading = true;
 
   final List<String> _categories = [
     'All',
@@ -45,66 +49,67 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
     super.dispose();
   }
 
-  void _loadCampaigns() {
-    // TODO: Replace with actual API call
-    _allCampaigns = [
-      Campaign(
-        id: '1',
-        title: 'Help Save Children Hospital',
-        category: 'Medical',
-        imageUrl: 'assets/images/campaign1.png',
-        goalAmount: 500000,
-        raisedAmount: 320000,
-        createdDate: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-      Campaign(
-        id: '2',
-        title: 'Build School in Rural Area',
-        category: 'Education',
-        imageUrl: 'assets/images/campaign2.png',
-        goalAmount: 1000000,
-        raisedAmount: 450000,
-        createdDate: DateTime.now().subtract(const Duration(days: 15)),
-      ),
-      Campaign(
-        id: '3',
-        title: 'Emergency Flood Relief',
-        category: 'Emergency',
-        imageUrl: 'assets/images/campaign3.png',
-        goalAmount: 750000,
-        raisedAmount: 680000,
-        createdDate: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      Campaign(
-        id: '4',
-        title: 'Wildlife Conservation Project',
-        category: 'Animals',
-        imageUrl: 'assets/images/campaign4.png',
-        goalAmount: 300000,
-        raisedAmount: 120000,
-        createdDate: DateTime.now().subtract(const Duration(days: 30)),
-      ),
-      Campaign(
-        id: '5',
-        title: 'Clean Water Initiative',
-        category: 'Community',
-        imageUrl: 'assets/images/campaign5.png',
-        goalAmount: 600000,
-        raisedAmount: 290000,
-        createdDate: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      Campaign(
-        id: '6',
-        title: 'Tree Planting Campaign',
-        category: 'Environment',
-        imageUrl: 'assets/images/campaign6.png',
-        goalAmount: 200000,
-        raisedAmount: 150000,
-        createdDate: DateTime.now().subtract(const Duration(days: 20)),
-      ),
-    ];
+  Future<void> _loadCampaigns() async {
+    List<Map<String, String>> offer = [];
+    List<Map<String, String>> moffer = [];
+      try {
+        dynamic token = await ApiService().getCampaign();
+
+        List<Map<String, dynamic>> task = token.cast<Map<String, dynamic>>();
+
+        task.forEach((obj)
+        {
+          Campaign p = Campaign
+            (
+            obj['title'] as String,
+            obj['description'] as String,
+            obj['category'] as String,
+            offer,
+            moffer,
+          );
+          if(obj['image'] != null && obj['start_date'] != null && obj['end_date'] != null) {
+            p.setCampaignDetails(
+                obj['start_date'], obj['end_date'], obj['image'], obj['current_amount'],
+                obj['title'], obj['title']);
+          }
+          else
+            {
+              print(obj);
+            }
+          setState(() => _allCampaigns.add(p));
+          print(p);
+        });
+
+        setState(() => isLoading = false);
+        //_allCampaigns = token.cast<Campaign>();
+
+
+
+
+        //print(token);
+      }
+      catch (e) {
+        print('Error loading campaign: $e');
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              duration: const Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+
     _filteredCampaigns = _allCampaigns;
+
+    //setState(() => totalStakeholders = waiting);
+
+
+    //setState(() => categories = tasks);
   }
+
 
   void _filterCampaigns() {
     setState(() {
@@ -121,7 +126,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
             campaign.category == _selectedCategory;
 
         // Filter by time period
-        bool matchesTimePeriod = _matchesTimePeriod(campaign.createdDate);
+        bool matchesTimePeriod = _matchesTimePeriod(campaign.created_at!);
 
         return matchesSearch && matchesCategory && matchesTimePeriod;
       }).toList();
@@ -281,6 +286,14 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    if (isLoading) {
+      return Scaffold(
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.teal),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -481,7 +494,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
   }
 
   Widget _buildCampaignCard(Campaign campaign) {
-    double progress = campaign.raisedAmount / campaign.goalAmount;
+    double progress = campaign.currentAmount / campaign.amount;
     
     return GestureDetector(
       onTap: () {
@@ -588,7 +601,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
 
                     // Amount Raised
                     Text(
-                      '₦${_formatAmount(campaign.raisedAmount)} raised',
+                      '₦${_formatAmount(campaign.amount)} raised',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
@@ -613,25 +626,4 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
     }
     return amount.toStringAsFixed(0);
   }
-}
-
-// Campaign Model
-class Campaign {
-  final String id;
-  final String title;
-  final String category;
-  final String imageUrl;
-  final double goalAmount;
-  final double raisedAmount;
-  final DateTime createdDate;
-
-  Campaign({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.imageUrl,
-    required this.goalAmount,
-    required this.raisedAmount,
-    required this.createdDate,
-  });
 }

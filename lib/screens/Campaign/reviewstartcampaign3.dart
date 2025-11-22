@@ -27,12 +27,12 @@ class Reviewstartcampaign3 extends StatefulWidget {
 class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   Map<String, dynamic>? user;
   int _selectedTabIndex = 0;
-  
+
   // Editable content
   late String _editableDescription;
   List<Map<String, String>> _budgetItems = [];
   List<Map<String, String>> _offers = [];
-  
+
   // Track expanded sections
   Map<String, bool> _expandedSections = {
     'ABOUT': true,
@@ -68,10 +68,10 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
         'description': widget.campaign.description,
         'startDate': widget.campaign.startDate,
         'endDate': widget.campaign.endDate,
-        'amount': widget.campaign.amount,
+        'amount': widget.campaign.amount.toString(),
         'id': user?['id'].toString(),
         'stakeholders':json.encode(widget.campaign.participants),
-        'images': widget.campaign.imageUrl?.path
+        'images': widget.campaign.imageUrl
 
       },
     );
@@ -112,10 +112,10 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     String tempDescription = _editableDescription;
     List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
     List<Map<String, String>> tempOffers = List.from(_offers);
-    
+
     // Controllers for new items
     TextEditingController aboutController = TextEditingController(text: tempDescription);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -163,7 +163,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ],
                     ),
                   ),
-                  
+
                   // Content
                   Expanded(
                     child: ListView(
@@ -212,9 +212,9 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             ],
                           ),
                         ),
-                        
+
                         SizedBox(height: 16),
-                        
+
                         // BUDGETING Section
                         _buildExpandableSection(
                           title: "BUDGETING",
@@ -232,7 +232,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                 ),
                               ),
                               SizedBox(height: 12),
-                              
+
                               // Budget items list
                               ...tempBudgetItems.asMap().entries.map((entry) {
                                 int index = entry.key;
@@ -279,9 +279,9 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                   ),
                                 );
                               }).toList(),
-                              
+
                               SizedBox(height: 8),
-                              
+
                               // Add new budget item button
                               OutlinedButton.icon(
                                 onPressed: () {
@@ -297,9 +297,9 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             ],
                           ),
                         ),
-                        
+
                         SizedBox(height: 16),
-                        
+
                         // OFFERS Section
                         _buildExpandableSection(
                           title: "OFFERS",
@@ -317,7 +317,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                 ),
                               ),
                               SizedBox(height: 12),
-                              
+
                               // Offers list
                               ...tempOffers.asMap().entries.map((entry) {
                                 int index = entry.key;
@@ -386,9 +386,9 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                   ),
                                 );
                               }).toList(),
-                              
+
                               SizedBox(height: 8),
-                              
+
                               // Add new offer button
                               OutlinedButton.icon(
                                 onPressed: () {
@@ -407,7 +407,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ],
                     ),
                   ),
-                  
+
                   // Update Button
                   Container(
                     padding: EdgeInsets.all(16),
@@ -470,7 +470,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     required Widget child,
   }) {
     bool isExpanded = _expandedSections[title] ?? false;
-    
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Color.fromRGBO(238, 240, 239, 1)),
@@ -526,7 +526,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> budgetItems) {
     TextEditingController expenseController = TextEditingController();
     TextEditingController costController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -590,7 +590,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   void _showAddOfferDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> offers) {
     TextEditingController conditionController = TextEditingController();
     TextEditingController rewardController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -668,7 +668,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
             ),
           ),
         );
-      
+
       case 1: // BUDGETING
         return Container(
           padding: EdgeInsets.all(15.0),
@@ -686,9 +686,9 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                   ),
                 ),
                 SizedBox(height: 10),
-                _buildBudgetItem("Total Target", widget.campaign.amount),
+                _buildBudgetItem("Total Target", widget.campaign.amount.toString()),
                 _buildBudgetItem("Platform Fee (5%)", "Calculated at end"),
-                ..._budgetItems.map((item) => 
+                ..._budgetItems.map((item) =>
                   _buildBudgetItem(item['expense']!, item['cost']!)
                 ),
                 if (_budgetItems.isEmpty)
@@ -708,7 +708,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
             ),
           ),
         );
-      
+
       case 2: // OFFERS
         return Container(
           padding: EdgeInsets.all(15.0),
@@ -764,7 +764,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                   ),
                 ),
         );
-      
+
       case 3: // DONATIONS
         return Container(
           padding: EdgeInsets.all(15.0),
@@ -780,7 +780,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
             ),
           ),
         );
-      
+
       case 4: // COMMENTS
         return Container(
           padding: EdgeInsets.all(15.0),
@@ -796,7 +796,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
             ),
           ),
         );
-      
+
       default:
         return Container();
     }
@@ -860,7 +860,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
               height: 3,
               width: text.length * 5.0,
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? Color.fromRGBO(41, 47, 56, 0.8)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(2),
@@ -1055,7 +1055,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: widget.campaign.amount,
+                                  text: widget.campaign.amount.toString(),
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 11.0,
@@ -1095,13 +1095,13 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 double targetAmount = double.tryParse(
-                                  widget.campaign.amount.replaceAll('₦', '').replaceAll(',', '').trim()
+                                  widget.campaign.amount.toString().replaceAll('₦', '').replaceAll(',', '').trim()
                                 ) ?? 1.0;
                                 double raisedAmount = 0.0;
                                 double progress = targetAmount > 0 ? raisedAmount / targetAmount : 0.0;
                                 progress = progress.clamp(0.0, 1.0);
                                 double indicatorPosition = constraints.maxWidth * progress;
-                                
+
                                 return Stack(
                                   children: [
                                     Positioned(
@@ -1137,7 +1137,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                                         height: 16.0,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: progress > 0 
+                                          color: progress > 0
                                               ? Color.fromRGBO(0, 164, 175, 1.0)
                                               : Color.fromRGBO(142, 150, 163, 1.0),
                                           border: Border.all(
@@ -1326,7 +1326,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
-                      
+
                       //Organizer Card
                       Positioned(
                         top: 491.0,
@@ -1427,8 +1427,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 0.0,
                         top: 0.0,
                         child: ErrorBoundary(
-                          child: Image.file(
-                            widget.campaign.imageUrl!,
+                          child: Image.asset(
+                            widget.campaign.imageUrl,
                             height: 321.357421875,
                             width: 440.0,
                           ),

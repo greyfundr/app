@@ -467,11 +467,19 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+
+                    String to = amountController.text;
+                    String cleanStr = to.replaceAll(',', '');
+
+                    double result = double.parse(cleanStr);
+                    print(result);
+                    print(selectedParticipants);
+                    print(selectedImages);
                     widget.campaign.setCampaignDetails(
                       _startDateController.text,
                       _endDateController.text,
-                      selectedImages[0],
-                      amountController.text,
+                      selectedImages[0].path,
+                      result,
                       selectedParticipants,
                       selectedImages
                     );

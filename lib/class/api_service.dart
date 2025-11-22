@@ -1,4 +1,5 @@
 import 'dart:core';
+import '../class/campaign.dart';
 
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,6 +55,24 @@ class ApiService {
       if (response.statusCode == 200) {
         dynamic category = response.data;
 
+        return category;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return category;
+  }
+
+  Future <dynamic>  getCampaign() async {
+    List <Campaign>? category;
+    try {
+      final response = await _dio.get(
+        "$baseUrl/campaign/getall",
+      );
+
+      if (response.statusCode == 200) {
+
+        dynamic category = response.data[0];
         return category;
       }
     } catch (e) {

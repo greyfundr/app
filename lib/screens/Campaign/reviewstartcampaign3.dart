@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,8 +7,8 @@ import 'error_boundary.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../class/auth_service.dart';
+import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
-import 'reviewstartcampaign4.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'campaigncheckapproved.dart';
@@ -61,26 +63,15 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
 
   void createCampaign() async {
 
-    final response = await http.post(
-      Uri.parse('https://greyfoundr-backend.onrender.com/campaign/create'),
-      body: {
-        'title': widget.campaign.title,
-        'description': widget.campaign.description,
-        'startDate': widget.campaign.startDate,
-        'endDate': widget.campaign.endDate,
-        'amount': widget.campaign.amount.toString(),
-        'id': user?['id'].toString(),
-        'stakeholders':json.encode(widget.campaign.participants),
-        'images': widget.campaign.imageUrl
-
-      },
-    );
+    final response = await ApiService().createCampaign(widget.campaign, user?['id']);
+    print(response.data);
     if (response.statusCode == 200) {
       // Handle successful login
-      Map<String, dynamic> responseData = jsonDecode(response.body);
-      String message = responseData['msg'];
-      int id = responseData['id'];
-      print(responseData);
+
+      String message = response.data['msg'];
+      int id = response.data['id'];
+
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Campaign Saved successful!'),
@@ -88,6 +79,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
           backgroundColor: Colors.green, // Optional: customize color
         ),
       );
+
       Future.delayed(const Duration(seconds: 3), () {
         Navigator.push(
           context,
@@ -95,10 +87,13 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
               builder: (_) => CampaignApprovalPage(id:id)),
         );
       });
+
     } else {
-      Map<String, dynamic> responseData = jsonDecode(response.body);
-      String message = responseData['msg'];
-      print('Response from Node.js: $responseData');
+      //dynamic responseData = jsonDecode(response.body);
+      //String message = responseData['msg'];
+      //final test = await ApiService().uploadImage(widget.campaign.imageUrl);
+
+      //print(response.body);
 
 
 
@@ -106,6 +101,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     }
 
   }
+
+
 
   void _showEditBottomSheet() {
     // Temporary variables for editing
@@ -1427,8 +1424,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 0.0,
                         top: 0.0,
                         child: ErrorBoundary(
-                          child: Image.asset(
-                            widget.campaign.imageUrl,
+                          child: Image.network(
+                            'https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/images/1763830912324-avatar.png',
                             height: 321.357421875,
                             width: 440.0,
                           ),

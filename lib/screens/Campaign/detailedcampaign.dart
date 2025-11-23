@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../class/jwt_helper.dart';
 import 'billscreen.dart';
 import 'homeprofile.dart';
 import 'profile_screen.dart';
+import '../../class/auth_service.dart';
+
+
 class CampaignDetailPage extends StatefulWidget {
   final String id;
   const CampaignDetailPage({super.key, required this.id});
@@ -18,11 +22,13 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void initState() {
     super.initState();
     loadCampaign();
+    loadProfile();
   }
 
   int selectedTabIndex = 2;
   int financingSubTabIndex = 1; // Default: Expenditure
   int donationSubTabIndex = 1; // Default: Top Donors
+  int userId = 0;
 
   Map<String, dynamic>? campaign;
   bool isLoading = true;
@@ -40,6 +46,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String profile = '';
   int _selectedIndex = 1; // Bills tab active
   double percentage = 0.00;
+  int cId = 0;
 
   final List<String> mainTabs = [
     "ABOUT",
@@ -49,10 +56,23 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     "COMMENTS",
   ];
 
+  void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => userId = userData['user']['id']);
+      print("User ID: ${userData['user']}");
+    } else {
+      print("Token is expired or invalid");
+
+    }
+    // setState(() => user = res['user']);
+  }
+
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'https://greyfoundr-backend.onrender.com/campaign/getcampaign';
+      final String baseUrl = 'http://localhost:3000/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);
@@ -75,14 +95,15 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           donor = responseData['donors'] ?? 0;
           image = responseData['image'] ?? 0;
           image = image.replaceAll('\\', '/');
+          cId = responseData['creator_id'];
         });
-        double percent = int.parse(responseData['current_amount'])/int.parse(responseData['goal_amount']);
+        double percent = double.parse(responseData['current_amount'])/double.parse(responseData['goal_amount']);
         percentage = percent;
 
         final creatorId = responseData['creator_id'];
 
         // FIXED: Changed from localhost to actual API URL
-        final String userBaseUrl = 'https://greyfoundr-backend.onrender.com/users/getUser';
+        final String userBaseUrl = 'http://localhost:3000/users/getUser';
         final userUrl = Uri.parse('$userBaseUrl/$creatorId');
 
         final userResponse = await http.get(userUrl);
@@ -525,6 +546,18 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   Widget build(BuildContext context) {
     // FIXED: Safe calculation of days
     int days = _calculateDaysLeft();
+    final bool campaignLive = true;
+
+
+    if(userId ==cId)
+      {
+        print(userId);
+        print(cId);
+        final bool campaignLive = false;
+        
+        print(campaignLive);
+      }
+    //final bool campaignLive = _isApproved && allStakeholdersApproved;
 
     // FIXED: Show loading indicator while data loads
     if (isLoading) {
@@ -562,8 +595,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
-                    child: Image.asset(
-                      image,
+                    child: Image.network(
+                      "https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${image}",
                       height: 240,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -760,6 +793,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
+                      if (campaignLive) ...[
+
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {},
@@ -786,7 +821,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                         ),
                         child: const Text("Donate"),
                       ),
-                    ),
+                    ),]
+                  else ...[
+
+
+                    ],
                   ],
                 ),
               ),

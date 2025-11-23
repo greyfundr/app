@@ -478,7 +478,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     widget.campaign.setCampaignDetails(
                       _startDateController.text,
                       _endDateController.text,
-                      selectedImages[0].path,
+                      selectedImages[0],
                       result,
                       selectedParticipants,
                       selectedImages

@@ -22,7 +22,7 @@ class CampaignApprovalPage extends StatefulWidget {
 class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
   late bool _isApproved;
   late int _stakeholdersApproved = 0;
-  late int totalStakeholders = 0;
+  int totalStakeholders = 0;
   Timer? _timer;
 
   @override
@@ -48,6 +48,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
     String ids = widget.id.toString();
     dynamic token = await ApiService().getCampaignApproval(ids) ;
     int champions = (token[0]['champions']);
+
     int hosts = (token[0]['host']);
     int approved = (token[0]['approved']);
     int waiting = (champions + hosts);

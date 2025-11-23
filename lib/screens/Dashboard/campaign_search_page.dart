@@ -531,7 +531,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.asset(
-                  campaign.imageUrl,
+                  campaign.imageUrl!.path,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) => Center(

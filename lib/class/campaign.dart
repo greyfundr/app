@@ -6,7 +6,7 @@ import 'dart:convert';
 class Campaign {
    String title = '';
    String description = '';
-   String imageUrl = '';
+   File? imageUrl;
    String startDate = '';
    String endDate = '';
    double amount = 0.0;
@@ -32,7 +32,7 @@ class Campaign {
 
    }
 
-   void setCampaignDetails(String startDate, String endDate, String mainImage, double amount,List<Participant> participant,List<File> image) {
+   void setCampaignDetails(String startDate, String endDate, File mainImage, double amount,List<Participant> participant,List<File> image) {
      this.startDate = startDate;
      this.endDate= endDate;
      imageUrl = mainImage;
@@ -59,6 +59,13 @@ class Campaign {
      images = image;
      // You can add logic here, like validation or updating the UI state in Flutter
 
+   }
+
+   Map<String, dynamic> toJson() {
+     return {
+       'name': title,
+       'value': description,
+     };
    }
 
 

@@ -1,12 +1,18 @@
+import 'dart:convert';
 import 'dart:core';
+import 'dart:io';
 import '../class/campaign.dart';
 
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart'; // Required for MediaType
+import 'package:mime/mime.dart';
 
 class ApiService {
   final Dio _dio = Dio();
-  final String baseUrl = "https://greyfoundr-backend.onrender.com";
+  final String baseUrl = "https://api.greyfundr.com/";
 
 
   Future <dynamic>  getCategory() async {
@@ -29,10 +35,10 @@ class ApiService {
 
   Future <dynamic>  getCampaignApproval(String id) async {
     Map<String, dynamic>? category;
-    final String url = '$baseUrl/posts/$id';
+    final String url = 'http://localhost:3000/posts/$id';
     try {
       final response = await _dio.get(
-        '$baseUrl/campaign/getApprovalStatus/$id');
+        'http://localhost:3000/campaign/getApprovalStatus/$id');
 
       if (response.statusCode == 200) {
         dynamic category = response.data["campaign"];
@@ -63,11 +69,53 @@ class ApiService {
     return category;
   }
 
+  Future <dynamic> createCampaign(Campaign campaign, int id) async {
+    List<MultipartFile> multipartImages = [];
+    Response response;
+
+
+    Dio dio = Dio();
+    try {
+      for (File imageFile in campaign.images) {
+
+        String fileName = imageFile.path.split('/').last;
+        String? mimeType = lookupMimeType(fileName);
+        print(fileName);
+
+        multipartImages.add(
+          await MultipartFile.fromFile(
+              imageFile.path, filename: fileName,contentType: MediaType(mimeType!.split('/')[0], mimeType.split('/')[1]), // Adjust content type as needed
+          ),
+        );
+      }
+
+      FormData formData = FormData.fromMap({
+        "image": multipartImages,
+        'title': campaign.title,
+        'description': campaign.description,
+        'startDate': campaign.startDate,
+        'endDate': campaign.endDate,
+        'amount': campaign.amount.toString(),
+        'id': id,
+        'stakeholders':json.encode(campaign.participants),
+        'images': campaign.imageUrl!.path
+      });
+
+      Response response = await dio.post("http://localhost:3000/campaign/create", data: formData);
+      return response;
+      print("Image uploaded successfully: ${response.data}");
+    } catch (e) {
+      print("Error uploading image: $e");
+    }
+
+
+  }
+
   Future <dynamic>  getCampaign() async {
     List <Campaign>? category;
     try {
       final response = await _dio.get(
-        "$baseUrl/campaign/getall",
+        "http://localhost:3000/campaign/getall",
       );
 
       if (response.statusCode == 200) {

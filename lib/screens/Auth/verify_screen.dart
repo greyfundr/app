@@ -52,7 +52,7 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
 
 
     final response = await http.post(
-      Uri.parse('http://localhost:3000/auth/verifyphone'),
+      Uri.parse('http://api.greyfundr.com/auth/verifyphone'),
       body: {
         'code': values,
         'email': widget.email,

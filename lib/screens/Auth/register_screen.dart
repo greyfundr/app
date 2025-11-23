@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Auth/personal_register_screen.dart';
 import 'group_register_screen.dart';
 import 'package:greyfdr/screens/Auth/business/bus_register.dart';
-// import 'charity_register_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'campaign_exist.dart';
-import 'campaign_option.dart';
+// import 'campaign_option.dart';
+import 'joinnew/joinnew.dart';
 
 
 
-class CampaignScreen extends StatelessWidget {
-  const CampaignScreen({super.key});
+class JoinScreen extends StatelessWidget {
+  const JoinScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +14,7 @@ class CampaignScreen extends StatelessWidget {
       // No default AppBar like before
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(25),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -27,7 +28,7 @@ class CampaignScreen extends StatelessWidget {
 
               // Title & Subtitle
               const Text(
-                "Start Campaign",
+                "Want to start a New or Join an Existing Champagne",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -35,10 +36,7 @@ class CampaignScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                "Want to start a New or Join an Existing Campaign",
-                style: TextStyle(fontSize: 15, color: Colors.black54),
-              ),
+              
               const SizedBox(height: 15),
 
               // Options
@@ -50,12 +48,12 @@ class CampaignScreen extends StatelessWidget {
                       icon: "assets/icons/personal.png",
                       title: "New Campaign",
                       description:
-                      "By setting up a Personal Account, you gain and control all aspects of this Account",
+                      "Set Up a new camapign for yourself, someone else or an Organization",
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CampaignOptionScreen(),
+                            builder: (_) => const CampaignStart11(),
                           ),
                         );
                       },
@@ -65,7 +63,7 @@ class CampaignScreen extends StatelessWidget {
                       icon: "assets/icons/groupb.png",
                       title: "Existing Campaign",
                       description:
-                      "By setting up a Group or Community Account, you might need to add one more Stakeholder to the Account",
+                      "Create your own Fundraiser page to support an existing GreyFundr Campaign",
                       onTap: () {
                         Navigator.push(
                           context,

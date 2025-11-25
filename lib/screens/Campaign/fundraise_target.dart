@@ -73,32 +73,21 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     dynamic tokens1 = await ApiService().getBackers();
 
     List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
-    List<Map<String, dynamic>> tasks1 = tokens.cast<Map<String, dynamic>>();
-    List<Map<String, dynamic>> tasks2 = tokens1.cast<Map<String, dynamic>>();
+    //List<Map<String, dynamic>> tasks1 = tokens.cast<Map<String, dynamic>>();
+    //List<Map<String, dynamic>> tasks2 = tokens1.cast<Map<String, dynamic>>();
 
     tasks.forEach((obj) {
       if (obj['first_name'] != null) {
-        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
+
+        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']??'assets/images/avatar.png');
         print(obj);
         setState(() => allUsers.add(p));
       }
     });
 
-    tasks1.forEach((obj) {
-      if (obj['first_name'] != null) {
-        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
-        print(obj);
-        setState(() => champions.add(p));
-      }
-    });
 
-    tasks2.forEach((obj) {
-      if (obj['first_name'] != null) {
-        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
-        print(obj);
-        setState(() => backers.add(p));
-      }
-    });
+
+
 
     print(allUsers);
     await Future.delayed(const Duration(seconds: 2));
@@ -1271,7 +1260,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
                 child: SizedBox(  // Added SizedBox to constrain height to 75%
 
-            height: MediaQuery.of(context).size.height * 0.85,
+            height: MediaQuery.of(context).size.height * 0.99,
 
             child: Column(
             mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height

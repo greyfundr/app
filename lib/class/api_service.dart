@@ -118,8 +118,9 @@ class ApiService {
     }
   }
 
-  Future<dynamic> updateUser(final Map<String, dynamic> users) async {
-    final Map<String, dynamic> user = users;
+  Future<dynamic> updateUser(users) async {
+    dynamic user = users;
+    print(users);
     File profile = File(user['profile_pic']);
     Response response;
     print(users);

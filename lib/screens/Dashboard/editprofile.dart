@@ -110,12 +110,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       'username': _usernameController.text,
       'bio': _bioController.text,
       'website': _websiteController.text,
+      'profile_pic':_imageFile?.path ?? widget.user?['profile_pic'],
       // Note: Profile picture update would require uploading to server
       // For demo, we'll just keep the local file reference
     };
 
+
     dynamic response = await ApiService().updateUser(updatedUser);
-    print(response.data);
+    //print(response.data);
 
     // Save to SharedPreferences (you might want to update JWT or call API)
     final prefs = await SharedPreferences.getInstance();

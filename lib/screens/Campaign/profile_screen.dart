@@ -7,6 +7,7 @@ import '../../class/jwt_helper.dart';
 import 'main_campaign.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
+import '../create/createnew.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -245,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CampaignScreen()),
+                                builder: (_) => const CreateNewPage()),
                           );
                         },
                         icon: const Icon(Icons.add),

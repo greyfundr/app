@@ -1271,7 +1271,11 @@ Widget _buildIconButton(String emoji, VoidCallback onTap) {
             ),
             child: SizedBox(  // Added SizedBox to constrain height to 75%
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               height: MediaQuery.of(context).size.height * 0.87,
+=======
+              height: MediaQuery.of(context).size.height * 0.85,
+>>>>>>> Stashed changes
 =======
               height: MediaQuery.of(context).size.height * 0.85,
 >>>>>>> Stashed changes

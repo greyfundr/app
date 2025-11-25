@@ -21,8 +21,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   @override
   void initState() {
     super.initState();
+    loadProfile();
     loadCampaign();
-
   }
 
   int selectedTabIndex = 2;
@@ -48,7 +48,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   double percentage = 0.00;
   int cId = 0;
 
-  late bool campaignLive = false;
+  late bool campaignLive = true;
 
   final List<String> mainTabs = [
     "ABOUT",
@@ -64,6 +64,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => userId = userData['user']['id']);
       print("User ID: ${userData['user']}");
+      print(userId);
 
     } else {
       print("Token is expired or invalid");
@@ -110,7 +111,16 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         print(percentage);
 
         final creatorId = responseData['creator_id'];
-        print(creatorId);
+
+        if(userId == creatorId)
+        {
+          print(userId);
+          print(cId);
+          campaignLive = false;
+
+          print(campaignLive);
+        }
+        print(campaignLive);
         // FIXED: Changed from localhost to actual API URL
         final String userBaseUrl = 'https://api.greyfundr.com/users/getUser';
         final userUrl = Uri.parse('$userBaseUrl/$creatorId');
@@ -559,15 +569,6 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     // FIXED: Safe calculation of days
     int days = _calculateDaysLeft();
 
-
-    if(userId ==cId)
-      {
-        print(userId);
-        print(cId);
-        campaignLive = false;
-        
-        print(campaignLive);
-      }
     //final bool campaignLive = _isApproved && allStakeholdersApproved;
 
     // FIXED: Show loading indicator while data loads

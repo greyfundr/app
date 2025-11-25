@@ -39,6 +39,13 @@ class Campaign {
 
   }
 
+
+  void setCurrentAmount(double currentAmount) {
+    this.currentAmount = currentAmount;
+    // You can add logic here, like validation or updating the UI state in Flutter
+
+  }
+
    void setCampaignDetails(String startDate, String endDate, File mainImage, double amount,List<Participant> participant,List<File> image) {
      this.startDate = startDate;
      this.endDate= endDate;

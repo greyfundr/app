@@ -5,8 +5,11 @@ import '../class/campaign.dart';
 
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart'; // Required for MediaType
 import 'package:mime/mime.dart';
+
 
 class ApiService {
   final Dio _dio = Dio();
@@ -31,16 +34,16 @@ class ApiService {
 
   Future<dynamic> getCampaignApproval(String id) async {
     Map<String, dynamic>? category;
-    // final String url = 'http://api.greyfundr.com/posts/$id';
     try {
       final response = await _dio.get(
-        'http://api.greyfundr.com/campaign/getApprovalStatus/$id',
+        '$baseUrl/campaign/getApprovalStatus/$id',
       );
 
       if (response.statusCode == 200) {
         dynamic category = response.data["campaign"];
-
+        print(category);
         return category;
+
       }
     } catch (e) {
       print("Login failed: $e");
@@ -50,7 +53,7 @@ class ApiService {
 
   Future<dynamic> getUserNotification(String id) async {
     Map<String, dynamic>? category;
-    // final String url = '$baseUrl/posts/$id';
+    final String url = '$baseUrl/posts/$id';
     try {
       final response = await _dio.get(
         '$baseUrl/notifications/notifications/$id',
@@ -69,7 +72,7 @@ class ApiService {
 
   Future<dynamic> createCampaign(Campaign campaign, int id) async {
     List<MultipartFile> multipartImages = [];
-    // Response response;
+    Response response;
 
     Dio dio = Dio();
     try {
@@ -89,11 +92,13 @@ class ApiService {
           ),
         );
       }
-
+      print(campaign.startDate);
+      print(campaign.endDate);
       FormData formData = FormData.fromMap({
         "image": multipartImages,
         'title': campaign.title,
         'description': campaign.description,
+        'category': campaign.category,
         'startDate': campaign.startDate,
         'endDate': campaign.endDate,
         'amount': campaign.amount.toString(),
@@ -107,6 +112,52 @@ class ApiService {
         data: formData,
       );
       return response;
+      print("Image uploaded successfully: ${response.data}");
+    } catch (e) {
+      print("Error uploading image: $e");
+    }
+  }
+
+  Future<dynamic> updateUser(final Map<String, dynamic> users) async {
+    final Map<String, dynamic> user = users;
+    File profile = File(user['profile_pic']);
+    Response response;
+    print(users);
+    Dio dio = Dio();
+    try {
+
+      String fileName = profile.path.split('/').last;
+      String? mimeType = lookupMimeType(fileName);
+      print(fileName);
+
+
+
+
+
+
+      FormData formData = FormData.fromMap({
+        "image":  await MultipartFile.fromFile(
+          profile.path,
+          filename: fileName,
+          contentType: MediaType(
+            mimeType!.split('/')[0],
+            mimeType.split('/')[1],
+          ), // Adjust content type as needed
+        ),
+        'id': user['id'],
+        'first_name': user['first_name'],
+        'last_name': user['last_name'],
+        'username': user['username'],
+
+      });
+      int id = user['id'];
+      print(id);
+      Response response = await dio.post(
+        "$baseUrl/users/updateUser/$id",
+        data: formData,
+      );
+      return response;
+      print("Image uploaded successfully: ${response.data}");
     } catch (e) {
       print("Error uploading image: $e");
     }
@@ -115,7 +166,7 @@ class ApiService {
   Future<dynamic> getCampaign() async {
     List<Campaign>? category;
     try {
-      final response = await _dio.get("http://localhost:3000/campaign/getall");
+      final response = await _dio.get("$baseUrl/campaign/getall");
 
       if (response.statusCode == 200) {
         dynamic category = response.data[0];
@@ -127,12 +178,28 @@ class ApiService {
     return category;
   }
 
+  Future<dynamic> sendOtp(int phoneNumber) async {
+    List<Campaign>? category;
+    try {
+      final response = await _dio.get("$baseUrl/campaign/getall");
+
+      if (response.statusCode == 200) {
+        dynamic category = response.data[0];
+        return category;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return category;
+  }
+
+
   Future<dynamic> approveStakeholderCampaign(
-    String id,
-    String campaignId,
-  ) async {
+      String id,
+      String campaignId,
+      ) async {
     Map<String, dynamic>? category;
-    // final String url = '$baseUrl/posts/$id';
+    final String url = '$baseUrl/posts/$id';
     try {
       final response = await _dio.get(
         '$baseUrl/campaign/getApprovalStatus/$id',
@@ -166,8 +233,51 @@ class ApiService {
     return users;
   }
 
+  Future<dynamic> getChampions() async {
+    Map<String, dynamic>? users;
+    try {
+      final response = await _dio.get("http://localhost:3000/champion");
+
+      if (response.statusCode == 200) {
+        dynamic users = response.data[0];
+        //print(users);
+
+        return users;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return users;
+  }
+
+  Future<dynamic> getBackers() async {
+    Map<String, dynamic>? users;
+    final token = await getToken();
+    print(token);
+
+    try {
+      final response = await _dio.get("http://localhost:3000/backer",
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        dynamic users = response.data[0];
+        //print(users);
+
+        return users;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return users;
+  }
+
+
   Future<bool> login(String email, String password) async {
-    // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues({});
     try {
       final response = await _dio.post(

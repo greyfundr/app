@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../../class/api_service.dart';
 // import '../../class/jwt_helper.dart';
 import '../../class/campaign.dart';
+import '../../class/participants.dart';
+import '../Campaign/detailedcampaign.dart';
 
 class CampaignSearchPage extends StatefulWidget {
   const CampaignSearchPage({super.key});
@@ -26,6 +30,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
     'Community',
     'Animals',
     'Environment',
+    'Nature',
   ];
 
   final List<String> _timePeriods = [
@@ -50,96 +55,102 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
   }
 
   Future<void> _loadCampaigns() async {
-  List<Map<String, String>> offer = [];
-  List<Map<String, String>> moffer = [];
-  
-  try {
-    setState(() => isLoading = true);
-    
-    dynamic token = await ApiService().getCampaign();
-    
-    // Add null check
-    if (token == null) {
-      print('API returned null');
+    List<Map<String, String>> offer = [];
+    List<Map<String, String>> moffer = [];
+    List<File> images = [];
+    List<Participant> participant = [];
+
+    try {
+      setState(() => isLoading = true);
+
+      dynamic token = await ApiService().getCampaign();
+
+      // Add null check
+      if (token == null) {
+        print('API returned null');
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No campaigns available'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if token is a List before casting
+      if (token is! List) {
+        print('Unexpected data type: ${token.runtimeType}');
+        print('Data: $token');
+        setState(() => isLoading = false);
+        return;
+      }
+
+      List<Map<String, dynamic>> task = token.cast<Map<String, dynamic>>();
+
+      for (var obj in task) {
+        try {
+          Campaign p = Campaign(
+            obj['title'] as String,
+            obj['description'] as String,
+            obj['category'],
+            offer,
+            moffer,
+          );
+
+          if (obj['image'] != null &&
+              obj['start_date'] != null &&
+              obj['end_date'] != null &&
+              obj['current_amount'] != null) {
+            p.setCampaignDetails(
+              obj['end_date'],
+              obj['end_date'],
+              File(obj['image']),
+              obj['goal_amount'].toDouble(),
+              participant,
+              images,
+            );
+            p.setCurrentAmount(obj['current_amount'].toDouble());
+            p.setCreationTime(DateTime.parse(obj['created_at']));
+            p.setId(obj['id']);
+            _allCampaigns.add(p);
+
+          } else {
+            print('Missing fields in campaign: $obj');
+          }
+        } catch (e) {
+          print('Error parsing campaign: $e');
+          print('Campaign data: $obj');
+        }
+      }
+
+      setState(() {
+        _filteredCampaigns = _allCampaigns;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading campaign: $e');
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No campaigns available'),
-            duration: Duration(seconds: 2),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
           ),
         );
       }
-      return;
-    }
-
-    // Check if token is a List before casting
-    if (token is! List) {
-      print('Unexpected data type: ${token.runtimeType}');
-      print('Data: $token');
-      setState(() => isLoading = false);
-      return;
-    }
-
-    List<Map<String, dynamic>> task = token.cast<Map<String, dynamic>>();
-
-    for (var obj in task) {
-      try {
-        Campaign p = Campaign(
-          obj['title'] as String,
-          obj['description'] as String,
-          obj['category'] as String,
-          offer,
-          moffer,
-        );
-        
-        if (obj['image'] != null && 
-            obj['start_date'] != null && 
-            obj['end_date'] != null &&
-            obj['current_amount'] != null) {
-          p.setCampaignDetails(
-            obj['start_date'],
-            obj['end_date'],
-            obj['image'],
-            obj['current_amount'],
-            obj['title'],
-            obj['title'],
-          );
-          _allCampaigns.add(p);
-        } else {
-          print('Missing fields in campaign: $obj');
-        }
-      } catch (e) {
-        print('Error parsing campaign: $e');
-        print('Campaign data: $obj');
-      }
-    }
-
-    setState(() {
-      _filteredCampaigns = _allCampaigns;
-      isLoading = false;
-    });
-  } catch (e) {
-    print('Error loading campaign: $e');
-    setState(() => isLoading = false);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
-}
 
 
   void _filterCampaigns() {
     setState(() {
       String query = _searchController.text.toLowerCase();
-      
+
       _filteredCampaigns = _allCampaigns.where((campaign) {
         // Filter by search query
         bool matchesSearch = query.isEmpty ||
@@ -364,12 +375,12 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
                               ),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _filterCampaigns();
-                                      },
-                                    )
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterCampaigns();
+                                },
+                              )
                                   : null,
                             ),
                           ),
@@ -393,7 +404,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
                             if (_selectedCategory != 'All')
                               _buildFilterChip(
                                 _selectedCategory,
-                                () {
+                                    () {
                                   setState(() => _selectedCategory = 'All');
                                   _filterCampaigns();
                                 },
@@ -401,9 +412,9 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
                             if (_selectedTimePeriod != 'All Time')
                               _buildFilterChip(
                                 _selectedTimePeriod,
-                                () {
+                                    () {
                                   setState(
-                                      () => _selectedTimePeriod = 'All Time');
+                                          () => _selectedTimePeriod = 'All Time');
                                   _filterCampaigns();
                                 },
                               ),
@@ -437,48 +448,48 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
             Expanded(
               child: _filteredCampaigns.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 80,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No campaigns found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Try adjusting your search or filters',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.75,
-                      ),
-                      itemCount: _filteredCampaigns.length,
-                      itemBuilder: (context, index) {
-                        return _buildCampaignCard(_filteredCampaigns[index]);
-                      },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 80,
+                      color: Colors.grey[300],
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No campaigns found',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Try adjusting your search or filters',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: _filteredCampaigns.length,
+                itemBuilder: (context, index) {
+                  return _buildCampaignCard(_filteredCampaigns[index]);
+                },
+              ),
             ),
           ],
         ),
@@ -520,12 +531,20 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
 
   Widget _buildCampaignCard(Campaign campaign) {
     double progress = campaign.currentAmount / campaign.amount;
-    
+
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to campaign details
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Opening ${campaign.title}')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CampaignDetailPage(
+                id: campaign.id.toString()
+            ),
+          ),
         );
       },
       child: Container(
@@ -550,11 +569,11 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+                const BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: ClipRRect(
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+                const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.asset(
                   campaign.imageUrl!.path,
                   fit: BoxFit.cover,
@@ -626,7 +645,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
 
                     // Amount Raised
                     Text(
-                      '₦${_formatAmount(campaign.amount)} raised',
+                      '₦${_formatAmount(campaign.currentAmount)} raised',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,

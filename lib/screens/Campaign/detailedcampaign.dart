@@ -22,7 +22,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void initState() {
     super.initState();
     loadCampaign();
-    loadProfile();
+
   }
 
   int selectedTabIndex = 2;
@@ -64,6 +64,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => userId = userData['user']['id']);
       print("User ID: ${userData['user']}");
+
     } else {
       print("Token is expired or invalid");
 
@@ -88,8 +89,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         setState(() {
           campaign = responseData;
           title = responseData['title'] ?? '';
-          goal = responseData['goal_amount']?.toString() ?? '0';
-          current = responseData['current_amount']?.toString() ?? '0';
+          goal = responseData['goal_amount'].toString();
+          current = responseData['current_amount'].toString() ?? '0';
           description = responseData['description'] ?? '';
           startDate = responseData['start_date'] ?? '';
           endDate = responseData['end_date'] ?? '';
@@ -98,12 +99,18 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           image = responseData['image'] ?? 0;
           image = image.replaceAll('\\', '/');
           cId = responseData['creator_id'];
+
         });
-        double percent = double.parse(responseData['current_amount'])/double.parse(responseData['goal_amount']);
+        double a =responseData['current_amount'].toDouble();
+        double b =responseData['goal_amount'].toDouble();
+
+        double percent =  a/b;
         percentage = percent;
 
-        final creatorId = responseData['creator_id'];
+        print(percentage);
 
+        final creatorId = responseData['creator_id'];
+        print(creatorId);
         // FIXED: Changed from localhost to actual API URL
         final String userBaseUrl = 'https://api.greyfundr.com/users/getUser';
         final userUrl = Uri.parse('$userBaseUrl/$creatorId');
@@ -116,10 +123,13 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
           // FIXED: Update user data in setState
           setState(() {
-            first = userData['first_name'] ?? '';
-            last = userData['last_name'] ?? '';
-            profile = userData['profile_pic'] ?? '';
+
+            first = userData['first_name'];
+            last = userData['last_name'];
+            profile = userData['profile_pic'];
+
             isLoading = false;
+
           });
 
           print(first);
@@ -741,7 +751,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                     ),
                     const SizedBox(width: 10),
                     const CircleAvatar(
-                      backgroundImage: AssetImage('assets/images/unicef.png'),
+                      backgroundImage: AssetImage('assets/images/avatar.png'),
                       radius: 18,
                     ),
                   ],

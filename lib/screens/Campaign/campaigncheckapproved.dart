@@ -23,17 +23,18 @@ class CampaignApprovalPage extends StatefulWidget {
 class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
   late bool _isApproved;
   late int _stakeholdersApproved = 0;
-  late int totalStakeholders;
+  late int totalStakeholders = 1;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    loadCampaignApproval();
     _timer = Timer.periodic(Duration(seconds: 10), (Timer t) =>
         loadCampaignApproval()); // Your function
 
     _isApproved = widget.isApproved;
-    //_stakeholdersApproved = widget.stakeholdersApproved;
+    _stakeholdersApproved = widget.stakeholdersApproved;
 
   }
 
@@ -47,7 +48,9 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
 
   Future<void> loadCampaignApproval() async {
     String ids = widget.id.toString();
+    print(ids);
     dynamic token = await ApiService().getCampaignApproval(ids) ;
+    print(token);
     int champions = (token[0]['champions']);
     int hosts = (token[0]['host']);
     int approved = (token[0]['approved']);

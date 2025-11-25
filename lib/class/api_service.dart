@@ -108,7 +108,7 @@ class ApiService {
       });
 
       Response response = await dio.post(
-        "http://localhost:3000/campaign/create",
+        "$baseUrl/campaign/create",
         data: formData,
       );
       return response;

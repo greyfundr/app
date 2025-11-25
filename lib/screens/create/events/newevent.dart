@@ -1,237 +1,506 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:intl/intl.dart';
 
-class EventCreationPage extends StatefulWidget {
+class EventStartPage extends StatefulWidget {
+  const EventStartPage({Key? key}) : super(key: key);
+
   @override
-  _EventCreationPageState createState() => _EventCreationPageState();
+  State<EventStartPage> createState() => _EventStartPageState();
 }
 
-class _EventCreationPageState extends State<EventCreationPage> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+class _EventStartPageState extends State<EventStartPage> {
+  int _currentStep = 0;
+  final _formKey = GlobalKey<FormState>();
 
-  // Form data
-  String eventName = '';
-  String description = '';
-  DateTime? selectedDate;
-  TimeOfDay? selectedTime;
-  String location = '';
-  String category = '';
-  List<String> tags = [];
+  // Step 1 variables
+  String? _selectedRole;
+  final _ownerNameController = TextEditingController();
+  final _ownerPhoneController = TextEditingController();
+  String _selectedCountryCode = '+1';
 
-  void _nextPage() {
-    if (_currentPage < 4) {
-      _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  // Step 2 variables
+  final _eventNameController = TextEditingController();
+  String? _selectedCategory;
+  File? _bannerImage;
+  final _guestCountController = TextEditingController();
+
+  // Step 3 variables
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  String? _selectedPayment;
+
+  final List<String> _eventCategories = [
+    'Wedding',
+    'Birthday',
+    'Corporate',
+    'Conference',
+    'Party',
+    'Other'
+  ];
+
+  final List<String> _countryCodes = [
+    '+1',
+    '+44',
+    '+91',
+    '+234',
+    '+86',
+    '+81'
+  ];
+
+  final List<String> _paymentOptions = [
+    'Pay Now',
+    'Pay Later',
+    'Pay on Event Day'
+  ];
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _bannerImage = File(image.path);
+      });
     }
   }
 
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
-  void _submitEvent() {
-    // Handle submission logic here, e.g., save to database or API
-    print('Event Created: $eventName, $description, $selectedDate, $selectedTime, $location, $category, $tags');
-    // Navigate back or show success
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Create Event'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              children: [
-                _buildStep1(),
-                _buildStep2(),
-                _buildStep3(),
-                _buildStep4(),
-                _buildStep5(),
-              ],
-            ),
+  bool _validateCurrentStep() {
+    if (_currentStep == 0) {
+      if (_selectedRole == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select your role')),
+        );
+        return false;
+      }
+      if (_selectedRole == 'Event Planner') {
+        if (_ownerNameController.text.isEmpty ||
+            _ownerPhoneController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Please fill in owner details')),
+          );
+          return false;
+        }
+      }
+    } else if (_currentStep == 1) {
+      if (_eventNameController.text.isEmpty ||
+          _selectedCategory == null ||
+          _guestCountController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all required fields')),
+        );
+        return false;
+      }
+    } else if (_currentStep == 2) {
+      if (_selectedDate == null ||
+          _selectedTime == null ||
+          _selectedPayment == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please complete all fields')),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _nextStep() {
+    if (_validateCurrentStep()) {
+      if (_currentStep < 2) {
+        setState(() {
+          _currentStep++;
+        });
+      } else {
+        _createEvent();
+      }
+    }
+  }
+
+  void _createEvent() {
+    // Handle event creation logic here
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Success'),
+        content: const Text('Event created successfully!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
-          _buildNavigationButtons(),
-          _buildPageIndicator(),
         ],
       ),
     );
   }
 
   Widget _buildStep1() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Step 1: Basic Info', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(labelText: 'Event Name'),
-            onChanged: (value) => eventName = value,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Your Role',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        RadioListTile<String>(
+          title: const Text('Owner'),
+          value: 'Owner',
+          groupValue: _selectedRole,
+          onChanged: (value) {
+            setState(() {
+              _selectedRole = value;
+              _ownerNameController.clear();
+              _ownerPhoneController.clear();
+            });
+          },
+        ),
+        RadioListTile<String>(
+          title: const Text('Event Planner'),
+          value: 'Event Planner',
+          groupValue: _selectedRole,
+          onChanged: (value) {
+            setState(() {
+              _selectedRole = value;
+            });
+          },
+        ),
+        if (_selectedRole == 'Event Planner') ...[
+          const SizedBox(height: 24),
+          const Text(
+            'Owner Details',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 16),
           TextField(
-            decoration: InputDecoration(labelText: 'Description'),
-            maxLines: 3,
-            onChanged: (value) => description = value,
+            controller: _ownerNameController,
+            decoration: const InputDecoration(
+              labelText: 'Owner Full Name',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.person),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 100,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCountryCode,
+                    isExpanded: true,
+                    items: _countryCodes.map((code) {
+                      return DropdownMenuItem(
+                        value: code,
+                        child: Text(code),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCountryCode = value!;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _ownerPhoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner Phone Number',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
-      ),
+      ],
     );
   }
 
   Widget _buildStep2() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Step 2: Date & Time', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () async {
-              DateTime? picked = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now(),
-                lastDate: DateTime(2101),
-              );
-              if (picked != null) setState(() => selectedDate = picked);
-            },
-            child: Text(selectedDate == null ? 'Select Date' : '${selectedDate!.toLocal()}'.split(' ')[0]),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Event Details',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _eventNameController,
+          decoration: const InputDecoration(
+            labelText: 'Name of Event',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.event),
           ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () async {
-              TimeOfDay? picked = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.now(),
-              );
-              if (picked != null) setState(() => selectedTime = picked);
-            },
-            child: Text(selectedTime == null ? 'Select Time' : selectedTime!.format(context)),
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: _selectedCategory,
+          decoration: const InputDecoration(
+            labelText: 'Event Category',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.category),
           ),
-        ],
-      ),
+          items: _eventCategories.map((category) {
+            return DropdownMenuItem(
+              value: category,
+              child: Text(category),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCategory = value;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Event Banner',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickImage,
+          child: Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[100],
+            ),
+            child: _bannerImage != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      _bannerImage!,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.cloud_upload, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('Tap to upload banner image'),
+                    ],
+                  ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _guestCountController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Number of Guests',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.people),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildStep3() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Step 3: Location', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(labelText: 'Location'),
-            onChanged: (value) => location = value,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Event Schedule & Payment',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        ListTile(
+          title: const Text('Date of Event'),
+          subtitle: Text(
+            _selectedDate != null
+                ? DateFormat('MMM dd, yyyy').format(_selectedDate!)
+                : 'Select date',
           ),
-        ],
-      ),
+          leading: const Icon(Icons.calendar_today),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Colors.grey),
+          ),
+          onTap: _selectDate,
+        ),
+        const SizedBox(height: 16),
+        ListTile(
+          title: const Text('Time of Event'),
+          subtitle: Text(
+            _selectedTime != null
+                ? _selectedTime!.format(context)
+                : 'Select time',
+          ),
+          leading: const Icon(Icons.access_time),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Colors.grey),
+          ),
+          onTap: _selectTime,
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Payment Option',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        ..._paymentOptions.map((option) {
+          return RadioListTile<String>(
+            title: Text(option),
+            value: option,
+            groupValue: _selectedPayment,
+            onChanged: (value) {
+              setState(() {
+                _selectedPayment = value;
+              });
+            },
+          );
+        }).toList(),
+      ],
     );
   }
 
-  Widget _buildStep4() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Step 4: Category & Tags', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(labelText: 'Category'),
-            onChanged: (value) => category = value,
-          ),
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(labelText: 'Tags (comma separated)'),
-            onChanged: (value) => tags = value.split(',').map((e) => e.trim()).toList(),
-          ),
-        ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Event'),
+        elevation: 0,
       ),
-    );
-  }
-
-  Widget _buildStep5() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
         children: [
-          Text('Step 5: Review & Submit', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          Text('Name: $eventName'),
-          Text('Description: $description'),
-          Text('Date: ${selectedDate?.toLocal()}'),
-          Text('Time: ${selectedTime?.format(context)}'),
-          Text('Location: $location'),
-          Text('Category: $category'),
-          Text('Tags: ${tags.join(', ')}'),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _submitEvent,
-            child: Text('Create Event'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavigationButtons() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (_currentPage > 0)
-            ElevatedButton(
-              onPressed: _previousPage,
-              child: Text('Previous'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            child: Row(
+              children: List.generate(3, (index) {
+                return Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: index <= _currentStep
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      if (index < 2) const SizedBox(width: 4),
+                    ],
+                  ),
+                );
+              }),
             ),
-          if (_currentPage < 4)
-            ElevatedButton(
-              onPressed: _nextPage,
-              child: Text('Next'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Step ${_currentStep + 1} of 3',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: _currentStep == 0
+                    ? _buildStep1()
+                    : _currentStep == 1
+                        ? _buildStep2()
+                        : _buildStep3(),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                if (_currentStep > 0)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _currentStep--;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Back'),
+                    ),
+                  ),
+                if (_currentStep > 0) const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _nextStep,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(_currentStep < 2 ? 'Next' : 'Create Event'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPageIndicator() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (index) {
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: 4.0),
-          width: 10.0,
-          height: 10.0,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _currentPage == index ? Colors.blue : Colors.grey,
-          ),
-        );
-      }),
-    );
+  @override
+  void dispose() {
+    _ownerNameController.dispose();
+    _ownerPhoneController.dispose();
+    _eventNameController.dispose();
+    _guestCountController.dispose();
+    super.dispose();
   }
 }

@@ -48,6 +48,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   double percentage = 0.00;
   int cId = 0;
 
+  late bool campaignLive = false;
+
   final List<String> mainTabs = [
     "ABOUT",
     "FINANCING",
@@ -72,7 +74,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'http://localhost:3000/campaign/getcampaign';
+      final String baseUrl = 'https://api.greyfundr.com/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);
@@ -103,7 +105,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         final creatorId = responseData['creator_id'];
 
         // FIXED: Changed from localhost to actual API URL
-        final String userBaseUrl = 'http://localhost:3000/users/getUser';
+        final String userBaseUrl = 'https://api.greyfundr.com/users/getUser';
         final userUrl = Uri.parse('$userBaseUrl/$creatorId');
 
         final userResponse = await http.get(userUrl);
@@ -546,14 +548,13 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   Widget build(BuildContext context) {
     // FIXED: Safe calculation of days
     int days = _calculateDaysLeft();
-    final bool campaignLive = true;
 
 
     if(userId ==cId)
       {
         print(userId);
         print(cId);
-        final bool campaignLive = false;
+        campaignLive = false;
         
         print(campaignLive);
       }

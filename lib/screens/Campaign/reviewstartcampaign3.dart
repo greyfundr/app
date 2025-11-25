@@ -1424,8 +1424,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 0.0,
                         top: 0.0,
                         child: ErrorBoundary(
-                          child: Image.network(
-                            'https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/images/1763830912324-avatar.png',
+                          child: Image.asset(
+                            widget.campaign.imageUrl!.path,
                             height: 321.357421875,
                             width: 440.0,
                           ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../class/api_service.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 
@@ -33,6 +34,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
+
     // Pre-fill controllers with the logged-in user's current details
     // If a field is missing from user data, it defaults to an empty string
     _firstNameController = TextEditingController(text: widget.user?['first_name'] ?? '');
@@ -41,6 +43,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _bioController = TextEditingController(text: widget.user?['bio'] ?? '');  // Add 'bio' to your user data if needed
     _websiteController = TextEditingController(text: widget.user?['website'] ?? '');  // Add 'website' to your user data if needed
   }
+
+
 
   @override
   void dispose() {
@@ -51,6 +55,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _websiteController.dispose();
     super.dispose();
   }
+
+
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
@@ -93,6 +99,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
 
+
+
     // Simulate API call or update logic here
     // For now, we'll just update local state and save to SharedPreferences
     final updatedUser = {
@@ -105,6 +113,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // Note: Profile picture update would require uploading to server
       // For demo, we'll just keep the local file reference
     };
+
+    dynamic response = await ApiService().updateUser(updatedUser);
+    print(response.data);
 
     // Save to SharedPreferences (you might want to update JWT or call API)
     final prefs = await SharedPreferences.getInstance();
@@ -171,7 +182,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   backgroundImage: _imageFile != null
                       ? FileImage(_imageFile!)
                       : (widget.user?['profile_pic'] != null
-                          ? NetworkImage(widget.user!['profile_pic'])
+                          ? NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/images/avatar.png')
                           : const AssetImage('assets/images/personal.png')) as ImageProvider,
                 ),
                 GestureDetector(

@@ -34,7 +34,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   void saveDetails() async {
      //userid = String.parseInt()
     final response = await http.post(
-      Uri.parse('http://api.greyfundr.com/auth/updateregister'),
+      Uri.parse('https://api.greyfundr.com/auth/updateregister'),
       body: {
         'id': widget.user_id.toString(),
         'first_name': nameController.text,

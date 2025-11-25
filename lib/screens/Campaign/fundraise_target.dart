@@ -57,6 +57,10 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
   List<Participant> allUsers = [];
 
+  List<Participant> champions = [];
+
+  List<Participant> backers = [];
+
   @override
   void initState() {
     super.initState();
@@ -65,13 +69,34 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
   Future<void> loadUsers() async {
     dynamic token = await ApiService().getUsers();
+    dynamic tokens = await ApiService().getChampions();
+    dynamic tokens1 = await ApiService().getBackers();
+
     List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
+    List<Map<String, dynamic>> tasks1 = tokens.cast<Map<String, dynamic>>();
+    List<Map<String, dynamic>> tasks2 = tokens1.cast<Map<String, dynamic>>();
 
     tasks.forEach((obj) {
       if (obj['first_name'] != null) {
         Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
-        print(p);
+        print(obj);
         setState(() => allUsers.add(p));
+      }
+    });
+
+    tasks1.forEach((obj) {
+      if (obj['first_name'] != null) {
+        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
+        print(obj);
+        setState(() => champions.add(p));
+      }
+    });
+
+    tasks2.forEach((obj) {
+      if (obj['first_name'] != null) {
+        Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']);
+        print(obj);
+        setState(() => backers.add(p));
       }
     });
 
@@ -1245,7 +1270,11 @@ Widget _buildIconButton(String emoji, VoidCallback onTap) {
               top: 20,
             ),
             child: SizedBox(  // Added SizedBox to constrain height to 75%
+<<<<<<< Updated upstream
               height: MediaQuery.of(context).size.height * 0.87,
+=======
+              height: MediaQuery.of(context).size.height * 0.85,
+>>>>>>> Stashed changes
               child: Column(
                 mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
                 crossAxisAlignment: CrossAxisAlignment.start,

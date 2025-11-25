@@ -36,7 +36,7 @@ class PersonalRegisterScreen extends StatelessWidget {
 
     void register() async {
       final response = await http.post(
-        Uri.parse('http://api.greyfundr.com/auth/register'),
+        Uri.parse('http://localhost:3000/auth/register'),
         body: {
           'email': emailController.text,
           'username': emailController.text,

@@ -4,6 +4,7 @@ import 'participants.dart';
 import 'dart:convert';
 
 class Campaign {
+  int id = 0;
    String title = '';
    String description = '';
    File? imageUrl;
@@ -32,6 +33,12 @@ class Campaign {
 
    }
 
+  void setId(int id) {
+    this.id = id;
+    // You can add logic here, like validation or updating the UI state in Flutter
+
+  }
+
    void setCampaignDetails(String startDate, String endDate, File mainImage, double amount,List<Participant> participant,List<File> image) {
      this.startDate = startDate;
      this.endDate= endDate;
@@ -41,6 +48,11 @@ class Campaign {
      images = image;
      // You can add logic here, like validation or updating the UI state in Flutter
 
+   }
+
+   void setCreationTime(DateTime created_at)
+   {
+     this.created_at = created_at;
    }
 
    void setImages(List<File> image) {

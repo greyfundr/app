@@ -21,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? user;
+  Map<String, dynamic>? wallet;
   int _selectedIndex = 0;
 
   @override
@@ -34,7 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => user = userData['user']);
+      setState(() => wallet = userData['wallet']);
       print("User ID: ${userData['user']}");
+      print("User ID: ${userData['wallet']}");
     } else {
       print("Token is expired or invalid");
     }
@@ -241,9 +244,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: TextStyle(color: Colors.white70, fontSize: 14),
                           ),
                           const SizedBox(height: 5),
-                          const Text(
-                            '₦72,311.00',
-                            style: TextStyle(
+                          Text(
+                            wallet?['balance'],
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold),
@@ -251,11 +254,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
-                              Text('You owe: ₦23,200',
-                                  style: TextStyle(color: Colors.white70)),
-                              Text('You are owed: ₦45,200',
-                                  style: TextStyle(color: Colors.white70)),
+                            children: [
+                              Text('You owe: ${wallet?['incoming_balance']}',
+                                  style: const TextStyle(color: Colors.white70)),
+                              Text('You are owed: ${wallet?['balance_owed']}',
+                                  style: const TextStyle(color: Colors.white70)),
                             ],
                           ),
                           const SizedBox(height: 15),
@@ -357,7 +360,7 @@ class SettingsActivityPage extends StatelessWidget {
              Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const EditProfilePage()),
+                                builder: (_) => EditProfilePage(user:user)),
                           );
             },
           ),

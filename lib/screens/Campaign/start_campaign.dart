@@ -87,7 +87,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red, size: 28),
+                      icon: const Icon(Icons.close, color: Color.fromARGB(255, 54, 244, 136), size: 28),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -408,7 +408,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(25.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -458,15 +458,15 @@ class _CampaignScreenState extends State<CampaignScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Yourself',
+                            'Campaign For You',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'By setting up a Personal Account, you gain and control all aspects of this Account',
+                            'Set up your personal campaign you want people to donate to',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -479,19 +479,19 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
 
               // Campaign Title
               const Text(
                 'Campaign Title',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'What name do you want to give to your Campaign/Fundraiser',
+                'A name for your Campaign/Fundraiser',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -525,7 +525,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
               const Text(
                 'Description',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -608,8 +608,10 @@ class _CampaignScreenState extends State<CampaignScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                 
                 ),
               ),
+              const SizedBox(height: 60),
             ],
           ),
         ),

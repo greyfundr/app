@@ -294,7 +294,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Team',
+                    'Create Team',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -416,52 +416,71 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               ),
 
               const SizedBox(height: 24),
+
+
+
               Row(
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: Colors.teal,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Visibility',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+  children: [
+    Container(
+      width: 28,
+      height: 28,
+      decoration: const BoxDecoration(
+        color: Colors.teal,
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.add,
+        color: Colors.white,
+        size: 18,
+      ),
+    ),
+    const SizedBox(width: 8),
+    const Text(
+      'Visibility',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 4),
+const Text(
+  'who can see this post',
+  style: TextStyle(
+    fontSize: 12,
+    color: Colors.grey,
+  ),
+),
+
+
+
+
               const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'CUSTOMIZE',
-                      style: TextStyle(
-                        color: Colors.grey,
-                      ),
-                    ),
-                   
-                  ], 
-                ),
-              ),
+              SizedBox(
+  width: double.infinity,
+  child: OutlinedButton(
+    onPressed: () {
+      _showCustomizeBottomSheet(context);  // Add this line
+    },
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      side: BorderSide(color: const Color.fromARGB(255, 216, 139, 14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    child: const Text(
+      'CUSTOMISE',
+      style: TextStyle(
+        color: Color.fromARGB(255, 216, 139, 14),
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
+),
+
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -503,7 +522,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   child: const Text('REVIEW & POST'),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 34),
             ],
           ),
         ),
@@ -788,6 +807,399 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     );
   }
 
+void _showCustomizeBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.85,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row( // Add this Row wrapper
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Expanded(
+          child: Center(
+            child: Text(
+              'Customise Campaign',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ),
+        IconButton( // Add this close button
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.close),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
+    ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildCustomizeOption(
+                          icon: '💰',
+                          title: 'Suggest Donation amount',
+                          subtitle: "Enter the amount you'd like others to consider giving.",
+                          hasToggle: false,
+                        ),
+                        _buildCustomizeOption(
+                          icon: '🌐',
+                          title: 'Show Contributions',
+                          subtitle: null,
+                          hasToggle: true,
+                          toggleValue: true,
+                          onToggleChanged: (val) {
+                            setModalState(() {
+                              // Handle toggle
+                            });
+                          },
+                        ),
+                        _buildCustomizeOption(
+                          icon: '💬',
+                          title: 'Allow Comments',
+                          subtitle: null,
+                          hasToggle: true,
+                          toggleValue: true,
+                          onToggleChanged: (val) {
+                            setModalState(() {
+                              // Handle toggle
+                            });
+                          },
+                        ),
+                        _buildCustomizeOption(
+                          icon: '👥',
+                          title: 'Allow Co-Campaigning',
+                          subtitle: 'Supporters can start a mini campaign under yours to rally more donations.',
+                          hasToggle: true,
+                          toggleValue: true,
+                          onToggleChanged: (val) {
+                            setModalState(() {
+                              // Handle toggle
+                            });
+                          },
+                        ),
+                        _buildCustomizeOption(
+                          icon: '🌐',
+                          title: 'Make Discoverable',
+                          subtitle: 'Your listing will appear in search results, allowing more users to find and interact with it.',
+                          hasToggle: true,
+                          toggleValue: true,
+                          onToggleChanged: (val) {
+                            setModalState(() {
+                              // Handle toggle
+                            });
+                          },
+                        ),
+                        _buildCustomizeOption(
+                          icon: '📣',
+                          title: 'Allow Champions',
+                          subtitle: 'Allow others to champion your campaign and help spread the word.',
+                          hasToggle: true,
+                          toggleValue: true,
+                          onToggleChanged: (val) {
+                            setModalState(() {
+                              // Handle toggle
+                            });
+                          },
+                        ),
+                        _buildCustomizeOption(
+                          icon: '⭐',
+                          title: 'Set Conditions & Rewards',
+                          subtitle: 'Encourage donations by offering special rewards or experiences.',
+                          hasToggle: false,
+                        ),
+                        _buildCustomizeOption(
+                          icon: '❤️',
+                          title: 'Set "Thank You" Message',
+                          subtitle: 'Send a personal message to thank supporters after they contribute.',
+                          hasToggle: false,
+                          onTap: () {
+    _showThankYouMessageBottomSheet(context);
+  },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget _buildCustomizeOption({
+  required String icon,
+  required String title,
+  String? subtitle,
+  bool hasToggle = false,
+  bool toggleValue = false,
+  Function(bool)? onToggleChanged,
+   VoidCallback? onTap, // Add this parameter
+}) {
+  return GestureDetector( // Added this wrapper
+    onTap: hasToggle ? null : onTap, // Added this
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                icon,
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (hasToggle)
+            Switch(
+              value: toggleValue,
+              onChanged: onToggleChanged,
+              activeColor: Colors.teal,
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+void _showThankYouMessageBottomSheet(BuildContext context) {
+  final TextEditingController messageController = TextEditingController();
+  
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 20,
+              right: 20,
+              top: 20,
+            ),
+            child: SizedBox( // Add SizedBox to control height
+              height: MediaQuery.of(context).size.height * 0.7, // Adjust height (70% of screen)
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Add close button
+                  Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    Expanded(
+      child: Center(
+        child: Text(
+          'Set "Thank You" Message',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    ),
+
+    // Close button on the right
+    IconButton(
+      onPressed: () {
+        Navigator.pop(context);
+      },
+      icon: Icon(Icons.close),
+      padding: EdgeInsets.zero,
+      constraints: BoxConstraints(),
+    ),
+  ],
+),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Send a personal message to thank supporters after they contribute.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Icons row
+                  Row(
+                    children: [
+                      _buildIconButton('🔔', () {}),
+                      const SizedBox(width: 12),
+                      _buildIconButton('🎉', () {}),
+                      const SizedBox(width: 12),
+                      _buildIconButton('❤️', () {}),
+                      const SizedBox(width: 12),
+                      _buildIconButton('🎨', () {}),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.teal,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Insert URL',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Message text field
+                  Expanded( // Wrap TextField in Expanded to take remaining space
+                    child: TextField(
+                      controller: messageController,
+                      maxLines: 6, // Changed from 6 to null
+                      
+                      decoration: InputDecoration(
+                        hintText: 'Type your thank you message here...',
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.teal),
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Done button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Handle saving the message
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'DONE',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 150),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+
+
+
+
+
+
+
+
+
+Widget _buildIconButton(String emoji, VoidCallback onTap) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(
+          emoji,
+          style: const TextStyle(fontSize: 20),
+        ),
+      ),
+    ),
+  );
+}
+
+
   void _showUserSelectionBottomSheet(BuildContext context) {
   List<Participant> filteredUsers = List.from(allUsers);
   List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
@@ -833,7 +1245,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               top: 20,
             ),
             child: SizedBox(  // Added SizedBox to constrain height to 75%
-              height: MediaQuery.of(context).size.height * 0.75,
+              height: MediaQuery.of(context).size.height * 0.87,
               child: Column(
                 mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -845,9 +1257,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 40),
                   SizedBox(
-                    height: 60,
+                    height: 50,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: tempSelectedParticipants.length,
@@ -904,7 +1316,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                           unselectedLabelColor: Colors.grey,
                         ),
                         SizedBox(
-                          height: 350,
+                          height: 450,
                           child: TabBarView(
                             children: List.generate(5, (_) {
                               return Column(

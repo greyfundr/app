@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../class/api_service.dart';
-import '../../class/jwt_helper.dart';
+// import '../../class/jwt_helper.dart';
 import '../../class/campaign.dart';
 
 class CampaignSearchPage extends StatefulWidget {
@@ -50,65 +50,90 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
   }
 
   Future<void> _loadCampaigns() async {
-    List<Map<String, String>> offer = [];
-    List<Map<String, String>> moffer = [];
+  List<Map<String, String>> offer = [];
+  List<Map<String, String>> moffer = [];
+  
+  try {
+    setState(() => isLoading = true);
+    
+    dynamic token = await ApiService().getCampaign();
+    
+    // Add null check
+    if (token == null) {
+      print('API returned null');
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No campaigns available'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check if token is a List before casting
+    if (token is! List) {
+      print('Unexpected data type: ${token.runtimeType}');
+      print('Data: $token');
+      setState(() => isLoading = false);
+      return;
+    }
+
+    List<Map<String, dynamic>> task = token.cast<Map<String, dynamic>>();
+
+    for (var obj in task) {
       try {
-        dynamic token = await ApiService().getCampaign();
-
-        List<Map<String, dynamic>> task = token.cast<Map<String, dynamic>>();
-
-        task.forEach((obj)
-        {
-          Campaign p = Campaign
-            (
-            obj['title'] as String,
-            obj['description'] as String,
-            obj['category'] as String,
-            offer,
-            moffer,
+        Campaign p = Campaign(
+          obj['title'] as String,
+          obj['description'] as String,
+          obj['category'] as String,
+          offer,
+          moffer,
+        );
+        
+        if (obj['image'] != null && 
+            obj['start_date'] != null && 
+            obj['end_date'] != null &&
+            obj['current_amount'] != null) {
+          p.setCampaignDetails(
+            obj['start_date'],
+            obj['end_date'],
+            obj['image'],
+            obj['current_amount'],
+            obj['title'],
+            obj['title'],
           );
-          if(obj['image'] != null && obj['start_date'] != null && obj['end_date'] != null) {
-            p.setCampaignDetails(
-                obj['start_date'], obj['end_date'], obj['image'], obj['current_amount'],
-                obj['title'], obj['title']);
-          }
-          else
-            {
-              print(obj);
-            }
-          setState(() => _allCampaigns.add(p));
-          print(p);
-        });
-
-        setState(() => isLoading = false);
-        //_allCampaigns = token.cast<Campaign>();
-
-
-
-
-        //print(token);
-      }
-      catch (e) {
-        print('Error loading campaign: $e');
-        setState(() => isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              duration: const Duration(seconds: 2),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _allCampaigns.add(p);
+        } else {
+          print('Missing fields in campaign: $obj');
         }
+      } catch (e) {
+        print('Error parsing campaign: $e');
+        print('Campaign data: $obj');
       }
+    }
 
-    _filteredCampaigns = _allCampaigns;
-
-    //setState(() => totalStakeholders = waiting);
-
-
-    //setState(() => categories = tasks);
+    setState(() {
+      _filteredCampaigns = _allCampaigns;
+      isLoading = false;
+    });
+  } catch (e) {
+    print('Error loading campaign: $e');
+    setState(() => isLoading = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+}
 
 
   void _filterCampaigns() {

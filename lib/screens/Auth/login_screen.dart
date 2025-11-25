@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static final emailController = TextEditingController();
   static final passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false; // Added loading state
 
   @override
   Widget build(BuildContext context) {
@@ -41,67 +42,86 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     void login() async {
-      SharedPreferences.setMockInitialValues({});
-      final response = await http.post(
-        Uri.parse('https://api.greyfundr.com/auth/login'),
-        body: {
-          'email': emailController.text,
-          'password': passwordController.text,
-        },
-      );
-      if (response.statusCode == 200) {
-        // Handle successful login
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['msg'];
-        String token = responseData['token'];
+      // Start loading
+      setState(() {
+        _isLoading = true;
+      });
 
-        await AuthService().saveToken(token);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            duration: Duration(seconds: 2), // Optional: how long it shows
-            backgroundColor: Colors.green, // Optional: customize color
-          ),
+      try {
+        SharedPreferences.setMockInitialValues({});
+        final response = await http.post(
+          Uri.parse('https://api.greyfundr.com/auth/login'),
+          body: {
+            'email': emailController.text,
+            'password': passwordController.text,
+          },
         );
-        Future.delayed(const Duration(seconds: 3), () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => const ProfileScreen()),
-          );
+        
+        // Stop loading
+        setState(() {
+          _isLoading = false;
         });
-      } else {
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['msg'];
-        print('Response from Node.js: $responseData');
 
-        _showErrorDialog(context, message);
+        if (response.statusCode == 200) {
+          // Handle successful login
+          Map<String, dynamic> responseData = jsonDecode(response.body);
+          String message = responseData['msg'];
+          String token = responseData['token'];
+
+          await AuthService().saveToken(token);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Future.delayed(const Duration(seconds: 3), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const ProfileScreen()),
+            );
+          });
+        } else {
+          Map<String, dynamic> responseData = jsonDecode(response.body);
+          String message = responseData['msg'];
+          print('Response from Node.js: $responseData');
+
+          _showErrorDialog(context, message);
+        }
+      } catch (e) {
+        // Stop loading on error
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(context, 'An error occurred. Please try again.');
       }
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Prevents keyboard from overlapping input fields
+      resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/login_bg.png"), // 👈 now full-page background
+            image: AssetImage("assets/images/login_bg.png"),
             fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Top section (only text now, no background image)
+              // Top section
               Expanded(
                 flex: 8,
                 child: Container(
                   width: double.infinity,
                   padding:
                       const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  color: Colors.transparent, // transparent over bg
+                  color: Colors.transparent,
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -130,7 +150,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        
                         children: [
                           const SizedBox(height: 10),
                           const Text(
@@ -153,10 +172,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Email / Phone
                           TextField(
                             controller: emailController,
+                            enabled: !_isLoading, // Disable when loading
                             decoration: InputDecoration(
                               labelText: "Enter Email or Phone",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.email, color: Colors.grey), // Added email icon
+                              suffixIcon: const Icon(Icons.email, color: Colors.grey),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -178,7 +198,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Password
                           TextField(
                             controller: passwordController,
-                            obscureText: !_isPasswordVisible, // Toggles based on state
+                            enabled: !_isLoading, // Disable when loading
+                            obscureText: !_isPasswordVisible,
                             decoration: InputDecoration(
                               labelText: "Password",
                               labelStyle: const TextStyle(color: Colors.grey),
@@ -215,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: _isLoading ? null : () {}, // Disable when loading
                               child: const Text(
                                 "Forgot Password?",
                                 style: TextStyle(color: Colors.red),
@@ -224,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // Login Button
+                          // Login Button with Loading Spinner
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -235,12 +256,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              onPressed: login,
-                              child: const Text(
-                                "Log In",
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.white),
-                              ),
+                              onPressed: _isLoading ? null : login, // Disable when loading
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : const Text(
+                                      "Log In",
+                                      style: TextStyle(
+                                          fontSize: 16, color: Colors.white),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -250,21 +280,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Text(
-                                "Don’t have an account? ",
+                                "Don't have an account? ",
                                 style: TextStyle(color: Colors.grey),
                               ),
                               GestureDetector(
-                                onTap: () {
+                                onTap: _isLoading ? null : () { // Disable when loading
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                         builder: (_) => const RegisterScreen()),
                                   );
                                 },
-                                child: const Text(
+                                child: Text(
                                   "Sign Up",
                                   style: TextStyle(
-                                    color: Color(0xFF00796B),
+                                    color: _isLoading ? Colors.grey : const Color(0xFF00796B),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

@@ -3,6 +3,7 @@ import '../Auth/group_register_screen.dart';
 import '../Auth/business_register_screen.dart';
 import '../Auth/charity_register_screen.dart';
 import 'start_campaign.dart';
+import 'main_campaign.dart';
 
 class CampaignOptionScreen extends StatelessWidget {
   const CampaignOptionScreen({super.key});
@@ -50,7 +51,7 @@ class CampaignOptionScreen extends StatelessWidget {
                       icon: "assets/icons/personal.png",
                       title: "Yourself",
                       description:
-                      "By setting up a Personal Account, you gain and control all aspects of this Account",
+                      "Set up a fundraising campaign for your own cause, goal, or project. Share your story and let others support you",
                       onTap: () {
                         Navigator.push(
                           context,
@@ -65,12 +66,12 @@ class CampaignOptionScreen extends StatelessWidget {
                       icon: "assets/icons/groupb.png",
                       title: "Someone else/Group",
                       description:
-                      "By setting up a Group or Community Account, you might need to add one more Stakeholder to the Account",
+                      "Launch a campaign on behalf of a person or group you care about. Explain their need and why you’re fundraising for them",
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const GroupRegisterScreen(),
+                            builder: (_) => const JoinScreen(),
                           ),
                         );
                       },

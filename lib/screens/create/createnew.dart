@@ -4,7 +4,8 @@ import 'fundpool/fundpool.dart';
 import 'invoice/invoice.dart';
 // import 'launch/launch.dart';
 import 'events/newevent.dart';
-import '../Campaign/main_campaign.dart';
+// import '../Campaign/main_campaign.dart';
+import '../Campaign/campaign_option.dart';
 
 class CreateNewPage extends StatelessWidget {
   const CreateNewPage({Key? key}) : super(key: key);
@@ -101,7 +102,7 @@ class CreateNewPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CampaignScreen(),
+                            builder: (_) => const CampaignOptionScreen(),
                           ),
                         );
                       },
@@ -117,7 +118,7 @@ class CreateNewPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>  EventCreationPage(),
+                            builder: (_) =>  EventStartPage(),
                           ),
                         );
                       },

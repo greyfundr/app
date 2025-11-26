@@ -3,10 +3,10 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../class/jwt_helper.dart';
-import 'billscreen.dart';
-import 'homeprofile.dart';
-import 'profile_screen.dart';
 import '../../class/auth_service.dart';
+import '../Dashboard/billscreen.dart';
+import '../Dashboard/homeprofile.dart';
+import '../Dashboard/profile_screen.dart';
 
 
 class CampaignDetailPage extends StatefulWidget {

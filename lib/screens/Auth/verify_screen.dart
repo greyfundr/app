@@ -32,7 +32,7 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
   }
 
   void _onOtpChanged(int index, String value) {
-    if (value.isNotEmpty && index < 5) {
+    if (value.isNotEmpty && index < 6) {
       _focusNodes[index + 1].requestFocus();
     }
   }
@@ -48,7 +48,7 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
     for (var controller in _otpControllers) {
       values = values + controller.text;
     }
-
+    print(values);
 
 
     final response = await http.post(

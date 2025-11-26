@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
+import '../Dashboard/homeprofile.dart';
+import '../Dashboard/profile_screen.dart';
 import '../auth/login_screen.dart';
-import 'homeprofile.dart';
-import 'profile_screen.dart'; // adjust path/filename if your Profile screen file is named differently
 
 class MyBillScreen extends StatefulWidget {
   const MyBillScreen({super.key});

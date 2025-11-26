@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../class/api_service.dart';
 import 'register_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -49,26 +50,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         SharedPreferences.setMockInitialValues({});
-        final response = await http.post(
-          Uri.parse('https://api.greyfundr.com/auth/login'),
-          body: {
-            'email': emailController.text,
-            'password': passwordController.text,
-          },
-        );
-        
+        final email = emailController.text;
+        final password = passwordController.text;
+
+        dynamic token = await ApiService().login(email,password);
+
         // Stop loading
         setState(() {
           _isLoading = false;
         });
 
-        if (response.statusCode == 200) {
-          // Handle successful login
-          Map<String, dynamic> responseData = jsonDecode(response.body);
-          String message = responseData['msg'];
-          String token = responseData['token'];
-
-          await AuthService().saveToken(token);
+        if (token) {
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -85,11 +77,13 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           });
         } else {
-          Map<String, dynamic> responseData = jsonDecode(response.body);
-          String message = responseData['msg'];
-          print('Response from Node.js: $responseData');
-
-          _showErrorDialog(context, message);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login Error!'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       } catch (e) {
         // Stop loading on error

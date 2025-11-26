@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:greyfdr/screens/Auth/login_screen.dart';
 import 'chooseusername.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,6 +8,7 @@ import 'dart:convert';
 class VerifyPerScreen extends StatefulWidget {
   final String phoneNumber;
   final String email;
+
 
   const VerifyPerScreen({super.key, required this.phoneNumber, required this.email});
 
@@ -76,7 +78,7 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ChooseUsernameScreen(user_id:id)),
+        MaterialPageRoute(builder: (_) => LoginScreen()),
       );
 
 

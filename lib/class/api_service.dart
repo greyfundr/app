@@ -282,7 +282,7 @@ class ApiService {
     SharedPreferences.setMockInitialValues({});
     try {
       final response = await _dio.post(
-        "$baseUrl/login",
+        "$baseUrl/auth/login",
         data: {"email": email, "password": password},
       );
 

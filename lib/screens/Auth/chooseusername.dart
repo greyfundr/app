@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../class/api_service.dart';
 import 'welcome.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,7 +7,9 @@ import 'dart:convert';
 
 class ChooseUsernameScreen extends StatefulWidget {
   final int user_id;
-  const ChooseUsernameScreen({super.key, required this.user_id});
+  final String email;
+  final String password;
+  const ChooseUsernameScreen({super.key, required this.user_id, required this.email, required this.password});
 
   @override
   State<ChooseUsernameScreen> createState() => _ChooseUsernameScreenState();
@@ -45,23 +48,27 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
     );
     if (response.statusCode == 200) {
       // Handle successful login
-      Map<String, dynamic> responseData = jsonDecode(response.body);
-      String message = responseData['message'];
-      print('Response from Node.js: $responseData');
+      dynamic token = await ApiService().login(widget.email,widget.password);
+      if(token) {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+        String message = responseData['message'];
+        print('Response from Node.js: $responseData');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: Duration(seconds: 5), // Optional: how long it shows
-          backgroundColor: Colors.green, // Optional: customize color
-        ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: Duration(seconds: 5), // Optional: how long it shows
+            backgroundColor: Colors.green, // Optional: customize color
+          ),
 
-      );
+        );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => WelcomeScreen(userName:generatedUsername)),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (_) => WelcomeScreen(userName: generatedUsername)),
+        );
+      }
 
     } else {
       Map<String, dynamic> responseData = jsonDecode(response.body);

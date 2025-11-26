@@ -47,9 +47,10 @@ class PersonalRegisterScreen extends StatelessWidget {
       );
       if (response.statusCode == 200) {
         // Handle successful login
+
         Map<String, dynamic> responseData = jsonDecode(response.body);
         String message = responseData['message'];
-        print('Response from Node.js: $responseData');
+
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -62,7 +63,12 @@ class PersonalRegisterScreen extends StatelessWidget {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => VerifyPerScreen(email:emailController.text,phoneNumber:phoneController.text)),
+          MaterialPageRoute(builder: (_) =>
+              VerifyPerScreen(
+                  email:emailController.text,
+                  phoneNumber:phoneController.text,
+                  password:passController.text
+              )),
         );
 
 

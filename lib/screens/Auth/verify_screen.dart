@@ -7,8 +7,9 @@ import 'dart:convert';
 class VerifyPerScreen extends StatefulWidget {
   final String phoneNumber;
   final String email;
+  final String password;
 
-  const VerifyPerScreen({super.key, required this.phoneNumber, required this.email});
+  const VerifyPerScreen({super.key, required this.phoneNumber, required this.email, required this.password});
 
   @override
   State<VerifyPerScreen> createState() => _VerifyPerScreenState();
@@ -76,7 +77,11 @@ class _VerifyPerScreenState extends State<VerifyPerScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ChooseUsernameScreen(user_id:id)),
+        MaterialPageRoute(builder: (_) =>
+            ChooseUsernameScreen(
+                user_id:id,
+                email:widget.email,
+                password:widget.password)),
       );
 
 

@@ -197,21 +197,21 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
               ),
               const SizedBox(height: 5),
-              // SizedBox(
-              //   width: double.infinity,
-              //   child: ElevatedButton(
-              //     onPressed: () {},
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.deepOrange,
-              //       foregroundColor: Colors.white,
-              //       padding: const EdgeInsets.symmetric(vertical: 16),
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(8),
-              //       ),
-              //     ),
-              //     child: const Text('ADD BILL LISTING'),
-              //   ),
-              // ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('ADD BILL LISTING'),
+                ),
+              ),
               const SizedBox(height: 24),
               const Text(
                 'Date',
@@ -433,39 +433,39 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
 
 
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: Colors.teal,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Visibility',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+              // Row(
+              //   children: [
+              //     Container(
+              //       width: 28,
+              //       height: 28,
+              //       decoration: const BoxDecoration(
+              //         color: Colors.teal,
+              //         shape: BoxShape.circle,
+              //       ),
+              //       child: const Icon(
+              //         Icons.add,
+              //         color: Colors.white,
+              //         size: 18,
+              //       ),
+              //     ),
+              //     const SizedBox(width: 8),
+              //     const Text(
+              //       'Visibility',
+              //       style: TextStyle(
+              //         fontSize: 18,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //   ],
+              // ),
               const SizedBox(height: 4),
-              const Text(
-                'who can see this post',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
+              // const Text(
+              //   'who can see this post',
+              //   style: TextStyle(
+              //     fontSize: 12,
+              //     color: Colors.grey,
+              //   ),
+              // ),
 
 
 
@@ -654,13 +654,23 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Create Team',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                   Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 40),
+                    const Text(
+                      'Create Team',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Color.fromARGB(255, 21, 5, 5), size: 28),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
                   const SizedBox(height: 16),
                   _buildRoleCard(
                     context,
@@ -707,15 +717,19 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('ADD',
+                      child: const Text('ADD SELECTED',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: Color.fromARGB(255, 255, 255, 255),
                         ),
                       ),
+
+                      
                     ),
+                    
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -766,25 +780,23 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               const SizedBox(height: 12),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.lightBlue.shade100,
+                  color: const Color.fromARGB(255, 195, 197, 194),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 child: Row(
                   children: [
                     Row(
-                      children: List.generate(5, (index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          child: CircleAvatar(
-                            radius: 14,
-                            backgroundImage: NetworkImage(
-                              'https://randomuser.me/api/portraits/men/${index + 10}.jpg',
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
+  children: List.generate(5, (index) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      child: CircleAvatar(
+        radius: 14,
+        backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=${index + 50}')
+      ),
+    );
+  }),
+),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1193,6 +1205,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
 
 
+
+
+
   Widget _buildIconButton(String emoji, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -1260,31 +1275,52 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 ),
                 child: SizedBox(  // Added SizedBox to constrain height to 75%
 
-            height: MediaQuery.of(context).size.height * 0.99,
+            height: MediaQuery.of(context).size.height * 0.82,
 
             child: Column(
             mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            const Text(
-            'Selected Participant',
-            style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            ),
-            ),
+            Row( // Add this Row wrapper
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'Select Participant',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton( // Add this close button
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.close),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
             const SizedBox(height: 40),
+
+
+            
             SizedBox(
-            height: 50,
+            height: 80,
             child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: tempSelectedParticipants.length,
             itemBuilder: (context, index) {
             final participant = tempSelectedParticipants[index];
             return Stack(
+              
             clipBehavior: Clip.none,
             children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 100),
             Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
             child: CircleAvatar(
@@ -1314,6 +1350,12 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             },
             ),
             ),
+
+
+
+
+
+
             const SizedBox(height: 12),
             DefaultTabController(
             length: 5,
@@ -1332,12 +1374,12 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             unselectedLabelColor: Colors.grey,
             ),
             SizedBox(
-            height: 450,
+            height: 380,
             child: TabBarView(
             children: List.generate(5, (_) {
             return Column(
             children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: 15),
             TextField(
             controller: searchController,
             onChanged: (val) => _filterUsers(val),
@@ -1367,8 +1409,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             toggleSelection(user);
             },
             style: ElevatedButton.styleFrom(
-            backgroundColor: selected ? Colors.grey : Colors.teal,
-            ),
+  backgroundColor: selected ? Colors.grey : Colors.teal,
+  foregroundColor: Colors.white, // <-- Text color
+),
             child: Text(selected ? 'Selected' : 'Select'),
             ),
             );
@@ -1400,7 +1443,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             borderRadius: BorderRadius.circular(8),
             ),
             ),
-            child: const Text('ADD PARTICIPANTS'),
+            child: const Text('ADD PARTICIPANTS',
+            style: TextStyle(color: Colors.white),),
             ),
             ),
             const SizedBox(height: 16),

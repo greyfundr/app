@@ -1,306 +1,491 @@
 import 'package:flutter/material.dart';
+import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
+// import '../../class/campaign.dart';
+// import '../Campaign/detailedcampaign.dart';
+// import 'notification_screen.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../Auth/login_screen.dart';
+// import '../../class/auth_service.dart';
+// import '../../class/jwt_helper.dart';
+// import 'editprofile.dart'; 
+// import 'homeprofile.dart';
+import '../../Dashboard/profile_screen.dart';
 
-class CharityPage extends StatelessWidget {
+class CharityPage extends StatefulWidget {
   const CharityPage({Key? key}) : super(key: key);
+
+  @override
+  State<CharityPage> createState() => _CharityPageState();
+}
+
+class _CharityPageState extends State<CharityPage>
+
+
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Column(
           children: [
             // Header Section
-            Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF0E7A7A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Top Bar
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                        ),
-                        Spacer(),
-                        Text('Bills', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                        SizedBox(width: 20),
-                        Text('Charity', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                        SizedBox(width: 20),
-                        Text('Lifestyle', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                        Spacer(),
-                        Icon(Icons.search, color: Colors.white),
-                        SizedBox(width: 16),
-                        Stack(
-                          children: [
-                            Icon(Icons.notifications_outlined, color: Colors.white),
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Ranking Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Ranking', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                            SizedBox(height: 4),
-                            Text('234 th', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                            Text('Philanthropy', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Total Donation', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                            SizedBox(height: 4),
-                            Text('₦3.5', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: Icon(Icons.favorite, size: 18),
-                          label: Text('Start Campaign'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade400,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                ],
-              ),
-            ),
-            // Category Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildCategory(Icons.medical_services, 'Medical', Colors.pink.shade100),
-                      _buildCategory(Icons.school, 'Education', Colors.blue.shade100),
-                      _buildCategory(Icons.public, 'Travel', Colors.cyan.shade100),
-                      _buildCategory(Icons.nature, 'Nature', Colors.teal.shade100),
-                      _buildCategory(Icons.pets, 'Animal', Colors.red.shade100),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Campaign Banner
-            Container(
-              height: 50,
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Kidney Transplant', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('Jasper needs a kidney transplant', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        Text('135 million naira', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Donate'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0E7A7A),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16),
+            _buildHeader(),
+            // Categories Section
+            _buildCategories(),
+            // Urgent Campaign Carousel
+            _buildUrgentCampaigns(),
             // Tabs
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildTab('Explore', true),
-                _buildTab('For you', false),
-                _buildTab('Following', false),
-              ],
-            ),
-            SizedBox(height: 8),
+            _buildTabs(),
             // Campaign List
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  _buildCampaignCard(
-                    'Borno State Flood Victims this year 2024 October',
-                    'https://via.placeholder.com/400x300',
-                    '₦347,000',
-                    '₦4,000,000',
-                    100,
-                    15,
-                    0.7,
-                    12,
-                  ),
-                  SizedBox(height: 16),
-                  _buildSmallCampaignCard(
-                    'Help fight Cancer treatment for my sister',
-                    'https://via.placeholder.com/150',
-                  ),
+                  _buildCampaignList(_getExploreCampaigns()),
+                  _buildCampaignList(_getForYouCampaigns()),
+                  _buildCampaignList(_getFollowingCampaigns()),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: Color(0xFF0E7A7A),
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_outlined), label: 'Bills'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D7377),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Top Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(
+                      'https://i.pravatar.cc/100',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Row(
+                    children: [
+                      Text(
+                        'Bills',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      const Text(
+                        'Charity',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      Text(
+                        'Lifestyle',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.white, size: 20),
+                  const SizedBox(width: 16),
+                  Stack(
+                    children: [
+                      const Icon(Icons.notifications_outlined,
+                          color: Colors.white, size: 20),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Stats Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Current Ranking',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '234 th',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Philanthropy',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Donation',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '₦3.5',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[400],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                  icon: const Icon(Icons.favorite, size: 16, color: Colors.white,),
+                  label: const Text(
+                    'Start Campaign',
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCategory(IconData icon, String label, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(icon, size: 30, color: Colors.black54),
-        ),
-        SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12)),
-      ],
-    );
-  }
+  Widget _buildCategories() {
+    final categories = [
+      {'name': 'Medical', 'icon': '💊', 'color': Colors.pink[100]},
+      {'name': 'Education', 'icon': '📚', 'color': Colors.blue[100]},
+      {'name': 'Travel', 'icon': '🌍', 'color': Colors.cyan[100]},
+      {'name': 'Nature', 'icon': '🌿', 'color': Colors.green[100]},
+      {'name': 'Animal', 'icon': '🦁', 'color': Colors.orange[100]},
+    ];
 
-  Widget _buildTab(String label, bool isActive) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive ? Colors.black : Colors.grey,
-          ),
-        ),
-        if (isActive)
-          Container(
-            margin: EdgeInsets.only(top: 4),
-            width: 60,
-            height: 3,
-            decoration: BoxDecoration(
-              color: Color(0xFF0E7A7A),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCampaignCard(
-    String title,
-    String imageUrl,
-    String raised,
-    String goal,
-    int donors,
-    int champions,
-    double progress,
-    int daysLeft,
-  ) {
     return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300,
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Category',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: categories.map((cat) {
+              return Column(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: cat['color'] as Color?,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        cat['icon'] as String,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    cat['name'] as String,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUrgentCampaigns() {
+    return Container(
+      height: 80,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildUrgentCard(
+            'Kidney Transplant',
+            'Jasper needs a kidney transplant',
+            '135 million naira.',
+            'https://i.pravatar.cc/101',
+          ),
+          const SizedBox(width: 12),
+          _buildUrgentCard(
+            'Heart Surgery',
+            'Jasper needs urgent surgery',
+            '50 million naira.',
+            'https://i.pravatar.cc/102',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUrgentCard(
+      String title, String subtitle, String amount, String image) {
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: NetworkImage(image),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  amount,
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0D7377),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              minimumSize: Size.zero,
+            ),
+            child: const Text(
+              'Donate',
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: const Color(0xFF0D7377),
+        unselectedLabelColor: Colors.grey[400],
+        indicatorColor: const Color(0xFF0D7377),
+        indicatorWeight: 2,
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        tabs: const [
+          Tab(text: 'Explore'),
+          Tab(text: 'For you'),
+          Tab(text: 'Following'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCampaignList(List<Map<String, dynamic>> campaigns) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: campaigns.length,
+      itemBuilder: (context, index) {
+        return _buildCampaignCard(campaigns[index]);
+      },
+    );
+  }
+
+  Widget _buildCampaignCard(Map<String, dynamic> campaign) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.network(
-                  imageUrl,
-                  width: double.infinity,
+                  campaign['image'],
                   height: 200,
+                  width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
               Positioned(
-                top: 10,
-                right: 10,
+                top: 12,
+                right: 12,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time, color: Colors.white, size: 16),
-                      SizedBox(width: 4),
-                      Text('$daysLeft Days left', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      const Icon(Icons.access_time,
+                          color: Colors.white, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${campaign['daysLeft']} Days left',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -308,72 +493,92 @@ class CharityPage extends StatelessWidget {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  campaign['title'],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(raised, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text(' raised of $goal', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                    Spacer(),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 12),
+                          children: [
+                            TextSpan(
+                              text: '₦${campaign['raised']}',
+                              style:
+                                  const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                            ),
+                            TextSpan(
+                              text: ' raised of ₦${campaign['goal']}',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () {},
-                      child: Text('Donate'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF0E7A7A),
-                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF0D7377),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 10),
+                      ),
+                      child: const Text(
+                        'Donate',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: campaign['progress'] / 100,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF0D7377),
                     ),
-                    FractionallySizedBox(
-                      widthFactor: progress,
-                      child: Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF0E7A7A),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ],
+                    minHeight: 6,
+                  ),
                 ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text('${(progress * 100).toInt()}%', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.people_outline, size: 18, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text('$donors Donors', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    SizedBox(width: 16),
-                    Icon(Icons.emoji_events_outlined, size: 18, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text('$champions Champions', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const Text('👥', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${campaign['donors']} Donors',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text('⏱️', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${campaign['champions']} Champions',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${campaign['progress']}%',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
                   ],
                 ),
               ],
@@ -384,53 +589,124 @@ class CharityPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSmallCampaignCard(String title, String imageUrl) {
+  Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300,
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              child: Text('Donate'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0E7A7A),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.home, 'Home', true),
+          _buildNavItem(Icons.description_outlined, 'Bills', false),
+          _buildNavItem(Icons.person_outline, 'Profile', false),
+        ],
       ),
     );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          color: isActive ? const Color(0xFF0D7377) : Colors.grey[400],
+          size: 24,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isActive ? const Color(0xFF0D7377) : Colors.grey[400],
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Map<String, dynamic>> _getExploreCampaigns() {
+    return [
+      {
+        'title': 'Borno State Flood Victims this year 2024 October',
+        'image': 'https://picsum.photos/400/300?random=1',
+        'raised': '347,000',
+        'goal': '4,000,000',
+        'donors': 100,
+        'champions': 15,
+        'daysLeft': 12,
+        'progress': 70,
+      },
+      {
+        'title': 'Help fight Cancer treatment for my sister',
+        'image': 'https://picsum.photos/400/300?random=2',
+        'raised': '125,000',
+        'goal': '500,000',
+        'donors': 45,
+        'champions': 8,
+        'daysLeft': 20,
+        'progress': 25,
+      },
+      {
+        'title': 'Build a School in Rural Community',
+        'image': 'https://picsum.photos/400/300?random=3',
+        'raised': '890,000',
+        'goal': '2,000,000',
+        'donors': 156,
+        'champions': 22,
+        'daysLeft': 8,
+        'progress': 45,
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _getForYouCampaigns() {
+    return [
+      {
+        'title': 'Clean Water Project for Communities',
+        'image': 'https://picsum.photos/400/300?random=4',
+        'raised': '456,000',
+        'goal': '1,000,000',
+        'donors': 89,
+        'champions': 12,
+        'daysLeft': 15,
+        'progress': 46,
+      },
+      {
+        'title': 'Emergency Medical Equipment Fund',
+        'image': 'https://picsum.photos/400/300?random=5',
+        'raised': '678,000',
+        'goal': '1,500,000',
+        'donors': 120,
+        'champions': 18,
+        'daysLeft': 10,
+        'progress': 45,
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _getFollowingCampaigns() {
+    return [
+      {
+        'title': 'Youth Education Scholarship Program',
+        'image': 'https://picsum.photos/400/300?random=6',
+        'raised': '234,000',
+        'goal': '800,000',
+        'donors': 67,
+        'champions': 10,
+        'daysLeft': 25,
+        'progress': 29,
+      },
+    ];
   }
 }

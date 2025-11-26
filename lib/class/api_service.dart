@@ -237,7 +237,7 @@ class ApiService {
   Future<dynamic> getChampions() async {
     Map<String, dynamic>? users;
     try {
-      final response = await _dio.get("http://localhost:3000/champion");
+      final response = await _dio.get("$baseUrl/champion");
 
       if (response.statusCode == 200) {
         dynamic users = response.data[0];
@@ -257,7 +257,7 @@ class ApiService {
     print(token);
 
     try {
-      final response = await _dio.get("http://localhost:3000/backer",
+      final response = await _dio.get("$baseUrl/backer",
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',

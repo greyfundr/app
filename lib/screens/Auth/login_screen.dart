@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Auth/pin_screen.dart';
 import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
+import 'check.dart';
 import 'register_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -91,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => const ProfileScreen()),
+                  builder: (_) => const AuthWrapper()),
             );
           });
         } else {

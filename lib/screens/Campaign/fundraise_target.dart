@@ -778,8 +778,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                           margin: const EdgeInsets.only(right: 4),
                           child: CircleAvatar(
                             radius: 14,
-                            backgroundImage: NetworkImage(
-                              'https://randomuser.me/api/portraits/men/${index + 10}.jpg',
+                            backgroundImage: AssetImage(
+                              'assets/icons/${index + 1}.jpg',
                             ),
                           ),
                         );

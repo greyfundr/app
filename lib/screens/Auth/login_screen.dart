@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:greyfdr/screens/Auth/pin_screen.dart';
 import '../../class/api_service.dart';
+import '../../class/jwt_helper.dart';
 import 'register_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,6 +21,22 @@ class _LoginScreenState extends State<LoginScreen> {
   static final passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false; // Added loading state
+
+
+  void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      var email = userData['user']['email'];
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => PinScreen(email:email)),
+      );
+    } else {
+      print("Token is expired or invalid");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

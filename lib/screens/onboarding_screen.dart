@@ -200,10 +200,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             isLast ? "Login" : "Next",
                             style: TextStyle(
                               fontSize: 16,
-                              color: isLast ? const Color.fromARGB(255, 252, 100, 58) : Colors.white,
+                              color: isLast ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
                             ),
                           ),
                         ),
+                         const SizedBox(height: 60),
 
                         // 👇 Register link (only on last page)
                         if (isLast) ...[

@@ -787,18 +787,16 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 child: Row(
                   children: [
                     Row(
-                      children: List.generate(5, (index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          child: CircleAvatar(
-                            radius: 14,
-                            backgroundImage: AssetImage(
-                              'assets/icons/${index + 1}.jpg',
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
+  children: List.generate(5, (index) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      child: CircleAvatar(
+        radius: 14,
+        backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=${index + 50}')
+      ),
+    );
+  }),
+),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -848,7 +846,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             return Padding(
               padding: const EdgeInsets.all(20),
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.81,
+                height: MediaQuery.of(context).size.height * 0.85,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1268,19 +1266,16 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               });
             }
 
-            return Expanded(
-                flex: 1,
-        child: Padding(
+            return Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                   left: 16,
                   right: 16,
                   top: 20,
                 ),
-
                 child: SizedBox(  // Added SizedBox to constrain height to 75%
 
-            height: MediaQuery.of(context).size.height * 0.75,
+            height: MediaQuery.of(context).size.height * 0.82,
 
             child: Column(
             mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
@@ -1456,10 +1451,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             ],
             ),
             ),
-            ),
             );
           },
-
         );
       },
     );

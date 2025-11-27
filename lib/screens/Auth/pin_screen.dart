@@ -5,14 +5,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class PinScreen extends StatefulWidget {
-  final String phoneNumber;
   final String email;
 
-  const PinScreen({super.key, required this.phoneNumber, required this.email});
+  const PinScreen({super.key, required this.email});
 
   @override
   State<PinScreen> createState() => _PinScreenState();
 }
+
+
 
 class _PinScreenState extends State<PinScreen> {
   final List<TextEditingController> _otpControllers = 
@@ -52,7 +53,7 @@ class _PinScreenState extends State<PinScreen> {
 
 
     final response = await http.post(
-      Uri.parse('https://api.greyfundr.com/auth/verifyphone'),
+      Uri.parse('https://api.greyfundr.com/auth/verifypin'),
       body: {
         'code': values,
         'email': widget.email,
@@ -207,7 +208,7 @@ class _PinScreenState extends State<PinScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            "Verify your phone number ending with ${widget.phoneNumber}",
+                            "Please Enter Your 4 Digit Pin",
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

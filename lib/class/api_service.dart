@@ -297,6 +297,32 @@ class ApiService {
     return false;
   }
 
+  Future<bool> createDonation(int userId, int creatorId, int campaignId, int amount) async {
+    print(userId);
+    print(creatorId);
+    print(campaignId);
+    print(amount);
+    try {
+      final response = await _dio.post(
+        "http://localhost:3000/donor/createDonor",
+        data: {
+          "amount" :amount,
+          "creator_id" : creatorId,
+          "user_id" : userId,
+          "campaign_id" : campaignId},
+      );
+
+      if (response.statusCode == 200) {
+        String token = response.data["token"];
+        await saveToken(token);
+        return true;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return false;
+  }
+
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("jwt_token", token);

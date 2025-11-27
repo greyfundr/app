@@ -834,7 +834,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             return Padding(
               padding: const EdgeInsets.all(20),
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.85,
+                height: MediaQuery.of(context).size.height * 0.81,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1251,16 +1251,19 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               });
             }
 
-            return Padding(
+            return Expanded(
+                flex: 1,
+        child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                   left: 16,
                   right: 16,
                   top: 20,
                 ),
+
                 child: SizedBox(  // Added SizedBox to constrain height to 75%
 
-            height: MediaQuery.of(context).size.height * 0.99,
+            height: MediaQuery.of(context).size.height * 0.75,
 
             child: Column(
             mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
@@ -1407,8 +1410,10 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             ],
             ),
             ),
+            ),
             );
           },
+
         );
       },
     );

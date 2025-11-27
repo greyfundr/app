@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
 import '../../class/auth_service.dart';
 import '../Dashboard/billscreen.dart';
 import '../Dashboard/homeprofile.dart';
 import '../Dashboard/profile_screen.dart';
+import 'package:flutter/services.dart';
 
 
 class CampaignDetailPage extends StatefulWidget {
@@ -33,6 +35,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   Map<String, dynamic>? campaign;
   bool isLoading = true;
   String title = '';
+  int campaignId = 0;
   String goal = '';
   String current = '';
   String description = '';
@@ -57,14 +60,13 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     "DONATIONS",
     "COMMENTS",
   ];
+  final List<Map<String, dynamic>> donations = [];
 
   void loadProfile() async {
     String? token = await AuthService().getToken();
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => userId = userData['user']['id']);
-      print("User ID: ${userData['user']}");
-      print(userId);
 
     } else {
       print("Token is expired or invalid");
@@ -81,7 +83,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
       final response = await http.get(url);
 
-      print(response.body);
+
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = jsonDecode(response.body);
@@ -100,8 +102,10 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           image = responseData['image'] ?? 0;
           image = image.replaceAll('\\', '/');
           cId = responseData['creator_id'];
+          campaignId = responseData['id'];
 
         });
+        print(campaignId);
         double a =responseData['current_amount'].toDouble();
         double b =responseData['goal_amount'].toDouble();
 
@@ -183,6 +187,20 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         );
       }
     }
+  }
+
+  void _showAddMoneyModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) =>
+      AddMoneyBottomSheet(
+        userId:userId,
+        creatorId: cId,
+        campaignId:campaignId,
+        ),
+    );
   }
 
   void _onItemTapped(int index) {
@@ -823,7 +841,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _showAddMoneyModal,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal,
                           foregroundColor: Colors.white,
@@ -844,6 +862,183 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
               const SizedBox(height: 40),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+// === Add Money Bottom Sheet ===
+class AddMoneyBottomSheet extends StatefulWidget {
+  final int userId;
+  final int creatorId;
+  final int campaignId;
+
+  const AddMoneyBottomSheet({super.key, required this.userId, required this.creatorId, required this.campaignId,});
+
+  @override
+  State<AddMoneyBottomSheet> createState() => _AddMoneyBottomSheetState();
+}
+
+class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
+  final TextEditingController _amountController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  String _formatNumber(String value) {
+    if (value.isEmpty) return '';
+    String digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (digitsOnly.isEmpty) return '';
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return digitsOnly.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+  }
+
+  Future<void> _onContinue() async {
+    if (_amountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an amount')),
+      );
+      return;
+    }
+    String actualAmount = _amountController.text.replaceAll(',', '');
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Donating ₦$actualAmount to campaign')),
+    );
+
+    dynamic token = await ApiService().createDonation(widget.userId,widget.creatorId,widget.campaignId,int.parse(actualAmount));
+
+    print(token);
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF007A74), Color(0xFF00B3AE)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter Amount',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'how much do you want to Donate? ',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C9C3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _amountController,
+                focusNode: _focusNode,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '0',
+                  hintStyle: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 18,
+                  ),
+                  prefixText: '₦ ',
+                  prefixStyle: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    if (newValue.text.isEmpty) {
+                      return newValue;
+                    }
+                    String formatted = _formatNumber(newValue.text);
+                    return TextEditingValue(
+                      text: formatted,
+                      selection:
+                      TextSelection.collapsed(offset: formatted.length),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _onContinue,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6B57),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'CONTINUE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

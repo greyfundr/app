@@ -574,8 +574,8 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
               child: ClipRRect(
                 borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.asset(
-                  campaign.imageUrl!.path,
+                child: Image.network(
+                  "https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${campaign.imageUrl!.path}",
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) => Center(

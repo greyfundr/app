@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +12,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'campaigncheckapproved.dart';
 import '../../class/campaign.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
 
 class Reviewstartcampaign3 extends StatefulWidget {
   final Campaign campaign;
@@ -35,6 +37,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   List<Map<String, String>> _budgetItems = [];
   List<Map<String, String>> _offers = [];
 
+  late File _image;
+
   // Track expanded sections
   Map<String, bool> _expandedSections = {
     'ABOUT': true,
@@ -55,6 +59,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => user = userData['user']);
+
+
       print("User ID: ${userData['user']}");
     } else {
       print("Token is expired or invalid");
@@ -1424,8 +1430,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         left: 0.0,
                         top: 0.0,
                         child: ErrorBoundary(
-                          child: Image.asset(
-                            widget.campaign.imageUrl!.path,
+                          child: Image.file(
+                            File( widget.campaign.imageUrl!.path),
                             height: 321.357421875,
                             width: 440.0,
                           ),

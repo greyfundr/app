@@ -8,6 +8,7 @@ import '../../class/campaign.dart';
 import '../../class/participants.dart';
 import '../../class/api_service.dart';
 
+
 // Add this custom formatter class for comma-separated numbers
 class NumberTextInputFormatter extends TextInputFormatter {
   @override
@@ -500,6 +501,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+
 
                     String to = amountController.text;
                     String cleanStr = to.replaceAll(',', '');

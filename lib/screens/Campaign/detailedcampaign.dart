@@ -5,7 +5,9 @@ import 'dart:convert';
 import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
 import '../../class/auth_service.dart';
+import '../../main.dart';
 import '../Dashboard/billscreen.dart';
+import '../Dashboard/campaign_search_page.dart';
 import '../Dashboard/homeprofile.dart';
 import '../Dashboard/profile_screen.dart';
 import 'package:flutter/services.dart';
@@ -61,7 +63,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     "COMMENTS",
   ];
 
-  late List<Map<String, dynamic>> donations;
+  late List< dynamic> donations;
 
   void loadProfile() async {
     String? token = await AuthService().getToken();
@@ -79,7 +81,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'http://localhost:3000/campaign/getcampaign';
+      final String baseUrl = 'https://api.greyfundr.com/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);
@@ -88,10 +90,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = jsonDecode(response.body);
-
-        Map<String, dynamic> campaign = responseData['payload']['campaigns'];
+        //print(responseData);
+        dynamic campaign = responseData['payload']['campaigns'];
+        //print(campaign);
         List<dynamic> donors = responseData['payload']['donors'];
-
+        print(donors);
 
 
         // Update all campaign data in setState
@@ -124,13 +127,12 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
         if(userId == creatorId)
         {
-          print(userId);
-          print(cId);
+
           campaignLive = false;
 
-          print(campaignLive);
+
         }
-        print(campaignLive);
+
         // FIXED: Changed from localhost to actual API URL
         final String userBaseUrl = 'https://api.greyfundr.com/users/getUser';
         final userUrl = Uri.parse('$userBaseUrl/$creatorId');
@@ -456,6 +458,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       ],
     );
   }
+
 
   Widget _buildTopdonorContent() {
     return Padding(
@@ -943,30 +946,37 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
     return digitsOnly.replaceAllMapped(formatter, (Match m) => '${m[1]},');
   }
 
-  Future<void> _onContinue() async {
-    if (_amountController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an amount')),
-      );
-      return;
-    }
-    String actualAmount = _amountController.text.replaceAll(',', '');
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Donating ₦$actualAmount to campaign')),
-    );
 
-    dynamic token = await ApiService().createDonation(widget.userId,widget.creatorId,widget.campaignId,int.parse(actualAmount));
-    print(token);
-    if(token)
-      {
-
-      }
-
-  }
 
   @override
   Widget build(BuildContext context) {
+
+    Future<void> _onContinue() async {
+      if (_amountController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter an amount')),
+        );
+        return;
+      }
+      String actualAmount = _amountController.text.replaceAll(',', '');
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Donating ₦$actualAmount to campaign')),
+      );
+
+      dynamic token = await ApiService().createDonation(widget.userId,widget.creatorId,widget.campaignId,int.parse(actualAmount));
+      print(token);
+      if(token)
+      {
+        print('found');
+
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (context) => CampaignSearchPage(),
+        ));
+
+      }
+
+    }
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(

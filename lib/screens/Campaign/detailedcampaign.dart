@@ -461,6 +461,206 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
+
+void _showDonateBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: MediaQuery.of(context).viewInsets, // for keyboard overlap
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0F1F7), // Light background matching image
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Creators Goal',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Raised and Goal Text
+                Text(
+                  '₦$current raised of ₦$goal',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                // Progress Bar
+                LinearPercentIndicator(
+                  lineHeight: 8,
+                  percent: percentage,
+                  progressColor: Colors.teal,
+                  backgroundColor: Colors.grey.shade300,
+                  barRadius: const Radius.circular(8),
+                ),
+                const SizedBox(height: 8),
+                // Donors and Champions Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('$donor Donors', style: const TextStyle(fontSize: 13)),
+                    Text('$champion Champions',
+                        style: const TextStyle(fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                    children: [
+                      const TextSpan(text: 'You are supporting '),
+                      TextSpan(
+                        text: 'Borno State Flood Victims ',
+                        style: const TextStyle(color: Colors.blue),
+                      ),
+                      const TextSpan(text: 'Donation will benefit '),
+                      const TextSpan(
+                        text: 'UNICEF ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const TextSpan(text: 'campaigned by '),
+                      TextSpan(
+                        text: 'Peter Moore',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Amount TextField
+                TextField(
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: 'Enter Amount',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Info box
+                Row(
+                  children: const [
+                    Icon(Icons.verified, color: Colors.teal, size: 18),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'You will be the Highest Donor',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: const [
+                    Icon(Icons.confirmation_number, color: Colors.redAccent, size: 18),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'You will receive Davido Concert Tickets',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Expansion tiles
+                ExpansionTile(
+                  title: const Text('Use my Nickname Or Be Anonymous',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text('You can choose to donate anonymously or use your nickname.'),
+                    ),
+                  ],
+                ),
+                ExpansionTile(
+                  title: const Text('Donating On Behalf Of',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text('Specify if you are donating on behalf of someone else.'),
+                    ),
+                  ],
+                ),
+                ExpansionTile(
+                  title: const Text('Add Comment',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Add comment',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Handle continue action here
+                      Navigator.pop(context); // Close bottom sheet
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal[700],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Continue', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+  
+
+  
+
   Widget _buildAlldonorContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -823,7 +1023,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+      _showDonateBottomSheet(context);  // Call the bottom sheet here
+    },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal,
                           foregroundColor: Colors.white,

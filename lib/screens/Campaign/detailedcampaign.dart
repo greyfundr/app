@@ -60,7 +60,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     "DONATIONS",
     "COMMENTS",
   ];
-  final List<Map<String, dynamic>> donations = [];
+
+  late List<Map<String, dynamic>> donations;
 
   void loadProfile() async {
     String? token = await AuthService().getToken();
@@ -78,7 +79,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'https://api.greyfundr.com/campaign/getcampaign';
+      final String baseUrl = 'http://localhost:3000/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);
@@ -88,33 +89,38 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       if (response.statusCode == 200) {
         Map<String, dynamic> responseData = jsonDecode(response.body);
 
+        Map<String, dynamic> campaign = responseData['payload']['campaigns'];
+        List<dynamic> donors = responseData['payload']['donors'];
+
+
+
         // Update all campaign data in setState
         setState(() {
-          campaign = responseData;
-          title = responseData['title'] ?? '';
-          goal = responseData['goal_amount'].toString();
-          current = responseData['current_amount'].toString() ?? '0';
-          description = responseData['description'] ?? '';
-          startDate = responseData['start_date'] ?? '';
-          endDate = responseData['end_date'] ?? '';
-          champion = responseData['champions'] ?? 0;
-          donor = responseData['donors'] ?? 0;
-          image = responseData['image'] ?? 0;
+          campaign = campaign;
+          title = campaign['title'] ?? '';
+          goal = campaign['goal_amount'].toString();
+          current = campaign['current_amount'].toString() ?? '0';
+          description = campaign['description'] ?? '';
+          startDate = campaign['start_date'] ?? '';
+          endDate = campaign['end_date'] ?? '';
+          champion = campaign['champions'] ?? 0;
+          donor = campaign['donors'] ?? 0;
+          image = campaign['image'] ?? 0;
           image = image.replaceAll('\\', '/');
-          cId = responseData['creator_id'];
-          campaignId = responseData['id'];
-
+          cId = campaign['creator_id'];
+          campaignId = campaign['id'];
+          donations=donors.cast<Map<String, dynamic>>();
         });
-        print(campaignId);
-        double a =responseData['current_amount'].toDouble();
-        double b =responseData['goal_amount'].toDouble();
+
+        double a =campaign['current_amount'].toDouble();
+        double b =campaign['goal_amount'].toDouble();
 
         double percent =  a/b;
         percentage = percent;
 
         print(percentage);
 
-        final creatorId = responseData['creator_id'];
+        final creatorId = campaign['creator_id'];
 
         if(userId == creatorId)
         {
@@ -459,17 +465,31 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         children: [
           const SizedBox(height: 12),
           ListView.builder(
-            itemCount: 2,
+            itemCount: donations.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
+              final donor = donations[index];
+              final amount = donor['amount'];
+              final name = donor['name'];
+              final date = donor['created_at'];
+              DateTime specificDate = DateTime.parse(date); // Example: Nov 26, 2025, 10:30 AM
+
+              // Get the current date and time
+              DateTime now = DateTime.now();
+
+              // Calculate the duration between the two dates
+              Duration difference = now.difference(specificDate);
+
+              // Get the difference in hours
+              int hoursDifference = difference.inHours;
               return ListTile(
                 leading: const CircleAvatar(
                   backgroundImage: AssetImage('assets/images/organizer.jpg'),
                 ),
-                title: Text("Top ${index + 1}"),
-                subtitle: const Text("₦30,000 donated"),
-                trailing: const Text("2h ago",
+                title: Text(name),
+                subtitle:  Text('₦ ${amount.toString()}'),
+                trailing:  Text('${hoursDifference.toString()} hours',
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
               );
             },
@@ -487,17 +507,31 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         children: [
           const SizedBox(height: 12),
           ListView.builder(
-            itemCount: 3,
+            itemCount: donations.length,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
+              final donor = donations[index];
+              final amount = donor['amount'];
+              final name = donor['name'];
+              final date = donor['created_at'];
+              DateTime specificDate = DateTime.parse(date); // Example: Nov 26, 2025, 10:30 AM
+
+              // Get the current date and time
+              DateTime now = DateTime.now();
+
+              // Calculate the duration between the two dates
+              Duration difference = now.difference(specificDate);
+
+              // Get the difference in hours
+              int hoursDifference = difference.inHours;
               return ListTile(
                 leading: const CircleAvatar(
                   backgroundImage: AssetImage('assets/images/organizer.jpg'),
                 ),
-                title: Text("Donor ${index + 1}"),
-                subtitle: const Text("₦45,000 donated"),
-                trailing: const Text("2h ago",
+                title: Text(name),
+                subtitle:  Text(amount.toString()),
+                trailing:  Text("${hoursDifference.toString()} hours",
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
               );
             },
@@ -923,8 +957,11 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
     );
 
     dynamic token = await ApiService().createDonation(widget.userId,widget.creatorId,widget.campaignId,int.parse(actualAmount));
-
     print(token);
+    if(token)
+      {
+        
+      }
 
   }
 

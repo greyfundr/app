@@ -313,8 +313,8 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        String token = response.data["token"];
-        await saveToken(token);
+        String token = response.data["msg"];
+
         return true;
       }
     } catch (e) {

@@ -62,7 +62,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
       {
 
         setState(() => _isApproved = true);
-
+        _timer!.cancel();
       }
 
 

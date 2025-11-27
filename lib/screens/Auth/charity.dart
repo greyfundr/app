@@ -9,7 +9,7 @@ import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
 // import '../../class/jwt_helper.dart';
 // import 'editprofile.dart'; 
 // import 'homeprofile.dart';
-import '../Dashboard/profile_screen.dart';
+// import '../../Dashboard/profile_screen.dart';
 
 class CharityPage extends StatefulWidget {
   const CharityPage({Key? key}) : super(key: key);

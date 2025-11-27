@@ -9,6 +9,7 @@ import '../create/createnew.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
 import 'kyc.dart';
+import 'charity/charity.dart';
 import 'notification_screen.dart';
 import 'campaign_search_page.dart';
 
@@ -204,7 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildFeatureCard(
                             'Lifestyle', 'assets/images/lifestyle.png', null),
                         _buildFeatureCard(
-                            'Invoices', 'assets/images/invoices.png', null),
+                            'Invoices', 'assets/images/invoices.png', () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const CharityPage()),
+                          );
+                        }),
+                        
                         _buildFeatureCard('Create New',
                             'assets/images/create.png', () {
                           Navigator.push(

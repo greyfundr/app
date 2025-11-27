@@ -55,14 +55,14 @@ class _CampaignScreenState extends State<CampaignScreen> {
     );
   }
 
-  void _showCategoryBottomSheet() {
+  void _showCategoryBottomSheet() { 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.9,
+          initialChildSize: 0.65,
           maxChildSize: 0.95,
           minChildSize: 0.5,
           builder: (context, scrollController) => Container(
@@ -94,40 +94,68 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Category List
+                // Category Grid
                 Expanded(
-                  child: ListView.builder(
+                  child: GridView.builder(
                     controller: scrollController,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.85, // Adjust this to control height/width ratio
+                    ),
                     itemCount: categories.length,
                     itemBuilder: (context, index) {
                       final category = categories[index];
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        leading: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              category['icon'],
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          category['label'],
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
+                      return GestureDetector(
                         onTap: () {
                           setState(() {
                             selectedCategory = category['label'];
                           });
                           Navigator.pop(context);
                         },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade300,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow.shade200,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Image.asset(
+                                    category['icon'],
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                category['label'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),

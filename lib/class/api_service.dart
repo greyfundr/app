@@ -105,6 +105,8 @@ class ApiService {
         'id': id,
         'stakeholders': json.encode(campaign.participants),
         'images': campaign.imageUrl!.path,
+        'moffers': json.encode(campaign.savedManualOffers),
+        'aoffers': json.encode(campaign.savedAutoOffers),
       });
 
       Response response = await dio.post(

@@ -72,27 +72,26 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   Future<void> loadUsers() async {
     setState(() => isLoading = true);
     dynamic token = await ApiService().getUsers();
-    dynamic tokens = await ApiService().getChampions();
-    dynamic tokens1 = await ApiService().getBackers();
+    //dynamic tokens = await ApiService().getChampions();
+   // dynamic tokens1 = await ApiService().getBackers();
 
     List<Map<String, dynamic>> tasks = token.cast<Map<String, dynamic>>();
     //List<Map<String, dynamic>> tasks1 = tokens.cast<Map<String, dynamic>>();
     //List<Map<String, dynamic>> tasks2 = tokens1.cast<Map<String, dynamic>>();
 
+    print(widget.campaign.savedAutoOffers);
+    print(widget.campaign.savedManualOffers);
+
     tasks.forEach((obj) {
       if (obj['first_name'] != null) {
 
         Participant p = Participant(id: obj['id'], name: obj['first_name'], username: obj['username'], imageUrl: obj['profile_pic']??'assets/images/avatar.png');
-        print(obj);
         setState(() => allUsers.add(p));
       }
     });
 
     setState(() => isLoading = false);
 
-
-
-    print(allUsers);
     await Future.delayed(const Duration(seconds: 2));
   }
 
@@ -517,9 +516,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     String cleanStr = to.replaceAll(',', '');
 
                     double result = double.parse(cleanStr);
-                    print(result);
-                    print(selectedParticipants);
-                    print(selectedImages);
+
                     widget.campaign.setCampaignDetails(
                         _startDateController.text,
                         _endDateController.text,

@@ -669,10 +669,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+
                 ],
               ),
               Padding(

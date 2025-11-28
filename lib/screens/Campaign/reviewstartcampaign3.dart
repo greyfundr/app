@@ -36,6 +36,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   late String _editableDescription;
   List<Map<String, String>> _budgetItems = [];
   List<Map<String, String>> _offers = [];
+  bool isLoading = false;
 
   late File _image;
 
@@ -50,7 +51,12 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
   void initState() {
     super.initState();
     _editableDescription = widget.campaign.description;
-    _offers = widget.campaign.savedAutoOffers;
+    List<Map<String, String>> savedAutoOffers = widget.campaign.savedAutoOffers;
+    List<Map<String, String>> savedManualOffers = widget.campaign.savedManualOffers;
+    List<Map<String, String>> combinedList = [...savedAutoOffers, ...savedManualOffers];
+    //print(savedAutoOffers);
+    //print(savedManualOffers);
+    _offers = combinedList;
     loadProfile();
   }
 
@@ -60,20 +66,18 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => user = userData['user']);
 
-
-      print("User ID: ${userData['user']}");
     } else {
       print("Token is expired or invalid");
     }
   }
 
   void createCampaign() async {
-
+    setState(() => isLoading = true);
     final response = await ApiService().createCampaign(widget.campaign, user?['id']);
     print(response.data);
     if (response.statusCode == 200) {
       // Handle successful login
-
+      setState(() => isLoading = false);
       String message = response.data['msg'];
       int id = response.data['id'];
 
@@ -86,7 +90,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
         ),
       );
 
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 1), () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -883,6 +887,23 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
       );
     }
 
+    if (isLoading) {
+      return Scaffold(
+          body: const Center(
+            child:
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('Uploading Images...'),
+              ],
+
+            ),
+          )
+      );
+    }
+
     DateTime startsDate = DateFormat('dd/MM/yyyy').parse(widget.campaign.startDate);
     DateTime endsDate = DateFormat('dd/MM/yyyy').parse(widget.campaign.endDate);
     Duration difference = endsDate.difference(startsDate);
@@ -1267,38 +1288,10 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         ),
                       ),
                       //Customise Button
-                      Positioned(
-                        left: 44.0,
-                        top: 769.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            height: 43.0,
-                            width: 162.0,
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Color.fromRGBO(255, 83, 79, 1.0),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(6.0),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "CUSTOMISE",
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13.0,
-                                  color: Color.fromRGBO(252, 100, 58, 1.0),
-                                  decoration: TextDecoration.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+
                       //Edit Campaign Button
                       Positioned(
-                        left: 234.0,
+                        left: 134.0,
                         top: 769.0,
                         child: ErrorBoundary(
                           child: InkWell(

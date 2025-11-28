@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'bill/quicksplit.dart';
 import 'fundpool/fundpool.dart';
 import 'invoice/invoice.dart';
-// import 'launch/launch.dart';
 import 'events/newevent.dart';
-// import '../Campaign/main_campaign.dart';
 import '../Campaign/campaign_option.dart';
 
 class CreateNewPage extends StatelessWidget {
@@ -45,7 +43,7 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             _buildOptionCard(
-              icon: '⚖️',
+              icon: 'assets/images/split.png',
               iconBg: const Color(0xFFE3F2FD),
               title: 'Split A Bill',
               description:
@@ -61,7 +59,7 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
-              icon: '👤',
+              icon: 'assets/images/porsh.png',
               iconBg: const Color(0xFFE1F5FE),
               title: 'Fund Pool',
               description:
@@ -77,7 +75,7 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
-              icon: '👤',
+              icon: 'assets/images/porsh.png',
               iconBg: const Color(0xFFE1F5FE),
               title: 'Generate Invoice',
               description:
@@ -93,8 +91,8 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
-              icon: '👤',
-              iconBg: const Color(0xFFE1F5FE),
+              icon: 'assets/images/giveaway.png',
+  iconBg: const Color(0xFFFFEBEE),
               title: 'Launch Fundraising Campaign',
               description:
                   'Ready to raise funds? Set up your campaign, tell your story, and watch the support roll in.',
@@ -109,7 +107,7 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
-              icon: '🎁',
+              icon: 'assets/images/giveaway.png',
               iconBg: const Color(0xFFFFEBEE),
               title: 'Events',
               description:
@@ -125,7 +123,7 @@ class CreateNewPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
-              icon: '🎁',
+              icon: 'assets/images/giveaway.png',
               iconBg: const Color(0xFFFFEBEE),
               title: 'Giveaway',
               description:
@@ -139,66 +137,69 @@ class CreateNewPage extends StatelessWidget {
   }
 
   Widget _buildOptionCard({
-    required String icon,
-    required Color iconBg,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
+  required String icon, // asset path
+  required Color iconBg,
+  required String title,
+  required String description,
+  required VoidCallback onTap,
+}) {
+  return Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12),
+    child: InkWell(
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Image.asset(
+                  icon, // <- replaced Text with Image.asset
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.contain,
                 ),
-                child: Center(
-                  child: Text(
-                    icon,
-                    style: const TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                      height: 1.4,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  );
+  
   }
 }

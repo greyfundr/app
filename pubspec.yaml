@@ -55,6 +55,10 @@ flutter:
     - assets/images/splash_bg.jpg
     - assets/images/greyfdr.png
     - assets/images/charity.png
+    - assets/images/split.png
+    - assets/images/porsh.png
+    - assets/images/giveaway.png
+    - assets/images/trophy.png
     - assets/images/lifestyle.png
     - assets/images/create.png
     - assets/images/personal.png

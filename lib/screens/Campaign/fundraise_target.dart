@@ -140,7 +140,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               const Text(
                 'Fundraising Target',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -149,7 +149,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 'How much are you trying to fundraise?',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey,
+                  color: Color.fromARGB(255, 107, 106, 106),
                 ),
               ),
               const SizedBox(height: 16),
@@ -538,7 +538,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   child: const Text('REVIEW & POST'),
                 ),
               ),
-              const SizedBox(height: 34),
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -731,7 +731,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     ),
                     
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -1282,7 +1282,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
                 child: SizedBox(  // Added SizedBox to constrain height to 75%
 
-            height: MediaQuery.of(context).size.height * 0.75,
+            height: MediaQuery.of(context).size.height * 0.86,
 
             child: Column(
             mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
@@ -1453,13 +1453,16 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
             child: const Text('ADD PARTICIPANTS',
             style: TextStyle(color: Colors.white),),
             ),
+            
             ),
-            const SizedBox(height: 16),
+            
+            
             ],
             ),
             ),
             ),
             );
+
           },
 
         );

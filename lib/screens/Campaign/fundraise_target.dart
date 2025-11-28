@@ -61,6 +61,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   List<Participant> champions = [];
 
   List<Participant> backers = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   }
 
   Future<void> loadUsers() async {
+    setState(() => isLoading = true);
     dynamic token = await ApiService().getUsers();
     dynamic tokens = await ApiService().getChampions();
     dynamic tokens1 = await ApiService().getBackers();
@@ -86,7 +88,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
       }
     });
 
-
+    setState(() => isLoading = false);
 
 
 
@@ -124,6 +126,14 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   Widget build(BuildContext context) {
     final String title = widget.campaign.title;
     final String description = widget.campaign.description;
+
+    if (isLoading) {
+      return Scaffold(
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.teal),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

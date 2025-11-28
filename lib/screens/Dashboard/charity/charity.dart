@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
 // import '../../class/campaign.dart';
@@ -9,6 +11,8 @@ import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
 // import '../../class/jwt_helper.dart';
 // import 'editprofile.dart'; 
 // import 'homeprofile.dart';
+import '../../../class/api_service.dart';
+import '../../../class/participants.dart';
 import '../../Dashboard/profile_screen.dart';
 
 class CharityPage extends StatefulWidget {
@@ -23,11 +27,16 @@ class _CharityPageState extends State<CharityPage>
 
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool isLoading = true;
+  List<Map<String, dynamic>> _filteredCampaigns = [];
+
+
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadCampaigns();
   }
 
   @override
@@ -36,8 +45,70 @@ class _CharityPageState extends State<CharityPage>
     super.dispose();
   }
 
+  Future<void> _loadCampaigns() async {
+    List<Map<String, String>> offer = [];
+    List<Map<String, String>> moffer = [];
+    List<File> images = [];
+    List<Participant> participant = [];
+
+    try {
+      setState(() => isLoading = true);
+
+      dynamic token = await ApiService().getCampaign();
+
+
+      // Add null check
+      if (token == null) {
+        print('API returned null');
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No campaigns available'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if token is a List before casting
+      if (token is! List) {
+        print('Unexpected data type: ${token.runtimeType}');
+        print('Data: $token');
+        setState(() => isLoading = false);
+        return;
+      }
+
+      setState(() {
+        _filteredCampaigns = token.cast<Map<String, dynamic>>();;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading campaign: $e');
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.teal),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
@@ -56,7 +127,7 @@ class _CharityPageState extends State<CharityPage>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildCampaignList(_getExploreCampaigns()),
+                  _buildCampaignList(_filteredCampaigns),
                   _buildCampaignList(_getForYouCampaigns()),
                   _buildCampaignList(_getFollowingCampaigns()),
                 ],
@@ -394,7 +465,8 @@ class _CharityPageState extends State<CharityPage>
             ),
             child: const Text(
               'Donate',
-              style: TextStyle(fontSize: 11),
+              style: TextStyle(fontSize: 11, color: Colors.white),
+
             ),
           ),
         ],
@@ -428,13 +500,32 @@ class _CharityPageState extends State<CharityPage>
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: campaigns.length,
+
       itemBuilder: (context, index) {
+
         return _buildCampaignCard(campaigns[index]);
       },
     );
   }
 
   Widget _buildCampaignCard(Map<String, dynamic> campaign) {
+    print(campaign['title']);
+    final currentAmount = campaign['current_amount'];
+    final amount = campaign['goal_amount'];
+    double progress = (currentAmount / amount) * 100;
+
+    final startdate = campaign['start_date'];
+    final enddate = campaign['end_date'];
+    DateTime specificDate = DateTime.parse(startdate); // Example: Nov 26, 2025, 10:30 AM
+    DateTime specificendDate = DateTime.parse(enddate); // Example: Nov 26, 2025, 10:30 AM
+
+
+    // Calculate the duration between the two dates
+    Duration difference = specificendDate.difference(specificDate);
+
+    // Get the difference in hours
+    int hoursDifference = difference.inDays;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -458,7 +549,7 @@ class _CharityPageState extends State<CharityPage>
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.network(
-                  campaign['image'],
+                  "https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${campaign['image']}",
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -480,7 +571,7 @@ class _CharityPageState extends State<CharityPage>
                           color: Colors.white, size: 12),
                       const SizedBox(width: 4),
                       Text(
-                        '${campaign['daysLeft']} Days left',
+                        '$hoursDifference Days left',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -514,7 +605,7 @@ class _CharityPageState extends State<CharityPage>
                           style: const TextStyle(fontSize: 12),
                           children: [
                             TextSpan(
-                              text: '₦${campaign['raised']}',
+                              text: '₦ ${currentAmount}',
                               style:
                                   const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -522,7 +613,7 @@ class _CharityPageState extends State<CharityPage>
                                   ),
                             ),
                             TextSpan(
-                              text: ' raised of ₦${campaign['goal']}',
+                              text: ' raised of ₦ ${amount}',
                               style: TextStyle(color: Colors.grey[600]),
                             ),
                           ],
@@ -541,7 +632,7 @@ class _CharityPageState extends State<CharityPage>
                       ),
                       child: const Text(
                         'Donate',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 12, color: Colors.white),
                       ),
                     ),
                   ],
@@ -550,7 +641,7 @@ class _CharityPageState extends State<CharityPage>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: campaign['progress'] / 100,
+                    value: progress / 100,
                     backgroundColor: Colors.grey[200],
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       Color(0xFF0D7377),
@@ -576,7 +667,7 @@ class _CharityPageState extends State<CharityPage>
                     ),
                     const Spacer(),
                     Text(
-                      '${campaign['progress']}%',
+                      '$progress %',
                       style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                     ),
                   ],

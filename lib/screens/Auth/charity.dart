@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
+
+import '../../class/api_service.dart';
+import '../../class/participants.dart';
 // import '../../class/campaign.dart';
 // import '../Campaign/detailedcampaign.dart';
 // import 'notification_screen.dart';
@@ -23,6 +28,8 @@ class _CharityPageState extends State<CharityPage>
 
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool isLoading = true;
+  List<Map<String, dynamic>> _filteredCampaigns = [];
 
   @override
   void initState() {
@@ -34,6 +41,60 @@ class _CharityPageState extends State<CharityPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCampaigns() async {
+    List<Map<String, String>> offer = [];
+    List<Map<String, String>> moffer = [];
+    List<File> images = [];
+    List<Participant> participant = [];
+
+    try {
+      setState(() => isLoading = true);
+
+      dynamic token = await ApiService().getCampaign();
+
+      // Add null check
+      if (token == null) {
+        print('API returned null');
+        setState(() => isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No campaigns available'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if token is a List before casting
+      if (token is! List) {
+        print('Unexpected data type: ${token.runtimeType}');
+        print('Data: $token');
+        setState(() => isLoading = false);
+        return;
+      }
+
+      setState(() {
+        _filteredCampaigns = token.cast<Map<String, dynamic>>();;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading campaign: $e');
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -56,7 +117,7 @@ class _CharityPageState extends State<CharityPage>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildCampaignList(_getExploreCampaigns()),
+                  _buildCampaignList(_filteredCampaigns),
                   _buildCampaignList(_getForYouCampaigns()),
                   _buildCampaignList(_getFollowingCampaigns()),
                 ],

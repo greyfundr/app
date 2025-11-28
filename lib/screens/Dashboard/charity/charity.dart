@@ -13,6 +13,7 @@ import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
 // import 'homeprofile.dart';
 import '../../../class/api_service.dart';
 import '../../../class/participants.dart';
+import '../../Campaign/detailedcampaign.dart';
 import '../../Dashboard/profile_screen.dart';
 
 class CharityPage extends StatefulWidget {
@@ -105,8 +106,17 @@ class _CharityPageState extends State<CharityPage>
     if (isLoading) {
       return Scaffold(
         body: const Center(
-          child: CircularProgressIndicator(color: Colors.teal),
+          child:
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text('Loading Campaign...'),
+            ],
+
         ),
+        )
       );
     }
     return Scaffold(
@@ -621,7 +631,16 @@ class _CharityPageState extends State<CharityPage>
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CampaignDetailPage(
+                                id: campaign['id'].toString()
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0D7377),
                         shape: RoundedRectangleBorder(

@@ -1,9 +1,13 @@
-// lib/screens/profile/billscreen.dart
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../../../services/api_service.dart';
-// import '../../auth/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../class/auth_service.dart';
+import '../Auth/login_screen.dart';
+import '../../class/jwt_helper.dart';
+import 'editprofile.dart'; 
+import 'package:intl/intl.dart';
 import 'homeprofile.dart';
+import 'notification_screen.dart';
 import 'profile_screen.dart';
 
 class MyBillScreen extends StatefulWidget {
@@ -14,33 +18,51 @@ class MyBillScreen extends StatefulWidget {
 }
 
 class _MyBillScreenState extends State<MyBillScreen> {
-  // Map<String, dynamic>? user;
+  Map<String, dynamic>? user;
+  Map<String, dynamic>? wallet;
   int _selectedIndex = 1; // Bills tab active
   String selectedTab = 'Bill'; // Bill, Request, History
 
   @override
   void initState() {
     super.initState();
-    // loadProfile();
+    loadProfile();
   }
 
-  // void loadProfile() async {
-  //   final res = await ApiService.getProfile();
-  //   setState(() => user = res['user']);
-  // }
+     String formatAmount(dynamic amount) {
+  final numValue = int.tryParse(amount.toString()) ?? 0;
+  return NumberFormat("#,###").format(numValue);
+}
+final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
 
-  // Future<void> logout() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.remove('token');
-  //   await prefs.remove('userId');
+  
 
-  //   if (!mounted) return;
-  //   Navigator.pushAndRemoveUntil(
-  //     context,
-  //     MaterialPageRoute(builder: (_) => const LoginScreen()),
-  //     (route) => false,
-  //   );
-  // }
+ void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => user = userData['user']);
+      setState(() => wallet = userData['wallet']);
+      print("User ID: ${userData['user']}");
+      print("User ID: ${userData['wallet']}");
+    } else {
+      print("Token is expired or invalid");
+    }
+  }
+
+   Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userId');
+    await AuthService().logout();
+
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
@@ -65,18 +87,43 @@ class _MyBillScreenState extends State<MyBillScreen> {
     }
   }
 
+
+  void _showAddMoneyModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AddMoneyBottomSheet(),
+    );
+  }
+
+
+  void _openSettingsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SettingsActivityPage(
+          user: user,
+          onLogout: logout,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: SafeArea(
+      body: user == null
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
         child: Column(
           children: [
             // Header Section
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF007A74), Color(0xFF00B3AE)],
+                  colors: [Color(0xFF007A74), Color.fromARGB(255, 29, 45, 44)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -96,26 +143,29 @@ class _MyBillScreenState extends State<MyBillScreen> {
                         Row(
                           children: [
                             CircleAvatar(
-                              radius: 20,
-                              backgroundImage: AssetImage('assets/images/avatar.png'),
+                              radius: 25,
+                              backgroundImage: user!['profile_pic'] != null
+                                  ? const AssetImage('assets/images/personal.png')
+                                  : const AssetImage('assets/images/personal.png')
+                                      as ImageProvider,
                             ),
                             const SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
-                                  "Good morning!",
+                                  "Hello!",
                                   style: TextStyle(
                                     color: Colors.white70,
                                     fontSize: 12,
                                   ),
                                 ),
                                 Text(
-                                  "Daniel Imoh",
+                                  "${user!['first_name']} ${user!['last_name']}",
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
                                     fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -123,42 +173,33 @@ class _MyBillScreenState extends State<MyBillScreen> {
                           ],
                         ),
                         Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.search, color: Colors.white),
-                              padding: EdgeInsets.zero,
-                            ),
-                            Stack(
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.notifications_none, color: Colors.white),
-                                  padding: EdgeInsets.zero,
-                                ),
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+  children: [
+    IconButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NotificationScreen()),
+        );
+      },
+      icon: const Icon(
+        Icons.notifications_none,
+        color: Colors.white, // ← set icon color here
+      ),
+    ),
+    IconButton(
+      onPressed: _openSettingsPage,
+      icon: const Icon(
+        Icons.menu,
+        color: Colors.white, // ← set icon color here
+      ),
+    ),
+  ],
+)
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Stats Section
+                  
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25),
                     child: Row(
@@ -168,133 +209,275 @@ class _MyBillScreenState extends State<MyBillScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Total Point
-                              const Text(
-                                "Total Point",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: const [
-                                  Text(
-                                    "320Pts",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "200 points to your next star",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10,
-                                ),
-                              ),
 
-                              const SizedBox(height: 16),
 
-                              // Total Balance with Add Money button
-                              const Text(
-                                "Total Balance",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
+                              //POINT AND TROPHY ROW
+
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        "₦72,311.00",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 17,
-                                        ),
-                                      ),
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    // POINT COLUMN
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          "Total Point",
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        SizedBox(height: 2),
+        Text(
+          "0Pts",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          "10 points to your next star",
+          style: TextStyle(color: Colors.white70, fontSize: 10),
+        ),
+      ],
+    ),
+
+    // TROPHY COLUMN
+    Column(
+                          children: [
+                            // Trophy icon
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                               
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/images/trophy.png', // Add trophy icon
+                                width: 50,
+                                height: 50,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(Icons.emoji_events, color: Colors.amber, size: 40);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+  ],
+),
+
+// FIRST LINE DIVIDER
+    const Divider(
+      color: Colors.white24, // try Colors.white for full white
+      thickness: 1,
+    ),
+
+ //BALANCE AND ADD MONEY ROW
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    // TOTAL BALANCE COLUMN
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+         "Total Balance",
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        
+        Row(
+            children: [
+            Text(
+  wallet?['balance'] != null
+      ? NumberFormat('#,##0.00').format(double.parse(wallet!['balance']))
+      : '0.00',
+  style: const TextStyle(
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  ),
+),
                                       const SizedBox(width: 6),
                                       Icon(Icons.remove_red_eye_outlined, color: Colors.white70, size: 16),
                                     ],
                                   ),
-                                  // Add Money button at the right end
-                                  ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.teal,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(Icons.add_circle_outline, size: 16),
-                                        SizedBox(width: 4),
-                                        Text("Add Money", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              
-                              Row(
-                                children: const [
+        
+        Row(
+                                children: [
                                   Text(
-                                    "You owe: ₦23,200",
-                                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                    'You owe: ₦${wallet?['incoming_balance'] != null ? formatter.format(double.parse(wallet!['incoming_balance'])) : '0.00'}',
+      style:  TextStyle(color: Colors.white70),
                                   ),
                                  
-                                  SizedBox(width: 50),
+                                  SizedBox(width: 30),
                                   Text(
-                                    "Creditors: ₦45,200",
+                                    'Creditors: ₦${wallet?['balance_owed'] != null ? formatter.format(double.parse(wallet!['balance_owed'])) : '0.00'}',
                                     style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
+      ],
+    ),
 
-                              const SizedBox(height: 16),
+    // SECOND COLUMN
+    Row(
+  mainAxisAlignment: MainAxisAlignment.start, 
+  children: [
+    ElevatedButton(
+      onPressed: _showAddMoneyModal,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+        foregroundColor: Colors.teal,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.add_circle_outline, color: Color.fromARGB(255, 255, 255, 255),size: 16),
+          SizedBox(height: 4),
+          Text(
+            "Add Money",
+            style: TextStyle(fontSize: 10,color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+  ],
 
-                              // Total Bill
-                              const Text(
-                                "Total Bill",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        "₦72,311.00",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 17,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Icon(Icons.remove_red_eye_outlined, color: Colors.white70, size: 16),
-                                    ],
+  
+),
+
+
+// 2ND WHITE LINE DIVIDER
+    const Divider(
+      color: Colors.white24, // try Colors.white for full white
+      thickness: 1,
+    ),
+//TOTAL BILLS AND CREATE BILL RO
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    // TOTAL BILL COLUMN
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+         "Total Bills",
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        Row(
+          children: [
+   const Text(
+                "₦0.00",
+                style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                        ),
+                        ),
+                       ],
+                      ),
+        Row(
+           children: [
+            Row(
+              children: const [
+            Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    // Row 1
+    Row(
+      children: const [ 
+        Text(
+          "Champion",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+    // Row 2
+    Row(
+      children: const [
+        const Text(
+                "₦0.00",
+        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  ],
+),
+      SizedBox(width: 50),
+      Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    // Row 1
+    Row(
+      children: const [ 
+        Text(
+          "Split",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+
+    Row(
+      children: const [
+        const Text(
+        "₦0.00",
+        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  ],
+),
+    SizedBox(width: 40),
+    Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    // Row 1
+    Row(
+      children: const [ 
+        Text(
+          "Backed",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+
+    Row(
+      children: const [
+        const Text(
+                                    "₦0.00",
+                                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                                   ),
-                                  // Add Money button at the right end
-                                  ElevatedButton(
+      ],
+    ),
+  ],
+),
+                                ],
+                              ),
+                                ],
+                              ),
+      ],
+    ),
+
+    // CREATE BUTTON COLUMN
+    Row(
+  mainAxisAlignment: MainAxisAlignment.start, // or spaceBetween, spaceAround, etc.
+  children: [
+    ElevatedButton(
                                     onPressed: () {},
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Color(0xFFFF6B35),
@@ -313,98 +496,19 @@ class _MyBillScreenState extends State<MyBillScreen> {
                                       ],
                                     ),
                                   ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 4),
-                              Row(
-                                children: const [
-                                  Text(
-                                    "Champion",
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                  SizedBox(width: 50),
-                                  Text(
-                                    "Split",
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                  SizedBox(width: 70),
-                                  Text(
-                                    "Backed",
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  const Text(
-                                    "₦85,700",
-                                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                  ),
-                                 
-                                  const SizedBox(width: 40),
-                                  const Text(
-                                    "₦239,000",
-                                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                  ),
-                                  
-                                  const SizedBox(width: 50),
-                                  const Text(
-                                    "₦32,600",
-                                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Create Bill button moved here
-                                  // ElevatedButton(
-                                  //   onPressed: () {},
-                                  //   style: ElevatedButton.styleFrom(
-                                  //     backgroundColor: Color(0xFFFF6B35),
-                                  //     foregroundColor: Colors.white,
-                                  //     shape: RoundedRectangleBorder(
-                                  //       borderRadius: BorderRadius.circular(25),
-                                  //     ),
-                                  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  //   ),
-                                  //   child: Row(
-                                  //     mainAxisSize: MainAxisSize.min,
-                                  //     children: const [
-                                  //       Icon(Icons.receipt_long, size: 16),
-                                  //       SizedBox(width: 4),
-                                  //       Text("Create Bill", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                                  //     ],
-                                  //   ),
-                                  // ),
-                                ],
-                              ),
-                            ],
+  ],
+),
+  ],
+),
+      ],
                           ),
                         ),
-                        Column(
-                          children: [
-                            // Trophy icon
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Image.asset(
-                                'assets/images/trophy.png', // Add trophy icon
-                                width: 40,
-                                height: 40,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.emoji_events, color: Colors.amber, size: 40);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                        
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -635,11 +739,11 @@ class _MyBillScreenState extends State<MyBillScreen> {
     required String amount,
   }) {
     return Container(
-      width: 250,
+      width: 300,
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 143, 147, 146),
+        color: Color.fromARGB(255, 232, 232, 232),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -657,7 +761,7 @@ class _MyBillScreenState extends State<MyBillScreen> {
                 Text(
                   name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color.fromARGB(255, 26, 25, 25),
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -668,7 +772,7 @@ class _MyBillScreenState extends State<MyBillScreen> {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Color.fromARGB(179, 121, 121, 121),
                     fontSize: 10,
                   ),
                   maxLines: 1,
@@ -678,7 +782,7 @@ class _MyBillScreenState extends State<MyBillScreen> {
                 Text(
                   amount,
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Color.fromARGB(179, 37, 60, 48),
                     fontSize: 9,
                   ),
                   maxLines: 1,

@@ -5,13 +5,14 @@ import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import 'editprofile.dart'; 
+import 'package:intl/intl.dart';
 import '../create/createnew.dart';
 import 'homeprofile.dart';
 import 'billscreen.dart';
 import 'kyc.dart';
 import 'charity/charity.dart';
 import 'notification_screen.dart';
-import 'campaign_search_page.dart';
+// import 'campaign_search_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -30,6 +31,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     loadProfile();
   }
+
+   String formatAmount(dynamic amount) {
+  final numValue = int.tryParse(amount.toString()) ?? 0;
+  return NumberFormat("#,###").format(numValue);
+}
+
+final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
 
   void loadProfile() async {
     String? token = await AuthService().getToken();
@@ -176,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red[400],
+                          color: const Color.fromARGB(255, 220, 115, 49),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -184,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: const [
                             Text(
                               'Kindly verify your Identity to upgrade your account',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Colors.white,fontSize: 12),
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(width: 8),
@@ -205,13 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildFeatureCard(
                             'Lifestyle', 'assets/images/lifestyle.png', null),
                         _buildFeatureCard(
-                            'Invoices', 'assets/images/invoices.png', () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const CharityPage()),
-                          );
-                        }),
+                            'Invoices', 'assets/images/invoices.png', null),
                         
                         _buildFeatureCard('Create New',
                             'assets/images/create.png', () {
@@ -227,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CampaignSearchPage()),
+                                builder: (_) => const CharityPage()),
                           );
                         }),
                       ],
@@ -252,23 +254,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: TextStyle(color: Colors.white70, fontSize: 14),
                           ),
                           const SizedBox(height: 5),
-                          Text(
-                            wallet?['balance'],
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold),
-                          ),
+  
+Text(
+  wallet?['balance'] != null
+      ? NumberFormat('#,##0.00').format(double.parse(wallet!['balance']))
+      : '0.00',
+  style: const TextStyle(
+    color: Colors.white,
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+  ),
+),
                           const SizedBox(height: 10),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('You owe: ${wallet?['incoming_balance']}',
-                                  style: const TextStyle(color: Colors.white70)),
-                              Text('You are owed: ${wallet?['balance_owed']}',
-                                  style: const TextStyle(color: Colors.white70)),
-                            ],
-                          ),
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Text(
+      'You owe: ₦${wallet?['incoming_balance'] != null ? formatter.format(double.parse(wallet!['incoming_balance'])) : '0.00'}',
+      style: const TextStyle(color: Colors.white70),
+    ),
+    Text(
+      'You are owed: ₦${wallet?['balance_owed'] != null ? formatter.format(double.parse(wallet!['balance_owed'])) : '0.00'}',
+      style: const TextStyle(color: Colors.white70),
+    ),
+  ],
+),
                           const SizedBox(height: 15),
                           Align(
                             alignment: Alignment.centerRight,

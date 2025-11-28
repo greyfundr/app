@@ -731,7 +731,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     ),
                     
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),

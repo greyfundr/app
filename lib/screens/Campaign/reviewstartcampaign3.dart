@@ -10,6 +10,7 @@ import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'edit_campaign_screen.dart';
 import 'campaigncheckapproved.dart';
 import '../../class/campaign.dart';
 import 'package:path_provider/path_provider.dart';
@@ -1378,6 +1379,10 @@ Widget _buildTeamMemberRow({
                           ),
                         ),
                       ),
+
+
+
+
                       //PROGRESS BAR
                       Positioned(
                         left: 22.0,
@@ -1466,6 +1471,13 @@ Widget _buildTeamMemberRow({
                           ),
                         ),
                       ),
+
+
+
+
+
+
+                      
                       //Champions Count
                       Positioned(
                         left: 162.0,
@@ -1587,39 +1599,84 @@ Widget _buildTeamMemberRow({
                           ),
                         ),
                       ),
+
+
+
+
                       //Edit Campaign Button
                       Positioned(
-                        left: 234.0,
+  left: 234.0,
                         top: 685.0,
-                        child: ErrorBoundary(
-                          child: InkWell(
-                            onTap: _showEditBottomSheet,
-                            child: Container(
-                              height: 43.0,
+  // bottom: 20.0, // Nice safe area from bottom
+  child: ErrorBoundary(
+    child: SizedBox(
+      height: 43.0,
                               width: 162.0,
-                              clipBehavior: Clip.none,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6.0),
-                                border: Border.all(
-                                  color: Color.fromRGBO(34, 171, 225, 1.0),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  "EDIT CAMPAIGN",
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13.0,
-                                    decoration: TextDecoration.none,
-                                    color: Color.fromRGBO(34, 171, 225, 1.0),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                              
+      child: ElevatedButton(
+        onPressed: () async {
+          // Navigate to the new full-screen Edit Campaign Page
+          final updatedCampaign = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditCampaignScreen(campaign: widget.campaign),
+            ),
+          );
+
+          // If user saved changes and returned a new campaign object
+          if (updatedCampaign is Campaign && mounted) {
+            setState(() {
+              // Update all editable fields locally so the review page reflects changes immediately
+              widget.campaign.title = updatedCampaign.title;
+              widget.campaign.description = updatedCampaign.description;
+              widget.campaign.images = updatedCampaign.images;
+              widget.campaign.participants = updatedCampaign.participants;
+              widget.campaign.savedManualOffers = updatedCampaign.savedManualOffers;
+              widget.campaign.savedAutoOffers = updatedCampaign.savedAutoOffers;
+
+              // Rebuild editable states
+              _editableDescription = updatedCampaign.description;
+              _offers = [...updatedCampaign.savedAutoOffers, ...updatedCampaign.savedManualOffers];
+              // Add budget items if you track them separately
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Campaign updated successfully!"),
+                backgroundColor: Colors.teal,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+  backgroundColor: Colors.transparent,   // Remove background color
+  foregroundColor: Colors.teal,          // Text/Icon color
+  shadowColor: Colors.transparent,       // Remove shadow
+  elevation: 0,                           // No elevation
+  
+
+  // Add border + radius
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(6),
+    side: BorderSide(
+      color: Color.fromRGBO(0, 164, 175, 1), // Border color
+      width: 2,                               // Border thickness
+    ),
+  ),
+),
+        child: Text(
+          "EDIT CAMPAIGN",
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    ),
+  ),
+),
 
 
 

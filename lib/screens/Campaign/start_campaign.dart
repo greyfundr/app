@@ -17,6 +17,53 @@ class _CampaignScreenState extends State<CampaignScreen> {
 
   bool get hasOffers => savedAutoOffers.isNotEmpty || savedManualOffers.isNotEmpty;
 
+
+  bool _canProceed() {
+  return _titleController.text.trim().isNotEmpty &&
+      _descriptionController.text.trim().isNotEmpty &&
+      selectedCategory != null;
+}
+
+void _proceedToFundraising() async {
+  // Show loading
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Row(
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          SizedBox(width: 16),
+          Text("Creating your campaign..."),
+        ],
+      ),
+      backgroundColor: Color(0xFF00A9A5),
+      duration: Duration(seconds: 2),
+    ),
+  );
+
+  await Future.delayed(const Duration(milliseconds: 200)); // Simulate processing
+
+  final campaign = Campaign(
+    _titleController.text.trim(),
+    _descriptionController.text.trim(),
+    selectedCategory!,
+    savedManualOffers,
+    savedAutoOffers,
+  );
+
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => FundraisingScreen(campaign: campaign)),
+  );
+}
+
   String? selectedCategory;
 
   // Categories list with label and icon assets
@@ -86,10 +133,17 @@ class _CampaignScreenState extends State<CampaignScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Color.fromARGB(255, 54, 244, 136), size: 28),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                    Container(
+  decoration: BoxDecoration(
+    color: Colors.black12,
+    borderRadius: BorderRadius.circular(12),
+  ),
+  padding: EdgeInsets.all(8),
+  child: GestureDetector(
+    onTap: () => Navigator.pop(context),
+    child: Icon(Icons.close, size: 22, color: Colors.grey[800]),
+  ),
+)
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -120,7 +174,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.shade300,
+                                color: const Color.fromARGB(255, 208, 208, 208),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -133,7 +187,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
                                 width: 60,
                                 height: 60,
                                 decoration: BoxDecoration(
-                                  color: Colors.yellow.shade200,
+                                  color: const Color.fromARGB(153, 174, 174, 174),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Padding(
@@ -169,10 +223,17 @@ class _CampaignScreenState extends State<CampaignScreen> {
   }
 
   Widget _buildSelectedCategoryWidget() {
+  if (selectedCategory == null) return const SizedBox.shrink();
+
+  final categoryMap = categories.firstWhere(
+    (c) => c['label'] == selectedCategory,
+    orElse: () => {'label': 'Unknown', 'icon': 'assets/icons/default.png'},  // Fallback; add a default icon if needed
+  );
+
   return FractionallySizedBox(
-    widthFactor: 0.5,  // This makes the container take 50% of the parent's width
+    widthFactor: 0.5,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
@@ -181,6 +242,7 @@ class _CampaignScreenState extends State<CampaignScreen> {
       child: Stack(
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,  // Prevent overflow
             children: [
               Container(
                 width: 50,
@@ -192,18 +254,16 @@ class _CampaignScreenState extends State<CampaignScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Image.asset(
-                    categories.firstWhere((c) => c['label'] == selectedCategory)['icon'],
+                    categoryMap['icon'] as String,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),  // Handle missing asset
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Text(
-                selectedCategory ?? '',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                selectedCategory!,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -211,22 +271,14 @@ class _CampaignScreenState extends State<CampaignScreen> {
             right: 0,
             top: 0,
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  selectedCategory = null;
-                });
-              },
+              onTap: () => setState(() => selectedCategory = null),
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.red.shade400,
                 ),
                 padding: const EdgeInsets.all(4),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
           ),
@@ -529,7 +581,8 @@ class _CampaignScreenState extends State<CampaignScreen> {
               TextField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  hintText: '',
+                  hintText: 'e.g. Help me fund my cancer treatment',
+    hintStyle: TextStyle(color: Colors.grey[500]),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -544,7 +597,8 @@ class _CampaignScreenState extends State<CampaignScreen> {
                     borderSide: const BorderSide(color: Colors.blue, width: 2),
                   ),
                 ),
-                maxLines: 1,
+                maxLines: 2,
+  maxLength: 100,
               ),
 
               const SizedBox(height: 24),
@@ -569,7 +623,8 @@ class _CampaignScreenState extends State<CampaignScreen> {
               TextField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
-                  hintText: '',
+                  hintText: 'Tell your story... Why do you need help? How will the money be used?',
+    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -605,40 +660,53 @@ class _CampaignScreenState extends State<CampaignScreen> {
               ],
 
               const SizedBox(height: 40),
+              
+Center(
+  child: TextButton(
+    onPressed: () {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Draft saved automatically!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    },
+    child: Text(
+      "Save as Draft",
+      style: TextStyle(color: Colors.grey[600], fontSize: 15),
+    ),
+  ),
+),
 
               // Next Button
               SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Campaign campaign = new Campaign(_titleController.text,_descriptionController.text,selectedCategory!,savedManualOffers,savedAutoOffers);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => FundraisingScreen(
-                            campaign: campaign
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A9A5),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'NEXT',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                 
-                ),
-              ),
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _canProceed() ? _proceedToFundraising : null,  // Disables if false
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF00A9A5),
+      foregroundColor: Colors.white,
+      disabledBackgroundColor: Colors.grey[400],  // Grey when disabled
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    child: const Text(
+      'NEXT',
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+),
+
+
+
+
+
+
               const SizedBox(height: 60),
             ],
           ),
@@ -830,16 +898,16 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                     final conditionController = entry.value['condition']!;
                     final rewardController = entry.value['reward']!;
                     return _buildOfferCard(
-                      conditionController: conditionController,
-                      rewardController: rewardController,
-                      onRemove: () {
-                        setState(() {
-                          conditionController.dispose();
-                          rewardController.dispose();
-                          autoOffers.removeAt(entry.key);
-                        });
-                      },
-                    );
+  conditionController: conditionController,
+  rewardController: rewardController,
+  onRemove: () {
+    setState(() {
+      conditionController.dispose();
+      rewardController.dispose();
+      autoOffers.removeAt(entry.key);
+    });
+  },
+);
                   }),
 
                   // Add more button for Auto Offers
@@ -888,17 +956,16 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                     final conditionController = entry.value['condition']!;
                     final rewardController = entry.value['reward']!;
                     return _buildOfferCard(
-                      conditionController: conditionController,
-                      rewardController: rewardController,
-                      onRemove: () {
-                        setState(() {
-                          conditionController.dispose();
-                          rewardController.dispose();
-                          manualOffers.removeAt(entry.key);
-                        });
-                      },
-                      isManual: true,
-                    );
+  conditionController: conditionController,
+  rewardController: rewardController,
+  onRemove: () {
+    setState(() {
+      conditionController.dispose();
+      rewardController.dispose();
+      manualOffers.removeAt(entry.key);
+    });
+  },
+);
                   }),
 
                   // Add more button for Manual Offers
@@ -1009,125 +1076,117 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
     );
   }
 
-  Widget _buildOfferCard({
-    required TextEditingController conditionController,
-    required TextEditingController rewardController,
-    required VoidCallback onRemove,
-    bool isManual = false,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Conditions',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (!isManual)
-                const Text(
-                  'Reward',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+ Widget _buildOfferCard({
+  required TextEditingController conditionController,
+  required TextEditingController rewardController,
+  required VoidCallback onRemove,
+  // Remove the isManual parameter — we don't need it anymore
+}) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.grey[50],
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey[300]!),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header: Conditions & Reward
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Condition',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              'Reward',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Two TextFields side by side (for both Auto & Manual)
+        Row(
+          children: [
+            // Condition Field
+            Expanded(
+              child: TextField(
+                controller: conditionController,
+                decoration: InputDecoration(
+                  hintText: 'e.g. Donate \$50 or more',
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: TextField(
-                    controller: conditionController,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ),
-              if (!isManual) ...[
-                const SizedBox(width: 16),
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      // Handle reward selection
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      // add a
-                      child: const Text(
-                        'Select',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF00A9A5),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (isManual) ...[
-            const SizedBox(height: 16),
-            const Text(
-              'Rewards',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                style: const TextStyle(fontSize: 14),
               ),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
+
+            const SizedBox(width: 12),
+
+            // Reward Field
+            Expanded(
               child: TextField(
                 controller: rewardController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
+                decoration: InputDecoration(
+                  hintText: 'e.g. Personal thank you video',
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
                 ),
-                maxLines: 3,
                 style: const TextStyle(fontSize: 14),
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
+        ),
+
+        const SizedBox(height: 12),
+
+        // Remove Button
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: onRemove,
+            icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+            label: const Text('Remove', style: TextStyle(color: Colors.red)),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(50, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

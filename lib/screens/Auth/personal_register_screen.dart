@@ -4,94 +4,103 @@ import 'verify_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class PersonalRegisterScreen extends StatelessWidget {
+class PersonalRegisterScreen extends StatefulWidget {
   const PersonalRegisterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final phoneController = TextEditingController();
-    final passController = TextEditingController();
-    final confirmController = TextEditingController();
+  State<PersonalRegisterScreen> createState() => _PersonalRegisterScreenState();
+}
 
-    void showErrorDialog(context,String message) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Registeration Error'),
-            content: Text(message),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
+class _PersonalRegisterScreenState extends State<PersonalRegisterScreen> {
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passController = TextEditingController();
+  final confirmController = TextEditingController();
+  
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    phoneController.dispose();
+    passController.dispose();
+    confirmController.dispose();
+    super.dispose();
+  }
+
+  void showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Registration Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void register() async {
+    final response = await http.post(
+      Uri.parse('https://api.greyfundr.com/auth/register'),
+      body: {
+        'email': emailController.text,
+        'username': emailController.text,
+        'phone': phoneController.text,
+        'password': passController.text,
+        'cpassword': confirmController.text,
+      },
+    );
+    if (response.statusCode == 200) {
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['message'];
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
       );
-    }
 
-    void register() async {
-      final response = await http.post(
-        Uri.parse('https://api.greyfundr.com/auth/register'),
-        body: {
-          'email': emailController.text,
-          'username': emailController.text,
-          'phone': phoneController.text,
-          'password': passController.text,
-          'cpassword': confirmController.text,
-        },
-      );
-      if (response.statusCode == 200) {
-        // Handle successful login
-
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['message'];
-
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: Duration(seconds: 2), // Optional: how long it shows
-            backgroundColor: Colors.green, // Optional: customize color
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyPerScreen(
+            email: emailController.text,
+            phoneNumber: phoneController.text,
+            password: passController.text,
           ),
+        ),
+      );
+    } else {
+      Map<String, dynamic> responseData = jsonDecode(response.body);
+      String message = responseData['error'];
+      print('Response from Node.js: $message');
 
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) =>
-              VerifyPerScreen(
-                  email:emailController.text,
-                  phoneNumber:phoneController.text,
-                  password:passController.text
-              )),
-        );
-
-
-
-      } else {
-        Map<String, dynamic> responseData = jsonDecode(response.body);
-        String message = responseData['error'];
-        print('Response from Node.js: $message');
-
-        showErrorDialog(context,message);
-
-
-      }
-
+      showErrorDialog(context, message);
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/login_bg.png"), // 👈 background image
+            image: AssetImage("assets/images/login_bg.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -104,18 +113,14 @@ class PersonalRegisterScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Back Button
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.black),
                       onPressed: () {
                         Navigator.pop(context);
                       },
                     ),
-
-                    // Need Help
                     GestureDetector(
                       onTap: () {
-                        // TODO: add help navigation
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Need Help tapped")),
                         );
@@ -184,6 +189,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                           // Email
                           TextField(
                             controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               labelText: "Email",
                               labelStyle: const TextStyle(color: Colors.grey),
@@ -202,6 +208,7 @@ class PersonalRegisterScreen extends StatelessWidget {
                           // Phone
                           TextField(
                             controller: phoneController,
+                            keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
                               prefixText: '234',
                               labelText: "Phone",
@@ -221,12 +228,23 @@ class PersonalRegisterScreen extends StatelessWidget {
                           // Password
                           TextField(
                             controller: passController,
-                            obscureText: true,
+                            obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: "Password",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.visibility_off,
-                                  color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -240,12 +258,23 @@ class PersonalRegisterScreen extends StatelessWidget {
                           // Retype Password
                           TextField(
                             controller: confirmController,
-                            obscureText: true,
+                            obscureText: _obscureConfirmPassword,
                             decoration: InputDecoration(
                               labelText: "Re-type Password",
                               labelStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: const Icon(Icons.visibility_off,
-                                  color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                  });
+                                },
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -277,7 +306,6 @@ class PersonalRegisterScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
 
-                          
                           // Already have account? Login
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -290,7 +318,8 @@ class PersonalRegisterScreen extends StatelessWidget {
                                 onTap: () {
                                   Navigator.pushReplacement(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    MaterialPageRoute(
+                                        builder: (_) => const LoginScreen()),
                                   );
                                 },
                                 child: const Text(
@@ -316,27 +345,6 @@ class PersonalRegisterScreen extends StatelessWidget {
     );
   }
 }
-
-// // Curved background clipper
-// class CurvedTopClipper extends CustomClipper<Path> {
-//   @override
-//   Path getClip(Size size) {
-//     var path = Path();
-//     path.lineTo(0, 8);
-//     path.quadraticBezierTo(
-//       size.width / 2, -40, 
-//       size.width, 20
-//       );
-//     path.lineTo(size.width, size.height);
-//     path.lineTo(0, size.height);
-//     path.close();
-//     return path;
-//   }
-
-//   @override
-//   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-// }
-
 
 class CurvedTopClipper extends CustomClipper<Path> {
   @override

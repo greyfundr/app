@@ -999,7 +999,7 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -1082,6 +1082,7 @@ class _OffersBottomSheetState extends State<_OffersBottomSheet> {
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(color: Colors.grey[300]!),
                       ),
+                      // add a
                       child: const Text(
                         'Select',
                         style: TextStyle(

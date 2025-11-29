@@ -80,21 +80,26 @@ class _LoginScreenState extends State<LoginScreen> {
         });
 
         if (token) {
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful!'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.green,
-            ),
+          // Show success dialog that auto-dismisses after 1 second and navigates
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              Future.delayed(const Duration(seconds: 1), () {
+                if (mounted) {
+                  Navigator.of(context).pop(); // Close the dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AuthWrapper()),
+                  );
+                }
+              });
+              return const AlertDialog(
+                title: Text('Login Successful'),
+                content: Text('You have logged in successfully!'),
+              );
+            },
           );
-          Future.delayed(const Duration(seconds: 3), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const AuthWrapper()),
-            );
-          });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

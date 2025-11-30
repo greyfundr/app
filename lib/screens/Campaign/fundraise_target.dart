@@ -13,23 +13,33 @@ import '../../class/api_service.dart';
 class NumberTextInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue;
-    }
+    if (newValue.text.isEmpty) return newValue;
 
-    // Remove any non-digit characters except for the decimal point if needed (but assuming integers for fundraising)
-    final String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (newText.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-
-    final int? value = int.tryParse(newText);
-    if (value == null) {
+    // Allow digits and one decimal point
+    String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    // Prevent multiple decimal points
+    if (cleaned.split('.').length > 2) {
       return oldValue;
     }
 
-    final String formatted = NumberFormat('#,###').format(value);
+    // Limit to 2 decimal places if decimal exists
+    if (cleaned.contains('.')) {
+      final parts = cleaned.split('.');
+      if (parts[1].length > 2) {
+        return oldValue;
+      }
+    }
+
+    if (cleaned.isEmpty) return newValue.copyWith(text: '');
+
+    // Parse as double
+    final double? value = double.tryParse(cleaned);
+    if (value == null) return oldValue;
+
+    // Format with commas and up to 2 decimals
+    final formatter = NumberFormat('#,###.##');
+    final String formatted = formatter.format(value);
 
     return newValue.copyWith(
       text: formatted,
@@ -37,7 +47,6 @@ class NumberTextInputFormatter extends TextInputFormatter {
     );
   }
 }
-
 class FundraisingScreen extends StatefulWidget {
   final Campaign campaign;
 
@@ -96,9 +105,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   }
 
   Future<void> _pickImage() async {
-    if (selectedImages.length >= 5) {
+    if (selectedImages.length >= 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maximum 5 images allowed')),
+        const SnackBar(content: Text('Maximum 4 images allowed')),
       );
       return;
     }
@@ -163,30 +172,91 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               ),
               const SizedBox(height: 16),
               TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number, // Ensures numeric keyboard
-                inputFormatters: [
-                  NumberTextInputFormatter(), // Custom formatter for comma separation and digit-only input
-                ],
-                decoration: InputDecoration(
-                  labelText: "N",
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+  controller: amountController,
+  keyboardType: TextInputType.number,
+  inputFormatters: [NumberTextInputFormatter()],
+  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+  decoration: InputDecoration(
+    hintText: '0', // Shows 0 when empty
+    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 20),
+    prefixText: '₦ ', // ₦ symbol inside the field
+    prefixStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black),
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Colors.teal, width: 2),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+  ),
+  onTap: () {
+    // Move cursor to end when user taps
+    if (amountController.text.isEmpty) {
+      amountController.selection = TextSelection.fromPosition(
+        TextPosition(offset: amountController.text.length),
+      );
+    }
+  },
+),
+
+const SizedBox(height: 8),
+ValueListenableBuilder<TextEditingValue>(
+  valueListenable: amountController,
+  builder: (context, value, child) {
+    String clean = value.text.replaceAll(',', '');
+    double targetAmount = clean.isEmpty ? 0 : double.tryParse(clean) ?? 0;
+    double serviceCharge = targetAmount * 0.20;
+    double youReceive = targetAmount - serviceCharge;
+
+    if (targetAmount == 0) {
+      return const Text(
+        'Enter an amount to see breakdown',
+        style: TextStyle(fontSize: 13, color: Colors.grey),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+          children: [
+            const TextSpan(text: 'Target: '),
+            TextSpan(
+              text: '₦ ${NumberFormat('#,###').format(targetAmount)}',
+              style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+            ),
+            const TextSpan(text: ' • Service charge (20%): '),
+            TextSpan(
+              text: '₦ ${NumberFormat('#,###').format(serviceCharge)}',
+              style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.orange),
+            ),
+            const TextSpan(text: ' • You receive: '),
+            TextSpan(
+              text: '₦ ${NumberFormat('#,###').format(youReceive)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.teal,
+                fontSize: 14,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+),
+const SizedBox(height: 8),
+
+
               const SizedBox(height: 15),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -278,7 +348,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Upload at least one image or a square',
+                'Upload at least one image (up to 4)',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -289,18 +359,16 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 children: [
                   // First box - always shows add icon (main image)
                   _buildImageUploadButton(0, true),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 18),
                   // Second box
                   _buildImageUploadButton(1, false),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 18),
                   // Third box
                   _buildImageUploadButton(2, false),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 18),
                   // Fourth box
                   _buildImageUploadButton(3, false),
-                  const SizedBox(width: 12),
-                  // Fourth box
-                  _buildImageUploadButton(4, false),
+                  
                 ],
               ),
               const SizedBox(height: 8),
@@ -510,30 +578,69 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+  String cleanStr = amountController.text.replaceAll(',', '');
+  
 
+  if (cleanStr.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter a fundraising target')),
+    );
+    return;
+  }
 
-                    String to = amountController.text;
-                    String cleanStr = to.replaceAll(',', '');
+  double result = double.tryParse(cleanStr) ?? 0;
+  
 
-                    double result = double.parse(cleanStr);
+  if (_startDateController.text.isEmpty || _endDateController.text.isEmpty) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Please select start and end dates')),
+  );
+  return;
+}
 
-                    widget.campaign.setCampaignDetails(
-                        _startDateController.text,
-                        _endDateController.text,
-                        selectedImages[0],
-                        result,
-                        selectedParticipants,
-                        selectedImages
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => Reviewstartcampaign3(
-                            campaign: widget.campaign
-                        ),
-                      ),
-                    );
-                  },
+DateTime start = DateFormat('dd/MM/yyyy').parse(_startDateController.text);
+DateTime end = DateFormat('dd/MM/yyyy').parse(_endDateController.text);
+
+if (end.isBefore(start)) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('End date cannot be before start date')),
+  );
+  return;
+}
+
+if (result <= 0) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Target must be greater than zero')),
+  );
+  return;
+}
+
+  File? mainImage = selectedImages.isNotEmpty ? selectedImages[0] : null;
+
+  if (mainImage == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please upload at least one image')),
+    );
+    return;
+  }
+
+  widget.campaign.setCampaignDetails(
+    _startDateController.text,
+    _endDateController.text,
+    mainImage,
+    result,
+    selectedParticipants,
+    selectedImages
+  );
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => Reviewstartcampaign3(
+        campaign: widget.campaign
+      ),
+    ),
+  );
+},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
@@ -545,6 +652,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                   child: const Text('REVIEW & POST'),
                 ),
               ),
+
+
+
               const SizedBox(height: 100),
             ],
           ),
@@ -585,67 +695,80 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   }
 
   Widget _buildImageUploadButton(int index, bool isMain) {
-    // Check if we have an image at this index
-    bool hasImage = index < selectedImages.length;
+  bool hasImage = index < selectedImages.length;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        GestureDetector(
-          onTap: hasImage ? null : _pickImage,
-          child: Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isMain ? Colors.teal : Colors.grey.shade300,
-              ),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      GestureDetector(
+        onTap: hasImage ? null : _pickImage,
+        child: Container(
+          width: 80,  // Increased from 60 for better UX
+          height: 80,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isMain ? Colors.teal : Colors.grey.shade300,
+              width: isMain ? 3 : 1.5,
             ),
-            child: hasImage
-                ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                selectedImages[index],
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[50],
+          ),
+          child: hasImage
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(selectedImages[index], fit: BoxFit.cover),
+                    ),
+                    if (isMain)
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.teal.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text("MAIN", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo_outlined, color: isMain ? Colors.teal : Colors.grey, size: 28),
+                    if (isMain)
+                      Text("Cover", style: TextStyle(fontSize: 10, color: Colors.teal, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+        ),
+      ),
+      if (hasImage)
+        Positioned(
+          right: -8,
+          top: -8,
+          child: GestureDetector(
+            onTap: () => _deleteImage(index),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
               ),
-            )
-                : Center(
-              child: Icon(
-                Icons.add_circle_outline,
-                color: isMain ? Colors.teal : Colors.grey.shade400,
-                size: 24,
+              padding: const EdgeInsets.all(4),
+              child: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 14,
               ),
             ),
           ),
         ),
-        // Delete button positioned outside on top-right
-        if (hasImage)
-          Positioned(
-            right: -8,
-            top: -8,
-            child: GestureDetector(
-              onTap: () => _deleteImage(index),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+    ],
+  );
+}
 
   void _showAddTeamMemberBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -695,7 +818,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     context,
                     icon: 'https://i.postimg.cc/gJwHvKwq/chanpion.png',
                     role: 'Select Champions',
-                    peopleCount: 4,
+                     peopleCount: champions.length,
                     onTap: () {
                       Navigator.pop(context);
                       _showUserSelectionBottomSheet(context);
@@ -705,7 +828,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                     context,
                     icon: 'https://i.postimg.cc/ydwXnS9J/backer.png',
                     role: 'Select Backers',
-                    peopleCount: 4,
+                     peopleCount: backers.length,
                     onTap: () {
                       Navigator.pop(context);
                       _showUserSelectionBottomSheet(context);
@@ -796,7 +919,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
                 child: Row(
                   children: [
                     Row(
-                      children: List.generate(5, (index) {
+                      children: List.generate(3, (index) {
                         return Container(
                           margin: const EdgeInsets.only(right: 4),
                           child: CircleAvatar(
@@ -1241,239 +1364,228 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
 
   void _showUserSelectionBottomSheet(BuildContext context) {
-    List<Participant> filteredUsers = List.from(allUsers);
-    List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
-    TextEditingController searchController = TextEditingController();
+  List<Participant> filteredUsers = List.from(allUsers);
+  List<Participant> tempSelectedParticipants = List.from(selectedParticipants);
+  TextEditingController searchController = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,  // Keeps it scroll-controlled for custom height
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            void _filterUsers(String query) {
-              setModalState(() {
-                filteredUsers = allUsers.where((user) {
-                  return user.name.toLowerCase().contains(query.toLowerCase()) ||
-                      user.username.toLowerCase().contains(query.toLowerCase());
-                }).toList();
-              });
-            }
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,  // Keeps it scroll-controlled for custom height
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          void _filterUsers(String query) {
+            setModalState(() {
+              filteredUsers = allUsers.where((user) {
+                return user.name.toLowerCase().contains(query.toLowerCase()) ||
+                    user.username.toLowerCase().contains(query.toLowerCase());
+              }).toList();
+            });
+          }
 
-            bool isSelected(Participant user) {
-              return tempSelectedParticipants.contains(user);
-            }
+          bool isSelected(Participant user) {
+            return tempSelectedParticipants.contains(user);
+          }
 
-            void toggleSelection(Participant user) {
-              setModalState(() {
-                if (isSelected(user)) {
-                  tempSelectedParticipants.remove(user);
-                } else {
-                  tempSelectedParticipants.add(user);
-                }
-              });
-            }
+          void toggleSelection(Participant user) {
+            setModalState(() {
+              if (isSelected(user)) {
+                tempSelectedParticipants.remove(user);
+              } else {
+                tempSelectedParticipants.add(user);
+              }
+            });
+          }
 
-            return Expanded(
-                flex: 1,
-        child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                  left: 16,
-                  right: 16,
-                  top: 20,
-                ),
-
-                child: SizedBox(  // Added SizedBox to constrain height to 75%
-
-            height: MediaQuery.of(context).size.height * 0.86,
-
-            child: Column(
-            mainAxisSize: MainAxisSize.min,  // This can stay, but the SizedBox will enforce the height
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            Row( // Add this Row wrapper
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Expanded(
-                          child: Center(
-                            child: Text(
-                              'Select Participant',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 20,
+            ),
+            child: SizedBox(  // Constrain height to ~86% of screen
+              height: MediaQuery.of(context).size.height * 0.86,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row( // Add this Row wrapper
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'Select Participant',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
                             ),
                           ),
                         ),
-                        IconButton( // Add this close button
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.close),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                      ),
+                      IconButton( // Add this close button
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.close),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    height: 80,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: tempSelectedParticipants.length,
+                      itemBuilder: (context, index) {
+                        final participant = tempSelectedParticipants[index];
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const SizedBox(height: 100),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              child: CircleAvatar(
+                                radius: 28,
+                                backgroundImage: AssetImage(participant.imageUrl),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Positioned(
+                              right: -8,
+                              top: -8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    tempSelectedParticipants.remove(participant);
+                                  });
+                                },
+                                child: const CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Colors.red,
+                                  child: Icon(Icons.close, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DefaultTabController(
+                    length: 3,
+                    child: Column(
+                      children: [
+                        TabBar(
+                          isScrollable: true,
+                          tabs: const [
+                            Tab(text: 'Followers'),
+                            Tab(text: 'Champions'),
+                            Tab(text: 'Backers'),
+                          ],
+                          labelColor: Colors.teal,
+                          unselectedLabelColor: Colors.grey,
+                        ),
+                        SizedBox(
+                          height: 380,
+                          child: TabBarView(
+                            children: List.generate(5, (_) {
+                              return Column(
+                                children: [
+                                  const SizedBox(height: 15),
+                                  TextField(
+                                    controller: searchController,
+                                    onChanged: (val) => _filterUsers(val),
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(Icons.search),
+                                      hintText: 'Search',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: filteredUsers.length,
+                                      itemBuilder: (context, idx) {
+                                        final user = filteredUsers[idx];
+                                        final selected = isSelected(user);
+                                        return ListTile(
+                                          leading: CircleAvatar(
+                                            backgroundImage: AssetImage(user.imageUrl),
+                                          ),
+                                          title: Text(user.name),
+                                          subtitle: Text(user.username),
+                                          trailing: ElevatedButton(
+                                            onPressed: () {
+                                              toggleSelection(user);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: selected ? Colors.grey : Colors.teal,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: Text(selected ? 'Selected' : 'Select'),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
+                          ),
                         ),
                       ],
                     ),
-            const SizedBox(height: 40),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          selectedParticipants = List.from(tempSelectedParticipants);
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('ADD PARTICIPANTS',
+                        style: TextStyle(color: Colors.white),),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
-
-            
-            SizedBox(
-            height: 80,
-            child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: tempSelectedParticipants.length,
-            itemBuilder: (context, index) {
-            final participant = tempSelectedParticipants[index];
-            return Stack(
-              
-            clipBehavior: Clip.none,
-            children: [
-            const SizedBox(height: 100),
-            Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            child: CircleAvatar(
-            radius: 28,
-            backgroundImage: AssetImage(participant.imageUrl),
-            ),
-            ),
-            const SizedBox(height: 12),
-            Positioned(
-            right: -8,
-            top: -8,
-            child: GestureDetector(
-            onTap: () {
-            setModalState(() {
-            tempSelectedParticipants.remove(participant);
-            });
-            },
-            child: const CircleAvatar(
-            radius: 10,
-            backgroundColor: Colors.red,
-            child: Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-            ),
-            ),
-            ],
-            );
-            },
-            ),
-            ),
-
-
-
-
-
-
-            const SizedBox(height: 12),
-            DefaultTabController(
-            length: 5,
-            child: Column(
-            children: [
-            TabBar(
-            isScrollable: true,
-            tabs: const [
-            Tab(text: 'Followers'),
-            Tab(text: 'Champions'),
-            Tab(text: 'Backers'),
-            Tab(text: 'Groups'),
-            Tab(text: 'Organization'),
-            ],
-            labelColor: Colors.teal,
-            unselectedLabelColor: Colors.grey,
-            ),
-            SizedBox(
-            height: 380,
-            child: TabBarView(
-            children: List.generate(5, (_) {
-            return Column(
-            children: [
-            const SizedBox(height: 15),
-            TextField(
-            controller: searchController,
-            onChanged: (val) => _filterUsers(val),
-            decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
-            hintText: 'Search',
-            border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            ),
-            ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-            child: ListView.builder(
-            itemCount: filteredUsers.length,
-            itemBuilder: (context, idx) {
-            final user = filteredUsers[idx];
-            final selected = isSelected(user);
-            return ListTile(
-            leading: CircleAvatar(
-            backgroundImage: AssetImage(user.imageUrl),
-            ),
-            title: Text(user.name),
-            subtitle: Text(user.username),
-            trailing: ElevatedButton(
-            onPressed: () {
-            toggleSelection(user);
-            },
-            style: ElevatedButton.styleFrom(
-  backgroundColor: selected ? Colors.grey : Colors.teal,
-  foregroundColor: Colors.white, // <-- Text color
-),
-            child: Text(selected ? 'Selected' : 'Select'),
-            ),
-            );
-            },
-            ),
-            ),
-            ],
-            );
-            }),
-            ),
-            ),
-            ],
-            ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-            onPressed: () {
-            setState(() {
-            selectedParticipants = List.from(tempSelectedParticipants);
-            });
-            Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            ),
-            ),
-            child: const Text('ADD PARTICIPANTS',
-            style: TextStyle(color: Colors.white),),
-            ),
-            
-            ),
-            
-            
-            ],
-            ),
-            ),
-            ),
-            );
-
-          },
-
-        );
-      },
-    );
+@override
+  void dispose() {
+    _startDateController.dispose();
+    _endDateController.dispose();
+    amountController.dispose();
+    super.dispose();
   }
+
+
+
+
 }

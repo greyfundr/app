@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'bill/quicksplit.dart';
 import 'fundpool/fundpool.dart';
 import 'invoice/invoice.dart';
-import 'events/newevent.dart';
+import 'events/eventwelcome.dart';
 import '../Campaign/campaign_option.dart';
 
 class CreateNewPage extends StatelessWidget {
@@ -116,7 +116,7 @@ class CreateNewPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>  EventStartPage(),
+                            builder: (_) =>  EventWelcomePage(),
                           ),
                         );
                       },

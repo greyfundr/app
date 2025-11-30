@@ -10,6 +10,7 @@ import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'edit_campaign_screen.dart';
 import 'campaigncheckapproved.dart';
 import '../../class/campaign.dart';
 import 'package:path_provider/path_provider.dart';
@@ -46,6 +47,256 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
     'BUDGETING': false,
     'OFFERS': false,
   };
+
+
+Widget _buildTeamMemberCard({
+  String? profilePicUrl,
+  String? fallbackImage,
+  String? imageUrl,
+  required String name,
+  required String role,
+  required bool isOrganizer,
+}) {
+  final double cardWidth = MediaQuery.of(context).size.width * 0.70;
+
+  return Container(
+    width: cardWidth,
+    margin: EdgeInsets.only(right: 16),
+    padding: EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(255, 200, 200, 200),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
+      ],
+    ),
+    child: Row(
+      children: [
+        // Avatar
+        Stack(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: _getImageProvider(profilePicUrl ?? imageUrl ?? fallbackImage),
+            ),
+            if (isOrganizer)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                  ),
+                  child: Icon(Icons.star, size: 14, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                name,
+                style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4),
+              Text(
+                role,
+                style: GoogleFonts.inter(fontSize: 11.5, color: const Color.fromARGB(255, 69, 69, 69)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper to safely load image
+ImageProvider _getImageProvider(String? url) {
+  if (url == null || url.isEmpty) {
+    return AssetImage('assets/images/personal.png');
+  }
+  if (url.startsWith('http') || url.startsWith('https')) {
+    return NetworkImage(url);
+  }
+  return AssetImage(url);
+}
+
+void _showTeamBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "List Of Campaign Particpants",
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+
+          // Team List
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.all(16),
+              children: [
+                // 1. Organizer (Always first)
+                _buildTeamMemberRow(
+                  imageUrl: user?['profile_pic'] ?? 'assets/images/personal.png',
+                  name: "${user?['first_name'] ?? 'You'} ${user?['last_name'] ?? ''}",
+                  role: "Campaign Organizer",
+                  isOrganizer: true,
+                ),
+
+                // 2. Selected Participants
+                if (widget.campaign.participants.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Text(
+                        "No team members added yet",
+                        style: GoogleFonts.inter(color: Colors.grey[600]),
+                      ),
+                    ),
+                  )
+                else
+                  ...widget.campaign.participants.map((p) => _buildTeamMemberRow(
+                        imageUrl: p.imageUrl,
+                        name: p.name,
+                        role: "Campaign Participant",
+                        isOrganizer: false,
+                      )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildTeamMemberRow({
+  required String imageUrl,
+  required String name,
+  required String role,
+  required bool isOrganizer,
+}) {
+  return Container(
+    margin: EdgeInsets.only(bottom: 12),
+    padding: EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(255, 181, 180, 180),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey[300]!, width: 1),
+    ),
+    child: Row(
+      children: [
+        Stack(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundImage: imageUrl.startsWith('http')
+                  ? NetworkImage(imageUrl)
+                  : AssetImage(imageUrl) as ImageProvider,
+              backgroundColor: Colors.grey[200],
+            ),
+            if (isOrganizer)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: Icon(Icons.star, size: 14, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                role,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (isOrganizer)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 60, 60, 60),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              "Host",
+              style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.w600),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+
+
+
+
+
+
+
 
   @override
   void initState() {
@@ -461,6 +712,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 100,)
                 ],
               ),
             );
@@ -976,13 +1228,15 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
+
+
                       //Campaign Title
                       Positioned(
-                        top: 332.0,
+                        top: 252.0,
                         left: 16.0,
                         child: ErrorBoundary(
                           child: Container(
-                            width: 276.0 + 2,
+                            
                             child: Text(
                               widget.campaign.title,
                               style: GoogleFonts.inter(
@@ -997,7 +1251,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                       //Progress Box Background
                       Positioned(
-                        top: 391.0,
+                        top: 287.0,
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 16.0),
                         child: ErrorBoundary(
                           child: Container(
@@ -1013,17 +1267,17 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                       //Organizer Label
                       Positioned(
-                        top: 477.0,
-                        left: 17.0,
+                        top: 377.0,
+                        left: 20.0,
                         child: ErrorBoundary(
                           child: Container(
-                            width: 57.0,
+                            width: 65.0,
                             child: Text(
                               "Organizer",
                               style: GoogleFonts.inter(
                                 color: Color.fromRGBO(0, 0, 0, 1.0),
                                 fontWeight: FontWeight.w500,
-                                fontSize: 9.0,
+                                fontSize: 12.0,
                                 decoration: TextDecoration.none,
                               ),
                               textAlign: TextAlign.left,
@@ -1031,25 +1285,42 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
+
+
+
                       //See All
-                      Positioned(
-                        left: 360.0,
-                        top: 478.0,
-                        child: ErrorBoundary(
-                          child: Text(
-                            "See All",
-                            style: GoogleFonts.inter(
-                              color: Color.fromRGBO(0, 0, 0, 1.0),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10.0,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ),
-                      ),
+                     Positioned(
+  left: 340.0,
+  top: 375.0,
+  child: GestureDetector(
+    onTap: () {
+      _showTeamBottomSheet(context);
+    },
+    child: Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(37, 240, 240, 240).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color.fromARGB(25, 0, 150, 135), width: 1),
+      ),
+      child: Text(
+        "See All",
+        style: GoogleFonts.inter(
+          color: Colors.teal,
+          fontWeight: FontWeight.w600,
+          fontSize: 11.0,
+        ),
+      ),
+    ),
+  ),
+),
+
+
+
+
                       //Progress % Text
                       Positioned(
-                        top: 421.0,
+                        top: 321.0,
                         left: 380.0,
                         child: ErrorBoundary(
                           child: Text(
@@ -1066,7 +1337,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       //Raised Amount
                       Positioned(
                         left: 24.0,
-                        top: 397.0,
+                        top: 300.0,
                         child: ErrorBoundary(
                           child: RichText(
                             text: TextSpan(
@@ -1095,7 +1366,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       //Days Left
                       Positioned(
                         left: 350.0,
-                        top: 397.0,
+                        top: 300.0,
                         child: ErrorBoundary(
                           child: Text(
                             '$days Days left',
@@ -1108,10 +1379,14 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
+
+
+
+
                       //PROGRESS BAR
                       Positioned(
                         left: 22.0,
-                        top: 421.0,
+                        top: 321.0,
                         child: ErrorBoundary(
                           child: SizedBox(
                             width: 350.0,
@@ -1196,10 +1471,17 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
+
+
+
+
+
+
+                      
                       //Champions Count
                       Positioned(
                         left: 162.0,
-                        top: 441.0,
+                        top: 341.0,
                         child: ErrorBoundary(
                           child: Text(
                             "0 Champions",
@@ -1214,7 +1496,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                       //Donors Count
                       Positioned(
-                        top: 439.0,
+                        top: 339.0,
                         left: 44.0,
                         child: ErrorBoundary(
                           child: Text(
@@ -1231,7 +1513,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       //Award Icon
                       Positioned(
                         left: 140.0,
-                        top: 441.0,
+                        top: 341.0,
                         child: ErrorBoundary(
                           child: SvgPicture.asset(
                             "assets/images/vuesaxlinearaward.svg",
@@ -1242,8 +1524,8 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                       //TAB SECTION - HEADER
                       Positioned(
-                        top: 581.0,
-                        left: 15.0,
+                        top: 490.0,
+                        left: 18.0,
                         child: ErrorBoundary(
                           child: Container(
                             decoration: BoxDecoration(
@@ -1270,7 +1552,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       ),
                       //TAB CONTENT AREA
                       Positioned(
-                        top: 611.0,
+                        top: 531.0,
                         left: 18.0,
                         child: ErrorBoundary(
                           child: Container(
@@ -1288,152 +1570,249 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                         ),
                       ),
                       //Customise Button
+                      Positioned(
+                        left: 44.0,
+                        top: 685.0,
+                        child: ErrorBoundary(
+                          child: Container(
+                            height: 43.0,
+                            width: 162.0,
+                            clipBehavior: Clip.none,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Color.fromRGBO(255, 83, 79, 1.0),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(6.0),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "CUSTOMISE",
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13.0,
+                                  color: Color.fromRGBO(252, 100, 58, 1.0),
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+
+
 
                       //Edit Campaign Button
                       Positioned(
-                        left: 134.0,
-                        top: 769.0,
-                        child: ErrorBoundary(
-                          child: InkWell(
-                            onTap: _showEditBottomSheet,
-                            child: Container(
-                              height: 43.0,
+  left: 234.0,
+                        top: 685.0,
+  // bottom: 20.0, // Nice safe area from bottom
+  child: ErrorBoundary(
+    child: SizedBox(
+      height: 43.0,
                               width: 162.0,
-                              clipBehavior: Clip.none,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6.0),
-                                border: Border.all(
-                                  color: Color.fromRGBO(34, 171, 225, 1.0),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  "EDIT CAMPAIGN",
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13.0,
-                                    decoration: TextDecoration.none,
-                                    color: Color.fromRGBO(34, 171, 225, 1.0),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                              
+      child: ElevatedButton(
+        onPressed: () async {
+          // Navigate to the new full-screen Edit Campaign Page
+          final updatedCampaign = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditCampaignScreen(campaign: widget.campaign),
+            ),
+          );
+
+          // If user saved changes and returned a new campaign object
+          if (updatedCampaign is Campaign && mounted) {
+            setState(() {
+              // Update all editable fields locally so the review page reflects changes immediately
+              widget.campaign.title = updatedCampaign.title;
+              widget.campaign.description = updatedCampaign.description;
+              widget.campaign.images = updatedCampaign.images;
+              widget.campaign.participants = updatedCampaign.participants;
+              widget.campaign.savedManualOffers = updatedCampaign.savedManualOffers;
+              widget.campaign.savedAutoOffers = updatedCampaign.savedAutoOffers;
+
+              // Rebuild editable states
+              _editableDescription = updatedCampaign.description;
+              _offers = [...updatedCampaign.savedAutoOffers, ...updatedCampaign.savedManualOffers];
+              // Add budget items if you track them separately
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Campaign updated successfully!"),
+                backgroundColor: Colors.teal,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+  backgroundColor: Colors.transparent,   // Remove background color
+  foregroundColor: Colors.teal,          // Text/Icon color
+  shadowColor: Colors.transparent,       // Remove shadow
+  elevation: 0,                           // No elevation
+  
+
+  // Add border + radius
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(6),
+    side: BorderSide(
+      color: Color.fromRGBO(0, 164, 175, 1), // Border color
+      width: 2,                               // Border thickness
+    ),
+  ),
+),
+        child: Text(
+          "EDIT CAMPAIGN",
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    ),
+  ),
+),
+
+
+
+
 
                       //Organizer Card
-                      Positioned(
-                        top: 491.0,
-                        left: 17.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              color: Color.fromRGBO(247, 247, 249, 1.0),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            height: 73.0,
-                            width: 404.0,
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  top: 1.0,
-                                  left: 3.0,
-                                  child: Container(
-                                    width: 388.0,
-                                    height: 60.0,
-                                    decoration: BoxDecoration(
-                                      color: Color.fromRGBO(251, 251, 255, 1.0),
-                                      borderRadius: BorderRadius.circular(10.0),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 7.0,
-                                  left: 13.0,
-                                  child: Image.asset(
-                                    'assets/images/personal.png',
-                                    height: 48.69182586669922,
-                                    width: 49.0,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 15.0,
-                                  left: 71.0,
-                                  child: Text(
-                                    "${user!['first_name']} ${user!['last_name']}",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12.0,
-                                      color: Color.fromRGBO(0, 0, 0, 1.0),
-                                      fontWeight: FontWeight.w500,
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 30.849050521850586,
-                                  left: 71.0,
-                                  child: Container(
-                                    width: 217.0,
-                                    child: Text(
-                                      _editableDescription,
-                                      style: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 12.0,
-                                        color: Color.fromRGBO(4, 17, 36, 0.5),
-                                        decoration: TextDecoration.none,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 305.0,
-                                  top: 18.924522399902344,
-                                  child: Container(
-                                    height: 27.82390022277832,
-                                    width: 70.0,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      color: Color.fromRGBO(238, 240, 239, 0.81),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "Donate",
-                                        style: GoogleFonts.inter(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 12.0,
-                                          color: Color.fromRGBO(41, 47, 56, 1.0),
-                                          decoration: TextDecoration.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                     // === FINAL VERSION: HORIZONTAL 70% WIDTH CARDS WITH PEEK EFFECT ===
+Positioned(
+  top: 410.0,
+  left: 17.0,
+  child: ErrorBoundary(
+    child: SizedBox(
+      height: 70,
+      width: MediaQuery.of(context).size.width - 34,
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+        scrollDirection: Axis.horizontal,
+        physics: BouncingScrollPhysics(),
+        itemCount: 1 + widget.campaign.participants.length, // Organizer + participants
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            // Organizer (always first)
+            return _buildTeamMemberCard(
+              profilePicUrl: user?['profile_pic'],
+              fallbackImage: 'assets/images/personal.png',
+              name: "${user?['first_name'] ?? 'You'} ${user?['last_name'] ?? ''}".trim(),
+              role: "Campaign Organizer",
+              isOrganizer: true,
+            );
+          }
+
+          // Selected participants
+          final participant = widget.campaign.participants[index - 1];
+          return _buildTeamMemberCard(
+            imageUrl: participant.imageUrl,
+            name: participant.name,
+            role: "Campaign Participant",
+            isOrganizer: false,
+          );
+        },
+      ),
+    ),
+  ),
+),
+// === END OF NEW TEAM ROW ===
+
+
+
+
+
+
+
                       //Header Union Background
-                      Positioned(
-                        left: 0.0,
-                        top: 0.0,
-                        child: ErrorBoundary(
-                          child: Image.file(
-                            File( widget.campaign.imageUrl!.path),
-                            height: 321.357421875,
-                            width: 440.0,
-                          ),
-                        ),
-                      ),
+
+
+
+
+
+
+                      // === REDUCED HEIGHT CAMPAIGN IMAGE CAROUSEL (240px) ===
+Positioned(
+  left: 0,
+  top: 0,
+  right: 0,
+  child: widget.campaign.images.isEmpty
+      ? Container(
+          height: 240,
+          color: Colors.grey[300],
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.image, size: 60, color: Colors.grey[600]),
+                SizedBox(height: 8),
+                Text(
+                  "No images added",
+                  style: GoogleFonts.inter(color: Colors.grey[700], fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        )
+      : SizedBox(
+          height: 240,
+          child: PageView.builder(
+            itemCount: widget.campaign.images.length,
+            itemBuilder: (context, index) {
+              return Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: FileImage(widget.campaign.images[index]),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+),
+
+// Optional: Add page dots (beautiful active indicator)
+if (widget.campaign.images.isNotEmpty)
+  Positioned(
+    bottom: 705,
+    left: 0,
+    right: 0,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        widget.campaign.images.length,
+        (index) => AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          margin: EdgeInsets.symmetric(horizontal: 4),
+          height: 8,
+          width: 8,
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 164, 159, 159).withOpacity(0.9),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 1))
+            ],
+          ),
+        ),
+      ),
+    ),
+  ),
+
+
+
+
+
                       //Submit Button
                       Positioned(
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 90.0),
-                        top: 827.0,
+                        top: 737.0,
                         child: ErrorBoundary(
                           child: InkWell(
                             onTap: createCampaign,
@@ -1463,7 +1842,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                       //Divider Line
                       Positioned(
                         left: 1.5,
-                        top: 763.5,
+                        top: 713.5,
                         child: ErrorBoundary(
                           child: SvgPicture.asset(
                             "assets/images/vector_33.svg",
@@ -1471,10 +1850,12 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
                           ),
                         ),
                       ),
+
+
                       //End of Campaign Text
                       Positioned(
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 173.0),
-                        top: 748.0,
+                        top: 668.0,
                         child: ErrorBoundary(
                           child: Text(
                             "END OF CAMPAIGN",

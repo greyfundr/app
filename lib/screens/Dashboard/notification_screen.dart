@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import '../../class/auth_service.dart';
 import '../../class/api_service.dart';
+import '../../class/global.dart';
 import '../../class/jwt_helper.dart';
+import '../Campaign/detailedcampaign.dart';
 // Import this file in your profile_screen.dart:
 // import 'notification_screen.dart';
 
@@ -59,6 +62,7 @@ class _NotificationScreenState extends State<NotificationScreen>
           iconColor: Colors.orange,
           title: obj['type'],
           message: obj['message'],
+          id: obj['type_id'],
           time: obj['created_at'], isRead: false);
 
 
@@ -173,7 +177,7 @@ class AllNotificationsTab extends StatelessWidget {
         title: 'Money Added',
         message: 'You successfully added ₦50,000 to your wallet',
         time: '2 hours ago',
-        isRead: false,
+        isRead: false, id: 0,
       ),
       NotificationItem(
         icon: Icons.campaign,
@@ -181,7 +185,7 @@ class AllNotificationsTab extends StatelessWidget {
         title: 'Campaign Update',
         message: 'Your campaign "Help John Medical Bill" received a new donation of ₦10,000',
         time: '5 hours ago',
-        isRead: false,
+        isRead: false, id: 0,
       ),
       NotificationItem(
         icon: Icons.payment,
@@ -189,7 +193,7 @@ class AllNotificationsTab extends StatelessWidget {
         title: 'Payment Received',
         message: 'You received ₦25,000 from Sarah Obi',
         time: '1 day ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
       NotificationItem(
         icon: Icons.info_outline,
@@ -197,7 +201,8 @@ class AllNotificationsTab extends StatelessWidget {
         title: 'Security Alert',
         message: 'Your password was changed successfully',
         time: '2 days ago',
-        isRead: true,
+        isRead: true, 
+        id: 0,
       ),
     ];
   }
@@ -216,7 +221,7 @@ class TransactionsTab extends StatelessWidget {
         title: 'Money Added',
         message: 'You successfully added ₦50,000 to your wallet',
         time: '2 hours ago',
-        isRead: false,
+        isRead: false, id: 0,
       ),
       NotificationItem(
         icon: Icons.payment,
@@ -224,7 +229,7 @@ class TransactionsTab extends StatelessWidget {
         title: 'Payment Received',
         message: 'You received ₦25,000 from Sarah Obi',
         time: '1 day ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
       NotificationItem(
         icon: Icons.send,
@@ -232,7 +237,7 @@ class TransactionsTab extends StatelessWidget {
         title: 'Money Sent',
         message: 'You sent ₦15,000 to John Doe',
         time: '3 days ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
       NotificationItem(
         icon: Icons.receipt_long,
@@ -240,7 +245,7 @@ class TransactionsTab extends StatelessWidget {
         title: 'Bill Payment',
         message: 'Electricity bill payment of ₦8,500 was successful',
         time: '1 week ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
     ];
 
@@ -295,7 +300,7 @@ class SystemTab extends StatelessWidget {
         title: 'Security Alert',
         message: 'Your password was changed successfully',
         time: '2 days ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
       NotificationItem(
         icon: Icons.verified_user,
@@ -303,7 +308,7 @@ class SystemTab extends StatelessWidget {
         title: 'KYC Verification',
         message: 'Complete your KYC verification to unlock all features',
         time: '3 days ago',
-        isRead: false,
+        isRead: false, id: 0,
       ),
       NotificationItem(
         icon: Icons.system_update,
@@ -311,7 +316,7 @@ class SystemTab extends StatelessWidget {
         title: 'App Update',
         message: 'A new version of GreyFundr is available. Update now for better experience',
         time: '1 week ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
       NotificationItem(
         icon: Icons.security,
@@ -319,7 +324,7 @@ class SystemTab extends StatelessWidget {
         title: 'Login Alert',
         message: 'New login detected from Lagos, Nigeria',
         time: '2 weeks ago',
-        isRead: true,
+        isRead: true, id: 0,
       ),
     ];
 
@@ -369,6 +374,15 @@ Widget _buildNotificationItem(NotificationItem item) {
       borderRadius: BorderRadius.circular(12),
     ),
     child: ListTile(
+      onTap: () {
+        snackbarKey.currentState?.showSnackBar(
+          SnackBar(content: Text('Opening Campaign ${item.title}')),
+        );
+
+        navigatorKey.currentState?.push(
+            MaterialPageRoute(builder: (context) => CampaignDetailPage(id: item.id.toString()),
+            ));
+      },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Container(
         padding: const EdgeInsets.all(10),
@@ -393,6 +407,7 @@ Widget _buildNotificationItem(NotificationItem item) {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
           const SizedBox(height: 4),
           Text(
             item.message,
@@ -452,6 +467,7 @@ class NotificationItem {
   final String message;
   final String time;
   final bool isRead;
+  final int id;
 
   NotificationItem({
     required this.icon,
@@ -459,6 +475,7 @@ class NotificationItem {
     required this.title,
     required this.message,
     required this.time,
-    required this.isRead,
+    required this.isRead, 
+    required this.id,
   });
 }

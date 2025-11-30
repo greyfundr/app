@@ -11,6 +11,7 @@ import '../Dashboard/campaign_search_page.dart';
 import '../Dashboard/homeprofile.dart';
 import '../Dashboard/profile_screen.dart';
 import 'package:flutter/services.dart';
+import '../../class/global.dart';
 
 
 class CampaignDetailPage extends StatefulWidget {
@@ -52,6 +53,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   int _selectedIndex = 1; // Bills tab active
   double percentage = 0.00;
   int cId = 0;
+  String occupation = '';
+  //moffer
+  //aoffer
 
   late bool campaignLive = true;
 
@@ -70,6 +74,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => userId = userData['user']['id']);
+      setState(() => occupation = userData['user']['occupation']);
 
     } else {
       print("Token is expired or invalid");
@@ -112,6 +117,15 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           image = image.replaceAll('\\', '/');
           cId = campaign['creator_id'];
           campaignId = campaign['id'];
+
+
+          final muoffer = campaign['moffer'];
+          final amoffer = campaign['aoffer'];
+          print(muoffer[0]);
+          print(amoffer);
+          //final moffer = JSON.parse(muoffer);
+          //final aoffer = JSON.parse(amoffer);
+
           donations=donors.cast<Map<String, dynamic>>();
         });
 
@@ -783,8 +797,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                           Text("$first $last",
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
-                          const Text(
-                              "Head of Doctors - Doctors Without Borders",
+                           Text(
+                              occupation,
                               style: TextStyle(
                                   color: Colors.grey, fontSize: 12)),
                         ],

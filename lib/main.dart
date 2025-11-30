@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'class/global.dart';
 import 'screens/splash_screen.dart';
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Greyfundr',
       navigatorKey: navigatorKey,
+      scaffoldMessengerKey: snackbarKey,
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),

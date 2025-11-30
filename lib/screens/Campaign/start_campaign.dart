@@ -593,8 +593,8 @@ void _proceedToFundraising() async {
                     borderSide: const BorderSide(color: Colors.grey),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                    borderRadius: BorderRadius.circular(4),
+                    borderSide: const BorderSide(color: Color.fromARGB(255, 152, 152, 152), width: 2),
                   ),
                 ),
                 maxLines: 2,
@@ -626,7 +626,7 @@ void _proceedToFundraising() async {
                   hintText: 'Tell your story... Why do you need help? How will the money be used?',
     hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 maxLines: 4,
@@ -661,22 +661,7 @@ void _proceedToFundraising() async {
 
               const SizedBox(height: 40),
               
-Center(
-  child: TextButton(
-    onPressed: () {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Draft saved automatically!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    },
-    child: Text(
-      "Save as Draft",
-      style: TextStyle(color: Colors.grey[600], fontSize: 15),
-    ),
-  ),
-),
+
 
               // Next Button
               SizedBox(

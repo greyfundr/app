@@ -945,8 +945,8 @@ Widget _buildTeamMemberRow({
                   ),
                 ),
                 SizedBox(height: 10),
-                _buildBudgetItem("Total Target", widget.campaign.amount.toString()),
-                _buildBudgetItem("Platform Fee (5%)", "Calculated at end"),
+               
+               
                 ..._budgetItems.map((item) =>
                   _buildBudgetItem(item['expense']!, item['cost']!)
                 ),
@@ -956,7 +956,7 @@ Widget _buildTeamMemberRow({
                     child: Text(
                       "No custom budget items added",
                       style: GoogleFonts.inter(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w400,
                         color: Color.fromRGBO(0, 0, 0, 0.5),
                         decoration: TextDecoration.none,
@@ -1164,11 +1164,34 @@ Widget _buildTeamMemberRow({
     String id = i.toString();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.campaign.title),
-        centerTitle: true,
-        leading: const BackButton(),
+      extendBodyBehindAppBar: true, // This is the key line
+      appBar: PreferredSize(
+    preferredSize: const Size.fromHeight(kToolbarHeight),
+    child: AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 12.0, top: 8.0),
+        child: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 22,
+            shadows: [
+              Shadow(
+                blurRadius: 10.0,
+                color: Colors.black54,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
+      actions: const [SizedBox(width: 56)], // Balanced spacing
+    ),
+  ),
       body: ErrorBoundary(
         child: Container(
           decoration: BoxDecoration(color: Color.fromRGBO(255, 255, 255, 1.0)),
@@ -1204,30 +1227,7 @@ Widget _buildTeamMemberRow({
                         ),
                       ),
                       //Status
-                      Positioned(
-                        top: constraints.maxHeight * 0.016736401673640166,
-                        left: 21.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            width: 54.0,
-                            height: constraints.maxHeight * 0.021966527196652718,
-                            child: Center(
-                              child: RichText(
-                                text: TextSpan(
-                                  text: "9:41",
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13.0,
-                                    decoration: TextDecoration.none,
-                                    color: Color.fromRGBO(251, 251, 255, 1.0),
-                                  ),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      
 
 
                       //Campaign Title
@@ -1350,14 +1350,18 @@ Widget _buildTeamMemberRow({
                               ),
                               children: [
                                 TextSpan(
-                                  text: widget.campaign.amount.toString(),
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 11.0,
-                                    color: Color.fromRGBO(41, 47, 56, 1.0),
-                                    decoration: TextDecoration.none,
-                                  ),
-                                ),
+  text: NumberFormat.currency(
+    locale: 'en_NG',           // Nigerian English locale
+    symbol: '₦',               // Naira symbol
+    decimalDigits: 0,          // set to 2 if you want .00
+  ).format(widget.campaign.amount),
+  style: GoogleFonts.inter(
+    fontWeight: FontWeight.w400,
+    fontSize: 11.0,
+    color: const Color.fromRGBO(41, 47, 56, 1.0),
+    decoration: TextDecoration.none,
+  ),
+),
                               ],
                             ),
                           ),
@@ -1471,12 +1475,6 @@ Widget _buildTeamMemberRow({
                           ),
                         ),
                       ),
-
-
-
-
-
-
                       
                       //Champions Count
                       Positioned(
@@ -1496,7 +1494,7 @@ Widget _buildTeamMemberRow({
                       ),
                       //Donors Count
                       Positioned(
-                        top: 339.0,
+                        top: 341.0,
                         left: 44.0,
                         child: ErrorBoundary(
                           child: Text(
@@ -1512,16 +1510,19 @@ Widget _buildTeamMemberRow({
                       ),
                       //Award Icon
                       Positioned(
-                        left: 140.0,
+                        left: 45.0,
                         top: 341.0,
                         child: ErrorBoundary(
                           child: SvgPicture.asset(
-                            "assets/images/vuesaxlinearaward.svg",
+                            "assets/images/group_2.svg",
                             height: 18.0,
                             width: 18.0,
                           ),
                         ),
                       ),
+
+
+
                       //TAB SECTION - HEADER
                       Positioned(
                         top: 490.0,
@@ -1536,7 +1537,7 @@ Widget _buildTeamMemberRow({
                               ),
                             ),
                             height: 35.0,
-                            width: 380.0,
+                            width: 395.0,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
@@ -1557,7 +1558,7 @@ Widget _buildTeamMemberRow({
                         child: ErrorBoundary(
                           child: Container(
                             height: 128.0,
-                            width: 380.0,
+                            width: 395.0,
                             decoration: BoxDecoration(
                               color: Color.fromRGBO(241, 241, 247, 1.0),
                               borderRadius: BorderRadius.only(
@@ -1569,10 +1570,16 @@ Widget _buildTeamMemberRow({
                           ),
                         ),
                       ),
+
+
+
+
+
+
                       //Customise Button
                       Positioned(
                         left: 44.0,
-                        top: 685.0,
+                        top: 700.0,
                         child: ErrorBoundary(
                           child: Container(
                             height: 43.0,
@@ -1606,7 +1613,7 @@ Widget _buildTeamMemberRow({
                       //Edit Campaign Button
                       Positioned(
   left: 234.0,
-                        top: 685.0,
+                        top: 700.0,
   // bottom: 20.0, // Nice safe area from bottom
   child: ErrorBoundary(
     child: SizedBox(
@@ -1781,7 +1788,7 @@ Positioned(
 // Optional: Add page dots (beautiful active indicator)
 if (widget.campaign.images.isNotEmpty)
   Positioned(
-    bottom: 705,
+    bottom: 750,
     left: 0,
     right: 0,
     child: Row(
@@ -1794,7 +1801,7 @@ if (widget.campaign.images.isNotEmpty)
           height: 8,
           width: 8,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 164, 159, 159).withOpacity(0.9),
+            color: const Color.fromARGB(255, 255, 255, 255),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 1))
@@ -1812,7 +1819,7 @@ if (widget.campaign.images.isNotEmpty)
                       //Submit Button
                       Positioned(
                         left: (constraints.maxWidth / 2) - (440.0 / 2 - 90.0),
-                        top: 737.0,
+                        top: 760.0,
                         child: ErrorBoundary(
                           child: InkWell(
                             onTap: createCampaign,
@@ -1853,21 +1860,22 @@ if (widget.campaign.images.isNotEmpty)
 
 
                       //End of Campaign Text
-                      Positioned(
-                        left: (constraints.maxWidth / 2) - (440.0 / 2 - 173.0),
-                        top: 668.0,
-                        child: ErrorBoundary(
-                          child: Text(
-                            "END OF CAMPAIGN",
-                            style: GoogleFonts.inter(
-                              color: Color.fromRGBO(142, 150, 163, 0.9),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 9.0,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ),
-                      ),
+                      Align(
+  alignment: Alignment.center,
+  child: Transform.translate(
+    offset: const Offset(0, 200), // Adjust Y position relative to center
+    child: ErrorBoundary(
+      child: Text(
+        "END OF CAMPAIGN",
+        style: GoogleFonts.inter(
+          color: Color.fromRGBO(87, 87, 87, 0.898),
+          fontWeight: FontWeight.w600,
+          fontSize: 12.0,
+        ),
+      ),
+    ),
+  ),
+)
                     ],
                   ),
                 ),

@@ -22,6 +22,89 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
   List<Map<String, String>> _offers = [];
   int _selectedTabIndex = 0;
 
+  Widget _buildTeamMemberCard({
+  String? profilePicUrl,
+  String? fallbackImage,
+  String? imageUrl,
+  required String name,
+  required String role,
+  required bool isOrganizer,
+}) {
+  final double cardWidth = MediaQuery.of(context).size.width * 0.70;
+
+  return Container(
+    width: cardWidth,
+    margin: EdgeInsets.only(right: 16),
+    padding: EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(255, 229, 229, 229),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: Offset(0, 4)),
+      ],
+    ),
+    child: Row(
+      children: [
+        // Avatar
+        Stack(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: _getImageProvider(profilePicUrl ?? imageUrl ?? fallbackImage),
+            ),
+            if (isOrganizer)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                  ),
+                  child: Icon(Icons.star, size: 14, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                name,
+                style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4),
+              Text(
+                role,
+                style: GoogleFonts.inter(fontSize: 11.5, color: const Color.fromARGB(255, 69, 69, 69)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper to safely load image
+ImageProvider _getImageProvider(String? url) {
+  if (url == null || url.isEmpty) {
+    return AssetImage('assets/images/personal.png');
+  }
+  if (url.startsWith('http') || url.startsWith('https')) {
+    return NetworkImage(url);
+  }
+  return AssetImage(url);
+}
+
   @override
   void initState() {
     super.initState();
@@ -169,7 +252,7 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Manage Team", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text("Manage Participants", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                 ],
               ),
@@ -223,13 +306,13 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Edit Description", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text("Edit Campaign Description", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
                   hintText: "Tell your story...",
                 ),
               ),
@@ -243,8 +326,15 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
                   backgroundColor: const Color.fromRGBO(0, 164, 175, 1),
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text("Save Description"),
+               child: const Text(
+  "Save Description",
+  style: TextStyle(
+    color: Colors.white, // Most common way
+  ),
+),
               ),
+
+              SizedBox(height: 100,)
             ],
           ),
         ),
@@ -254,64 +344,133 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
 
   // BUDGET EDIT MODAL (Reused from your old code)
   void _editBudget() {
-    List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Edit Budget", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              ...tempBudgetItems.asMap().entries.map((entry) {
-                int index = entry.key;
-                Map<String, String> item = entry.value;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(247, 247, 249, 1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(flex: 2, child: Text(item['expense'] ?? '')),
-                      Expanded(child: Text(item['cost'] ?? '', textAlign: TextAlign.right)),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () => setModalState(() => tempBudgetItems.removeAt(index)),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  _showAddBudgetItemDialog(context, setModalState, tempBudgetItems);
-                },
-                icon: const Icon(Icons.add),
-                label: const Text("Add Budget Item"),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color.fromRGBO(0, 164, 175, 1))),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() => _budgetItems = tempBudgetItems);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(0, 164, 175, 1)),
-                child: const Text("Save Budget"),
-              ),
-            ],
-          ),
-        ),
+  List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent, // Allows rounded corners to show properly
+    builder: (_) => Container(
+      height: MediaQuery.of(context).size.height * 0.85, // Max 85% of screen
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    );
-  }
+      child: Column(
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Edit Budget",
+                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1),
+
+          // Scrollable Content
+          Expanded(
+            child: StatefulBuilder(
+              builder: (context, setModalState) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Budget Items List
+                  ...tempBudgetItems.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Map<String, String> item = entry.value;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(247, 247, 249, 1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              item['expense'] ?? '',
+                              style: GoogleFonts.inter(fontSize: 14.5),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              item['cost'] ?? '',
+                              style: GoogleFonts.inter(
+                                fontSize: 14.5,
+                                color: const Color.fromRGBO(0, 164, 175, 1),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () => setModalState(() => tempBudgetItems.removeAt(index)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+
+                  const SizedBox(height: 16),
+
+                  // Add Budget Item Button
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _showAddBudgetItemDialog(context, setModalState, tempBudgetItems);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Budget Item"),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color.fromRGBO(0, 164, 175, 1)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 80), // Space for fixed button
+                ],
+              ),
+            ),
+          ),
+
+          // Fixed Save Button at Bottom
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() => _budgetItems = tempBudgetItems);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromRGBO(0, 164, 175, 1),
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(
+                "Save Budget",
+                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> budgetItems) {
     final expenseController = TextEditingController();
@@ -358,70 +517,128 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
 
   // OFFERS EDIT MODAL (Reused from your old code)
   void _editOffers() {
-    List<Map<String, String>> tempOffers = List.from(_offers);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Edit Offers", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              ...tempOffers.asMap().entries.map((entry) {
-                int index = entry.key;
-                Map<String, String> offer = entry.value;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(247, 247, 249, 1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  List<Map<String, String>> tempOffers = List.from(_offers);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent, // Important for custom shape
+    builder: (_) => Container(
+      height: MediaQuery.of(context).size.height * 0.85, // Limits max height
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header with title and close button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Edit Offers",
+                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          // Scrollable content
+          Expanded(
+            child: StatefulBuilder(
+              builder: (context, setModalState) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ...tempOffers.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Map<String, String> offer = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(247, 247, 249, 1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Condition: ${offer['condition'] ?? ''}"),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.red),
-                            onPressed: () => setModalState(() => tempOffers.removeAt(index)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "Condition: ${offer['condition'] ?? ''}",
+                                  style: GoogleFonts.inter(fontSize: 14),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => setModalState(() => tempOffers.removeAt(index)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Reward: ${offer['reward'] ?? ''}",
+                            style: const TextStyle(
+                              color: Color.fromRGBO(0, 164, 175, 1),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
-                      Text("Reward: ${offer['reward'] ?? ''}", style: const TextStyle(color: Color.fromRGBO(0, 164, 175, 1))),
-                    ],
+                    );
+                  }).toList(),
+
+                  const SizedBox(height: 16),
+
+                  // Add Offer Button
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _showAddOfferDialog(context, setModalState, tempOffers);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Offer"),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color.fromRGBO(0, 164, 175, 1)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
-                );
-              }).toList(),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  _showAddOfferDialog(context, setModalState, tempOffers);
-                },
-                icon: const Icon(Icons.add),
-                label: const Text("Add Offer"),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color.fromRGBO(0, 164, 175, 1))),
+
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() => _offers = tempOffers);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(0, 164, 175, 1)),
-                child: const Text("Save Offers"),
-              ),
-            ],
+            ),
           ),
-        ),
+
+          // Save Button at bottom
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() => _offers = tempOffers);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromRGBO(0, 164, 175, 1),
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Save Offers", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showAddOfferDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> offers) {
     final conditionController = TextEditingController();
@@ -586,8 +803,8 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
           ),
           // Floating edit icon on image
           Positioned(
-            bottom: 16,
-            right: 16,
+            top: 230,
+            right: 20,
             child: FloatingActionButton(
               mini: true,
               backgroundColor: Colors.white,
@@ -724,31 +941,68 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
     ],
   ),
 ),
-                    const SizedBox(height: 20),
+                   
+                  
+                    const SizedBox(height: 12),
+                    // TEAM CARDS
 
-                    // Team section
+                                        // Team section - FIXED VERSION
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Campaign Team", style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        Text(
+                          "Campaign Participants",
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
+                        ),
                         Row(
                           children: [
                             TextButton(
                               onPressed: _editParticipants,
                               child: const Text("Edit", style: TextStyle(color: Color.fromRGBO(0, 164, 175, 1))),
                             ),
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text("See All", style: TextStyle(color: Color.fromRGBO(0, 164, 175, 1))),
-                            ),
+                           
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    // Team cards (reuse your horizontal list from review page)
 
-                    const SizedBox(height: 30),
+                    // Horizontal scrolling team member cards
+                    SizedBox(
+                      height: 70, // Enough for avatar + name + role
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: 1 + _campaign.participants.length, // Organizer + participants
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            // Organizer (current user) - you need to pass this or get from auth
+                            // For now, using placeholder. Replace with real user data later
+                            return _buildTeamMemberCard(
+                              profilePicUrl: null, // Replace with currentUser.profilePic if available
+                              fallbackImage: 'assets/images/personal.png',
+                              name: "You", // Or currentUser.fullName
+                              role: "Campaign Organizer",
+                              isOrganizer: true,
+                            );
+                          }
+
+                          // Participants
+                          final participant = _campaign.participants[index - 1];
+                          return _buildTeamMemberCard(
+                            imageUrl: participant.imageUrl,
+                            name: participant.name,
+                            role: "Team Member",
+                            isOrganizer: false,
+                          );
+                        },
+                      ),
+                    ),
+
+                    
+                     
+
+                    const SizedBox(height: 15),
                     // Tabs
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -771,10 +1025,15 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
           ),
 
           // FINISH EDITING BUTTON
+
+         
+
+
+
           Positioned(
             left: 24,
             right: 24,
-            bottom: 20,
+            top: 800.0,
             child: ElevatedButton(
               onPressed: _saveAndFinish,
               style: ElevatedButton.styleFrom(
@@ -788,6 +1047,7 @@ class _EditCampaignScreenState extends State<EditCampaignScreen> {
               ),
             ),
           ),
+          
         ],
       ),
     );

@@ -86,7 +86,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   void loadCampaign() async {
     try {
       final id = widget.id;
-      final String baseUrl = 'http://localhost:3000/campaign/getcampaign';
+      final String baseUrl = 'https://api.greyfundr.com/campaign/getcampaign';
       final url = Uri.parse('$baseUrl/$id');
 
       final response = await http.get(url);

@@ -14,7 +14,7 @@ import 'package:mime/mime.dart';
 class ApiService {
   final Dio _dio = Dio();
 
-  final String baseUrl = "https://api.greyfundr.com/";
+  final String baseUrl = "https://api.greyfundr.com";
 
   Future<dynamic> getCategory() async {
     Map<String, dynamic>? category;

@@ -54,8 +54,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   double percentage = 0.00;
   int cId = 0;
   String occupation = '';
-  late List< dynamic> moffer;
-  late List< dynamic> aoffer;
+  late List< dynamic> moffer = [];
+  late List< dynamic> aoffer = [];
 
   late bool campaignLive = true;
 

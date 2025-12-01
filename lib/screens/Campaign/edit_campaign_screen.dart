@@ -1033,7 +1033,7 @@ ImageProvider _getImageProvider(String? url) {
           Positioned(
             left: 24,
             right: 24,
-            top: 800.0,
+            top: 750.0,
             child: ElevatedButton(
               onPressed: _saveAndFinish,
               style: ElevatedButton.styleFrom(
@@ -1042,7 +1042,7 @@ ImageProvider _getImageProvider(String? url) {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: Text(
-                "FINISH EDITING",
+                "FINISHED EDITING!",
                 style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
               ),
             ),

@@ -861,7 +861,7 @@ if (result <= 0) {
                     ),
                     
                   ),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 130),
                 ],
               ),
             ),
@@ -1567,6 +1567,7 @@ if (result <= 0) {
                         style: TextStyle(color: Colors.white),),
                     ),
                   ),
+                  SizedBox(height: 20)
                 ],
               ),
             ),

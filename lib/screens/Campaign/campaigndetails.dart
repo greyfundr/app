@@ -14,15 +14,15 @@ import 'package:flutter/services.dart';
 import '../../class/global.dart';
 
 
-class CampaignDetailPage extends StatefulWidget {
+class CampaignDetails extends StatefulWidget {
   final String id;
-  const CampaignDetailPage({super.key, required this.id});
+  const CampaignDetails({super.key, required this.id});
 
   @override
-  State<CampaignDetailPage> createState() => _CampaignDetailPageState();
+  State<CampaignDetails> createState() => _CampaignDetailPageState();
 }
 
-class _CampaignDetailPageState extends State<CampaignDetailPage> {
+class _CampaignDetailPageState extends State<CampaignDetails> {
   @override
   void initState() {
     super.initState();
@@ -119,8 +119,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
           campaignId = campaign['id'];
 
 
-           moffer = campaign['moffer'];
-           aoffer = campaign['aoffer'];
+          moffer = campaign['moffer'];
+          aoffer = campaign['aoffer'];
           //final dataArray = JSON.parse(storedString);
           //List<dynamic> combinedList = [...muoffer, ...amoffer];
           print(moffer);
@@ -218,11 +218,11 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) =>
-      AddMoneyBottomSheet(
-        userId:userId,
-        creatorId: cId,
-        campaignId:campaignId,
-        ),
+          AddMoneyBottomSheet(
+            userId:userId,
+            creatorId: cId,
+            campaignId:campaignId,
+          ),
     );
   }
 
@@ -591,19 +591,43 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         return _buildFinancingContent();
 
       case 2:
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Manual Offers \n\n'
-                "• Condition: ${moffer[0]['condition']} \n"
-                "• Reward: ${moffer[0]['reward']} \n\n"
 
-                'Auto Offers \n\n'
-                "• Condition: ${aoffer[0]['condition']} \n"
-                "• Reward: ${aoffer[0]['reward']} \n\n",
-            style: const TextStyle(height: 1.4, color: Colors.black87),
-          ),
-        );
+        if(moffer.isEmpty || aoffer.isEmpty) {
+          return Padding(
+
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+
+              'Manual Offers \n\n'
+
+                  'Auto Offers \n\n',
+
+
+
+              style: const TextStyle(height: 1.4, color: Colors.black87),
+            ),
+          );
+        }
+        else
+          {
+            return Padding(
+
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+
+                'Manual Offers \n\n'
+                    "• Condition: ${moffer[0]['condition']} \n"
+                    "• Reward: ${moffer[0]['reward']} \n\n"
+                    'Auto Offers \n\n'
+                    "• Condition: ${aoffer[0]['condition']} \n"
+                    "• Reward: ${aoffer[0]['reward']} \n\n",
+
+
+                style: const TextStyle(height: 1.4, color: Colors.black87),
+              ),
+            );
+
+          }
 
       case 3:
         return _buildDonationContent();
@@ -639,6 +663,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+
+
     // FIXED: Safe calculation of days
     int days = _calculateDaysLeft();
 
@@ -653,7 +679,18 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
       );
     }
 
+
     return Scaffold(
+
+      appBar: AppBar(
+        title: const Text('Start Campaign'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.teal,
@@ -801,7 +838,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                           Text("$first $last",
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
-                           Text(
+                          Text(
                               occupation,
                               style: TextStyle(
                                   color: Colors.grey, fontSize: 12)),
@@ -875,36 +912,36 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                      if (campaignLive) ...[
+                    if (campaignLive) ...[
 
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text("Champion"),
                         ),
-                        child: const Text("Champion"),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _showAddMoneyModal,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _showAddMoneyModal,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text("Donate"),
                         ),
-                        child: const Text("Donate"),
-                      ),
-                    ),]
-                  else ...[
+                      ),]
+                    else ...[
 
 
                     ],
@@ -986,8 +1023,8 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
         print('found');
 
         navigatorKey.currentState?.push(
-          MaterialPageRoute(builder: (context) => CampaignSearchPage(),
-        ));
+            MaterialPageRoute(builder: (context) => CampaignSearchPage(),
+            ));
 
       }
 

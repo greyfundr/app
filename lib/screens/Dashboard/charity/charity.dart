@@ -13,6 +13,7 @@ import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
 // import 'homeprofile.dart';
 import '../../../class/api_service.dart';
 import '../../../class/participants.dart';
+import '../../Campaign/campaigndetails.dart';
 import '../../Campaign/detailedcampaign.dart';
 import '../../Dashboard/profile_screen.dart';
 
@@ -635,7 +636,7 @@ class _CharityPageState extends State<CharityPage>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CampaignDetailPage(
+                            builder: (_) => CampaignDetails(
                                 id: campaign['id'].toString()
                             ),
                           ),

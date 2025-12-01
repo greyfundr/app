@@ -49,6 +49,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
       print("User ID: ${userData['wallet']}");
     } else {
       print("Token is expired or invalid");
+      logout();
     }
   }
 

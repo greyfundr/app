@@ -591,19 +591,42 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
         return _buildFinancingContent();
 
       case 2:
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Manual Offers \n\n'
-                "• Condition: ${moffer[0]['condition']} \n"
-                "• Reward: ${moffer[0]['reward']} \n\n"
+        if(moffer.isEmpty || aoffer.isEmpty) {
+          return Padding(
 
-                'Auto Offers \n\n'
-                "• Condition: ${aoffer[0]['condition']} \n"
-                "• Reward: ${aoffer[0]['reward']} \n\n",
-            style: const TextStyle(height: 1.4, color: Colors.black87),
-          ),
-        );
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+
+              'Manual Offers \n\n'
+
+                  'Auto Offers \n\n',
+
+
+
+              style: const TextStyle(height: 1.4, color: Colors.black87),
+            ),
+          );
+        }
+        else
+        {
+          return Padding(
+
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+
+              'Manual Offers \n\n'
+                  "• Condition: ${moffer[0]['condition']} \n"
+                  "• Reward: ${moffer[0]['reward']} \n\n"
+                  'Auto Offers \n\n'
+                  "• Condition: ${aoffer[0]['condition']} \n"
+                  "• Reward: ${aoffer[0]['reward']} \n\n",
+
+
+              style: const TextStyle(height: 1.4, color: Colors.black87),
+            ),
+          );
+
+        }
 
       case 3:
         return _buildDonationContent();

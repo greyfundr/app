@@ -107,6 +107,7 @@ class ApiService {
         'images': campaign.imageUrl!.path,
         'moffers': json.encode(campaign.savedManualOffers),
         'aoffers': json.encode(campaign.savedAutoOffers),
+        'sharetitle': campaign.sharetitle,
       });
 
       Response response = await dio.post(

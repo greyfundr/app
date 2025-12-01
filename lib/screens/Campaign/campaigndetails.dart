@@ -67,7 +67,7 @@ class _CampaignDetailPageState extends State<CampaignDetails> {
     "COMMENTS",
   ];
 
-  late List< dynamic> donations;
+  late List< dynamic> donations = [];
 
   void loadProfile() async {
     String? token = await AuthService().getToken();

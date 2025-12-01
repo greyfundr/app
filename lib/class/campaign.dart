@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'participants.dart';
 // import 'dart:convert';
 
@@ -9,6 +10,7 @@ class Campaign {
   File? imageUrl;                    // main/cover image
   String startDate = '';
   String endDate = '';
+  String sharetitle = '';
   double amount = 0.0;
   String category = '';
   List<Participant> participants = [];
@@ -58,6 +60,7 @@ class Campaign {
     this.amount = amount;
     participants = participant;
     images = image;
+    sharetitle = generateRandomStringFromChars(10,title);
   }
 
   void setCreationTime(DateTime created_at) => this.created_at = created_at;
@@ -65,6 +68,17 @@ class Campaign {
   void setImages(List<File> image) => images = image;
 
   void setParticipants(List<Participant> participant) => participants = participant;
+
+  String generateRandomStringFromChars(int length, String characterSet) {
+    final Random random = Random();
+    final StringBuffer result = StringBuffer();
+
+    for (int i = 0; i < length; i++) {
+      final int randomIndex = random.nextInt(characterSet.length);
+      result.write(characterSet[randomIndex]);
+    }
+    return result.toString();
+  }
 
   // Fixed: You had a wrong method named setStartDate that was setting images!
   // Removed it — use setCampaignDetails instead

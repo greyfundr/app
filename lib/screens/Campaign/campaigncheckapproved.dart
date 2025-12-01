@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../class/api_service.dart';
 import 'dart:async';
 import 'detailedcampaign.dart';
@@ -7,6 +8,7 @@ class CampaignApprovalPage extends StatefulWidget {
   final bool isApproved;
   final int stakeholdersApproved;
   final int id;
+  final String sharetitle;
 
   const CampaignApprovalPage({
     Key? key,
@@ -14,6 +16,7 @@ class CampaignApprovalPage extends StatefulWidget {
     this.stakeholdersApproved = 0,
 
     required this.id,
+    required this.sharetitle,
   }) : super(key: key);
 
   @override
@@ -161,7 +164,13 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     label: 'Copy Link',
                     isActive: campaignLive,
                     onTap: () {
-                      // Handle copy link
+                      Clipboard.setData(ClipboardData(text: 'https://api.greyfundr.com/campaign/getcampaign/${widget.sharetitle}'));
+                      // Optionally, show a SnackBar to confirm the copy action
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Text copied to clipboard!'),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),

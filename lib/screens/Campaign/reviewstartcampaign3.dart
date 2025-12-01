@@ -345,7 +345,7 @@ Widget _buildTeamMemberRow({
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => CampaignApprovalPage(id:id)),
+              builder: (_) => CampaignApprovalPage(id:id,sharetitle:widget.campaign.sharetitle)),
         );
       });
 

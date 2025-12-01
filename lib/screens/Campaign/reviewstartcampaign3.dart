@@ -1577,42 +1577,14 @@ Widget _buildTeamMemberRow({
 
 
                       //Customise Button
-                      Positioned(
-                        left: 44.0,
-                        top: 700.0,
-                        child: ErrorBoundary(
-                          child: Container(
-                            height: 43.0,
-                            width: 162.0,
-                            clipBehavior: Clip.none,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Color.fromRGBO(255, 83, 79, 1.0),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(6.0),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "CUSTOMISE",
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13.0,
-                                  color: Color.fromRGBO(252, 100, 58, 1.0),
-                                  decoration: TextDecoration.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+
 
 
 
 
                       //Edit Campaign Button
                       Positioned(
-  left: 234.0,
+  left: 134.0,
                         top: 700.0,
   // bottom: 20.0, // Nice safe area from bottom
   child: ErrorBoundary(

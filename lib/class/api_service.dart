@@ -308,7 +308,7 @@ class ApiService {
 
     try {
       final response = await _dio.put(
-        "http://localhost:3000/wallet/addFunds/$id",
+        "$baseUrl/wallet/addFunds/$id",
         data: {"amount": amount, "id": id},
       );
       print(response);

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'package:greyfdr/class/wallet.dart';
+
 import '../class/campaign.dart';
 
 import 'package:dio/dio.dart';
@@ -9,6 +11,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart'; // Required for MediaType
 import 'package:mime/mime.dart';
+
+import 'auth_service.dart';
 
 
 class ApiService {
@@ -292,6 +296,34 @@ class ApiService {
       if (response.statusCode == 200) {
         String token = response.data["token"];
         await saveToken(token);
+        return true;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+    return false;
+  }
+
+  Future<bool> addBalance(int id, double amount) async {
+
+    try {
+      final response = await _dio.put(
+        "http://localhost:3000/wallet/addFunds/$id",
+        data: {"amount": amount, "id": id},
+      );
+      print(response);
+      if (response.statusCode == 200) {
+        dynamic token = response.data["wallets"];
+        String balance =token["balance"];
+        Wallet wallet = Wallet(
+          id: token["id"],
+          balance: double.parse(balance),
+          incoming_balance: double.parse(token["incoming_balance"]),
+          balance_owed: double.parse(token["balance_owed"]),
+        );
+        String walletString = jsonEncode(wallet.toJson());
+        await AuthService().saveWalletToken(walletString);
+        print(response);
         return true;
       }
     } catch (e) {

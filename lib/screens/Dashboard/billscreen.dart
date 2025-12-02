@@ -93,7 +93,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const AddMoneyBottomSheet(),
+      builder: (context) => AddMoneyBottomSheet(userId: user?['id'],),
     );
   }
 

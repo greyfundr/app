@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../class/api_service.dart';
+import '../../class/global.dart';
 import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
@@ -43,10 +47,13 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
     String? token = await AuthService().getToken();
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
-      setState(() => user = userData['user']);
-      setState(() => wallet = userData['wallet']);
-      print("User ID: ${userData['user']}");
-      print("User ID: ${userData['wallet']}");
+      String? userToken = await AuthService().getUserToken();
+      String? walletToken = await AuthService().getWalletToken();
+
+      setState(() => user = jsonDecode(userToken!));
+      setState(() => wallet = jsonDecode(walletToken!));
+      //print("User ID: ${userData['user']}");
+      //print("User ID: ${userData['wallet']}");
     } else {
       print("Token is expired or invalid");
       logout();
@@ -95,7 +102,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const AddMoneyBottomSheet(),
+      builder: (context) => AddMoneyBottomSheet(userId: user?['id']),
     );
   }
 
@@ -258,7 +265,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
   
 Text(
   wallet?['balance'] != null
-      ? NumberFormat('#,##0.00').format(double.parse(wallet!['balance']))
+      ? NumberFormat('#,##0.00').format(wallet!['balance'])
       : '0.00',
   style: const TextStyle(
     color: Colors.white,
@@ -271,11 +278,11 @@ Text(
   mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
     Text(
-      'You owe: ₦${wallet?['incoming_balance'] != null ? formatter.format(double.parse(wallet!['incoming_balance'])) : '0.00'}',
+      'You owe: ₦${wallet?['incoming_balance'] != null ? formatter.format(wallet!['incoming_balance']) : '0.00'}',
       style: const TextStyle(color: Colors.white70),
     ),
     Text(
-      'You are owed: ₦${wallet?['balance_owed'] != null ? formatter.format(double.parse(wallet!['balance_owed'])) : '0.00'}',
+      'You are owed: ₦${wallet?['balance_owed'] != null ? formatter.format(wallet!['balance_owed']) : '0.00'}',
       style: const TextStyle(color: Colors.white70),
     ),
   ],
@@ -556,7 +563,9 @@ class SettingsActivityPage extends StatelessWidget {
 
 // === Add Money Bottom Sheet ===
 class AddMoneyBottomSheet extends StatefulWidget {
-  const AddMoneyBottomSheet({super.key});
+  final int userId;
+
+  const AddMoneyBottomSheet({super.key, required this.userId});
 
   @override
   State<AddMoneyBottomSheet> createState() => _AddMoneyBottomSheetState();
@@ -589,7 +598,7 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
     return digitsOnly.replaceAllMapped(formatter, (Match m) => '${m[1]},');
   }
 
-  void _onContinue() {
+  Future<void> _onContinue() async {
     if (_amountController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter an amount')),
@@ -601,6 +610,22 @@ class _AddMoneyBottomSheetState extends State<AddMoneyBottomSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Adding ₦$actualAmount to wallet')),
     );
+
+    String cleanedString = _amountController.text.replaceAll(',', '');
+    double parsedNumber = double.parse(cleanedString);
+
+    dynamic token = await ApiService().addBalance(widget.userId,parsedNumber);
+    print(token);
+    if(token)
+    {
+      print('found');
+      
+
+      navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (context) => ProfileScreen(),
+          ));
+
+    }
   }
 
   @override

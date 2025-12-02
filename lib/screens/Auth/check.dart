@@ -6,6 +6,7 @@ import 'login_screen.dart';
 // ... imports for secure storage
 
 class AuthWrapper extends StatelessWidget {
+
   const AuthWrapper({super.key});
 
   Future<String?> _checkToken() async {

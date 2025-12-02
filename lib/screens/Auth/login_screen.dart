@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:greyfdr/screens/Auth/pin_screen.dart';
 import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
+import '../../class/user.dart';
+import '../../class/wallet.dart';
 import 'check.dart';
 import 'register_screen.dart';
 import 'package:http/http.dart' as http;
@@ -22,17 +24,54 @@ class _LoginScreenState extends State<LoginScreen> {
   static final passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false; // Added loading state
+  late User user;
+  late Wallet userWallet;
 
-
-  void loadProfile() async {
+  void loadUser() async {
     String? token = await AuthService().getToken();
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
-      var email = userData['user']['email'];
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (_) => PinScreen(email:email)),
+      user = User(
+        id: userData['user']["id"],
+        first_name: userData['user']["first_name"],
+        last_name: userData['user']["last_name"],
+        profile_pic: userData['user']["profile_pic"],
+        username: userData['user']["username"],
+        occupation: userData['user']["occupation"],
+          );
+
+      String balance =userData['wallet']["balance"];
+
+      userWallet = Wallet(
+          id: userData['wallet']["id"],
+          balance: double.parse(balance),
+          incoming_balance: double.parse(userData['wallet']["incoming_balance"]),
+          balance_owed: double.parse(userData['wallet']["balance_owed"]),
+
+      );
+
+      String userString = jsonEncode(user.toJson());
+      String walletString = jsonEncode(userWallet.toJson());
+      await AuthService().saveUserToken(userString);
+      await AuthService().saveWalletToken(walletString);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              Navigator.of(context).pop(); // Close the dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AuthWrapper()),
+              );
+            }
+          });
+          return const AlertDialog(
+            title: Text('Login Successful'),
+            content: Text('You have logged in successfully!'),
+          );
+        },
       );
     } else {
       print("Token is expired or invalid");
@@ -81,25 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (token) {
           // Show success dialog that auto-dismisses after 1 second and navigates
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              Future.delayed(const Duration(seconds: 1), () {
-                if (mounted) {
-                  Navigator.of(context).pop(); // Close the dialog
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const AuthWrapper()),
-                  );
-                }
-              });
-              return const AlertDialog(
-                title: Text('Login Successful'),
-                content: Text('You have logged in successfully!'),
-              );
-            },
-          );
+          loadUser();
+
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

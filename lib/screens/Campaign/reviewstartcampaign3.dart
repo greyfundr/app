@@ -323,15 +323,6 @@ Widget _buildTeamMemberRow({
   }
 
   void createCampaign() async {
-    setState(() => isLoading = true);
-    final response = await ApiService().createCampaign(widget.campaign, user?['id']);
-    print(response.data);
-    if (response.statusCode == 200) {
-      // Handle successful login
-      setState(() => isLoading = false);
-      String message = response.data['msg'];
-      int id = response.data['id'];
-
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -345,21 +336,10 @@ Widget _buildTeamMemberRow({
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => CampaignApprovalPage(id:id,sharetitle:widget.campaign.sharetitle)),
+              builder: (_) => CampaignApprovalPage(campaign: widget.campaign)),
         );
       });
 
-    } else {
-      //dynamic responseData = jsonDecode(response.body);
-      //String message = responseData['msg'];
-      //final test = await ApiService().uploadImage(widget.campaign.imageUrl);
-
-      //print(response.body);
-
-
-
-
-    }
 
   }
 

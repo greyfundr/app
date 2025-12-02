@@ -2,40 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../class/api_service.dart';
 import 'dart:async';
+import '../../class/auth_service.dart';
+import '../../class/campaign.dart';
+import '../../class/jwt_helper.dart';
 import 'detailedcampaign.dart';
 
 class CampaignApprovalPage extends StatefulWidget {
   final bool isApproved;
   final int stakeholdersApproved;
-  final int id;
-  final String sharetitle;
+  final Campaign campaign;
 
   const CampaignApprovalPage({
-    Key? key,
+    super.key,
     this.isApproved = false,
     this.stakeholdersApproved = 0,
-
-    required this.id,
-    required this.sharetitle,
-  }) : super(key: key);
+    required this.campaign,
+  });
 
   @override
   State<CampaignApprovalPage> createState() => _CampaignApprovalPageState();
 }
 
 class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
+  Map<String, dynamic>? user;
   late bool _isApproved;
   late int _stakeholdersApproved = 0;
   late int totalStakeholders = 1;
   Timer? _timer;
+  late int campaigId = 0;
 
   @override
   void initState() {
     super.initState();
-    loadCampaignApproval();
-    _timer = Timer.periodic(Duration(seconds: 10), (Timer t) =>
-        loadCampaignApproval()); // Your function
-
+    loadProfile();
+    //createCampaign();
+    _timer = Timer.periodic(Duration(seconds: 20), (Timer t) =>
+       // loadCampaignApproval()); // Your function
+    loadCampaignApproval()
+    );
     _isApproved = widget.isApproved;
     _stakeholdersApproved = widget.stakeholdersApproved;
 
@@ -48,9 +52,57 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
     super.dispose();
   }
 
+  void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => user = userData['user']);
+
+      createCampaign();
+    } else {
+      print("Token is expired or invalid");
+    }
+  }
+
+  void createCampaign() async {
+    print(widget.campaign);
+    final response = await ApiService().createCampaign(widget.campaign, user?['id']);
+    print(response.data);
+    if (response.statusCode == 200) {
+      // Handle successful login
+      String message = response.data['msg'];
+      setState(() => campaigId = response.data['id']);
+
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Campaign Saved successful!'),
+          duration: Duration(seconds: 2), // Optional: how long it shows
+          backgroundColor: Colors.green, // Optional: customize color
+        ),
+      );
+
+      //loadCampaignApproval();
+
+
+
+    } else {
+      //dynamic responseData = jsonDecode(response.body);
+      //String message = responseData['msg'];
+      //final test = await ApiService().uploadImage(widget.campaign.imageUrl);
+
+      //print(response.body);
+
+
+
+
+    }
+
+  }
+
 
   Future<void> loadCampaignApproval() async {
-    String ids = widget.id.toString();
+    String ids = campaigId.toString();
     print(ids);
     dynamic token = await ApiService().getCampaignApproval(ids) ;
     print(token);
@@ -164,7 +216,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                     label: 'Copy Link',
                     isActive: campaignLive,
                     onTap: () {
-                      Clipboard.setData(ClipboardData(text: 'https://api.greyfundr.com/campaign/getcampaign/${widget.sharetitle}'));
+                      Clipboard.setData(ClipboardData(text: 'https://api.greyfundr.com/campaign/getcampaign/${widget.campaign.sharetitle}'));
                       // Optionally, show a SnackBar to confirm the copy action
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -215,7 +267,7 @@ class _CampaignApprovalPageState extends State<CampaignApprovalPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => CampaignDetailPage(id:widget.id.toString())),
+                              builder: (_) => CampaignDetailPage(id:campaigId.toString())),
                         );// Handle back to donation
                       },
                       style: ElevatedButton.styleFrom(

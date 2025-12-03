@@ -97,6 +97,7 @@ class ApiService {
           ),
         );
       }
+
       print(campaign.startDate);
       print(campaign.endDate);
       FormData formData = FormData.fromMap({

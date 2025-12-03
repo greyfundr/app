@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'participants.dart';
+import 'budget.dart';
 // import 'dart:convert';
 
 class Campaign {
@@ -15,10 +16,13 @@ class Campaign {
   String category = '';
   List<Participant> participants = [];
   List<File> images = [];            // all campaign images (carousel)
+  List<Map<String, String>> buget = [];
   List<Map<String, String>> savedAutoOffers = [];
   List<Map<String, String>> savedManualOffers = [];
   DateTime? created_at;
   double currentAmount = 0.0;
+  List<Budget> budgets = [];
+
 
   // Old constructor (you were using this)
   Campaign(String name, String desc, String aCategory, List<Map<String, String>> mOffers, List<Map<String, String>> aOffers) {
@@ -53,7 +57,7 @@ class Campaign {
 
   void setCurrentAmount(double currentAmount) => this.currentAmount = currentAmount;
 
-  void setCampaignDetails(String startDate, String endDate, File mainImage, double amount, List<Participant> participant, List<File> image) {
+  void setCampaignDetails(String startDate, String endDate, File mainImage, double amount, List<Participant> participant, List<File> image,List<Budget> budget) {
     this.startDate = startDate;
     this.endDate = endDate;
     imageUrl = mainImage;
@@ -61,6 +65,7 @@ class Campaign {
     participants = participant;
     images = image;
     sharetitle = generateRandomStringFromChars(10,title);
+    budgets = budget;
   }
 
   void setCreationTime(DateTime created_at) => this.created_at = created_at;

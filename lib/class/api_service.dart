@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'package:greyfdr/class/user.dart';
 import 'package:greyfdr/class/wallet.dart';
 
 import '../class/campaign.dart';
@@ -160,12 +161,28 @@ class ApiService {
       });
       int id = user['id'];
       print(id);
-      Response response = await dio.post(
+      Response response = await dio.put(
         "$baseUrl/users/updateUser/$id",
         data: formData,
       );
-      return response;
-      print("Image uploaded successfully: ${response.data}");
+
+      if (response.statusCode == 200) {
+        print("Image uploaded successfully: ${response.data}");
+        User users = User(
+        id : user['id'],
+        first_name : user['first_name'],
+        last_name : user['last_name'],
+        profile_pic : response.data["profile"],
+        username : user['username'],
+        occupation : 'Member',);
+
+        String userString = jsonEncode(users.toJson());
+        await AuthService().saveUserToken(userString);
+
+        return response;
+      }
+
+
     } catch (e) {
       print("Error uploading image: $e");
     }

@@ -115,17 +115,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // For demo, we'll just keep the local file reference
     };
 
+    //print(updatedUser);
+
 
     dynamic response = await ApiService().updateUser(updatedUser);
     //print(response.data);
 
     // Save to SharedPreferences (you might want to update JWT or call API)
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('first_name', _firstNameController.text);
-    await prefs.setString('last_name', _lastNameController.text);
-    await prefs.setString('username', _usernameController.text);
-    await prefs.setString('bio', _bioController.text);
-    await prefs.setString('website', _websiteController.text);
+
 
     // Call onProfileUpdate if provided
     widget.onProfileUpdate?.call(updatedUser);
@@ -184,7 +181,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   backgroundImage: _imageFile != null
                       ? FileImage(_imageFile!)
                       : (widget.user?['profile_pic'] != null
-                          ? NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/images/avatar.png')
+                          ? NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${widget.user?['profile_pic']}')
                           : const AssetImage('assets/images/personal.png')) as ImageProvider,
                 ),
                 GestureDetector(

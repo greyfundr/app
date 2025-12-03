@@ -138,7 +138,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
                             CircleAvatar(
                               radius: 25,
                               backgroundImage: user!['profile_pic'] != null
-                                  ? const AssetImage('assets/images/personal.png')
+                                  ? NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${user?['profile_pic']}')
                                   : const AssetImage('assets/images/personal.png')
                                       as ImageProvider,
                             ),

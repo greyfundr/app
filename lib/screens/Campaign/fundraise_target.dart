@@ -7,7 +7,37 @@ import 'reviewstartcampaign3.dart';
 import '../../class/campaign.dart';
 import '../../class/participants.dart';
 import '../../class/api_service.dart';
+import 'package:file_picker/file_picker.dart';
 
+
+class Expense {
+  String name;
+  double cost;
+  PlatformFile? file;
+
+  Expense({required this.name, required this.cost, this.file});
+
+  // Add copyWith for deep copying
+  Expense copyWith({
+    String? name,
+    double? cost,
+    PlatformFile? file,
+  }) {
+    return Expense(
+      name: name ?? this.name,
+      cost: cost ?? this.cost,
+      file: file ?? this.file,
+    );
+  }
+
+  bool get isImage =>
+      file?.extension?.toLowerCase() == 'jpg' ||
+      file?.extension?.toLowerCase() == 'jpeg' ||
+      file?.extension?.toLowerCase() == 'png' ||
+      file?.extension?.toLowerCase() == 'webp';
+
+  bool get isPdf => file?.extension?.toLowerCase() == 'pdf';
+}
 
 // Add this custom formatter class for comma-separated numbers
 class NumberTextInputFormatter extends TextInputFormatter {
@@ -62,6 +92,9 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   final TextEditingController amountController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
 
+  DateTime? selectedStartDate;
+DateTime? selectedEndDate;
+
   List<Participant> selectedParticipants = [];
   List<File> selectedImages = []; // Store selected images
 
@@ -72,11 +105,64 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
   List<Participant> backers = [];
   bool isLoading = true;
 
+  List<Expense> expenses = [];   // ← Add this
+
   @override
   void initState() {
     super.initState();
     loadUsers();
   }
+
+
+  Future<void> _selectDateRange(BuildContext context) async {
+  final DateTime? pickedStart = await showDatePicker(
+    context: context,
+    initialDate: selectedStartDate ?? DateTime.now(),
+    firstDate: DateTime.now(),
+    lastDate: DateTime.now().add(const Duration(days: 365)),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.teal,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (pickedStart == null) return;
+
+  // Now pick end date (must be >= start date)
+  final DateTime? pickedEnd = await showDatePicker(
+    context: context,
+    initialDate: selectedEndDate ?? pickedStart.add(const Duration(days: 7)),
+    firstDate: pickedStart, // ← This prevents selecting earlier dates
+    lastDate: DateTime.now().add(const Duration(days: 365)),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.teal,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (pickedEnd != null) {
+    setState(() {
+      selectedStartDate = pickedStart;
+      selectedEndDate = pickedEnd;
+
+      // Update your controllers if you still need them for submission
+      _startDateController.text = DateFormat('dd/MM/yyyy').format(pickedStart);
+      _endDateController.text = DateFormat('dd/MM/yyyy').format(pickedEnd);
+    });
+  }
+}
 
   Future<void> loadUsers() async {
     setState(() => isLoading = true);
@@ -101,7 +187,7 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
 
     setState(() => isLoading = false);
 
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
   }
 
   Future<void> _pickImage() async {
@@ -128,6 +214,22 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
     setState(() {
       selectedImages.removeAt(index);
     });
+  }
+
+   void _openExpenseBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ExpenseBottomSheet(
+        expenses: expenses,
+        onExpensesChanged: (newList) {
+          setState(() {
+            expenses = newList;
+          });
+        },
+      ),
+    );
   }
 
   @override
@@ -192,8 +294,8 @@ class _FundraisingScreenState extends State<FundraisingScreen> {
       borderSide: BorderSide.none,
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Colors.teal, width: 2),
+      borderRadius: BorderRadius.circular(2),
+      borderSide: const BorderSide(color: Color.fromARGB(255, 134, 134, 134), width: 1),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
   ),
@@ -216,12 +318,15 @@ ValueListenableBuilder<TextEditingValue>(
     double serviceCharge = targetAmount * 0.20;
     double youReceive = targetAmount - serviceCharge;
 
-    if (targetAmount == 0) {
-      return const Text(
-        'Enter an amount to see breakdown',
-        style: TextStyle(fontSize: 13, color: Colors.grey),
-      );
-    }
+  if (targetAmount == 0) {
+  return const Padding(
+    padding: EdgeInsets.all(8.0), // or any value you need
+    child: Text(
+      '20% service charge will be applied to total amount raised',
+      style: TextStyle(fontSize: 13, color: Colors.grey),
+    ),
+  );
+}
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -229,12 +334,8 @@ ValueListenableBuilder<TextEditingValue>(
         text: TextSpan(
           style: const TextStyle(fontSize: 13, color: Colors.grey),
           children: [
-            const TextSpan(text: 'Target: '),
-            TextSpan(
-              text: '₦ ${NumberFormat('#,###').format(targetAmount)}',
-              style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
-            ),
-            const TextSpan(text: ' • Service charge (20%): '),
+           
+            const TextSpan(text: 'Service Fee(20%): '),
             TextSpan(
               text: '₦ ${NumberFormat('#,###').format(serviceCharge)}',
               style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.orange),
@@ -256,88 +357,133 @@ ValueListenableBuilder<TextEditingValue>(
 ),
 const SizedBox(height: 8),
 
-
-              const SizedBox(height: 15),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      '20% service charge will be applied to total amount raised',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 5),
+                          // ─────────────────────── SMART BUTTON (Step 3) ───────────────────────
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('ADD BILL LISTING'),
-                ),
+                child: expenses.isEmpty
+                    ? ElevatedButton(
+                        onPressed: () {
+                          // We'll connect this in Step 4
+                          _openExpenseBottomSheet();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepOrange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('ADD BILL LISTING'),
+                      )
+                    : OutlinedButton.icon(
+                        onPressed: () {
+                          // Same function – opens the sheet to edit/add more
+                          _openExpenseBottomSheet();
+                        },
+                        icon: const Icon(Icons.receipt_long, size: 20),
+                        label: Text(
+                          '${expenses.length} Expense${expenses.length > 1 ? 's' : ''} Added • Add More',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Colors.deepOrange, width: 2),
+                          foregroundColor: Colors.deepOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Date',
+const Text(
+  'Date',
+  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+),
+const SizedBox(height: 12),
+
+// ←→ Beautiful Date Range Picker (like airline apps)
+GestureDetector(
+  onTap: () => _selectDateRange(context),
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Row(
+      children: [
+        // Start Date Box
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Start Date',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                selectedStartDate == null
+                    ? 'DD/MM/YYYY'
+                    : DateFormat('dd MMM yyyy').format(selectedStartDate!),
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
+                  color: selectedStartDate == null
+                      ? Colors.grey.shade400
+                      : Colors.black,
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Starting Date',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        _buildDateField(_startDateController, 'DD/MM/YYYY'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Ending Date',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        _buildDateField(_endDateController, 'DD/MM/YYYY'),
-                      ],
-                    ),
-                  ),
-                ],
+            ],
+          ),
+        ),
+
+        // Back and Forth Arrow
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Icon(
+            Icons.swap_horiz,
+            color: Colors.teal,
+            size: 28,
+          ),
+        ),
+
+        // End Date Box
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'End Date',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
+              const SizedBox(height: 4),
+              Text(
+                selectedEndDate == null
+                    ? 'DD/MM/YYYY'
+                    : DateFormat('dd MMM yyyy').format(selectedEndDate!),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: selectedEndDate == null
+                      ? Colors.grey.shade400
+                      : Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
+
+
               const SizedBox(height: 24),
               const Text(
                 'Upload Images',
@@ -663,36 +809,36 @@ if (result <= 0) {
     );
   }
 
-  Widget _buildDateField(TextEditingController controller, String hint) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      ),
-      readOnly: true,
-      onTap: () async {
-        final DateTime? picked = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-        );
-        if (picked != null) {
-          controller.text = DateFormat('dd/MM/yyyy').format(picked);
-        }
-      },
-    );
-  }
+  // Widget _buildDateField(TextEditingController controller, String hint) {
+  //   return TextField(
+  //     controller: controller,
+  //     decoration: InputDecoration(
+  //       hintText: hint,
+  //       hintStyle: TextStyle(color: Colors.grey.shade400),
+  //       border: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: Colors.grey.shade300),
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: BorderSide(color: Colors.grey.shade300),
+  //       ),
+  //       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+  //     ),
+  //     readOnly: true,
+  //     onTap: () async {
+  //       final DateTime? picked = await showDatePicker(
+  //         context: context,
+  //         initialDate: DateTime.now(),
+  //         firstDate: DateTime.now(),
+  //         lastDate: DateTime.now().add(const Duration(days: 365)),
+  //       );
+  //       if (picked != null) {
+  //         controller.text = DateFormat('dd/MM/yyyy').format(picked);
+  //       }
+  //     },
+  //   );
+  // }
 
   Widget _buildImageUploadButton(int index, bool isMain) {
   bool hasImage = index < selectedImages.length;
@@ -1456,7 +1602,7 @@ if (result <= 0) {
                                 backgroundImage: AssetImage(participant.imageUrl),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 4),
                             Positioned(
                               right: -8,
                               top: -8,
@@ -1478,7 +1624,7 @@ if (result <= 0) {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   DefaultTabController(
                     length: 3,
                     child: Column(
@@ -1546,7 +1692,7 @@ if (result <= 0) {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -1589,4 +1735,335 @@ if (result <= 0) {
 
 
 
+}
+
+
+
+// ──────────────────────────────────────────────────────────────────────
+// EXPENSE BOTTOM SHEET – THE TABLE UI
+// ──────────────────────────────────────────────────────────────────────
+class ExpenseBottomSheet extends StatefulWidget {
+  final List<Expense> expenses;
+  final ValueChanged<List<Expense>> onExpensesChanged;
+
+  const ExpenseBottomSheet({
+    Key? key,
+    required this.expenses,
+    required this.onExpensesChanged,
+  }) : super(key: key);
+
+  @override
+  State<ExpenseBottomSheet> createState() => _ExpenseBottomSheetState();
+}
+
+class _ExpenseBottomSheetState extends State<ExpenseBottomSheet> {
+  late List<Expense> _localExpenses;
+  final List<TextEditingController> _nameControllers = [];
+  final List<TextEditingController> _costControllers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Deep copy
+    _localExpenses = widget.expenses.map((e) => e.copyWith()).toList();
+
+    // Initialize controllers
+    for (var expense in _localExpenses) {
+      final nameCtrl = TextEditingController(text: expense.name);
+      final costCtrl = TextEditingController(
+        text: expense.cost > 0
+            ? NumberFormat('#,###.##').format(expense.cost)
+            : '',
+      );
+
+      nameCtrl.addListener(() {
+        expense.name = nameCtrl.text;
+      });
+
+      costCtrl.addListener(() {
+        final clean = costCtrl.text.replaceAll(',', '');
+        final value = double.tryParse(clean) ?? 0;
+        expense.cost = value;
+
+        // Reformat with commas (but avoid infinite loop)
+        if (value > 0) {
+          final formatted = NumberFormat('#,###.##').format(value);
+          if (costCtrl.text != formatted) {
+            costCtrl.text = formatted;
+            costCtrl.selection = TextSelection.fromPosition(
+              TextPosition(offset: costCtrl.text.length),
+            );
+          }
+        }
+      });
+
+      _nameControllers.add(nameCtrl);
+      _costControllers.add(costCtrl);
+    }
+  }
+
+  void _addRow() {
+    setState(() {
+      _localExpenses.add(Expense(name: '', cost: 0));
+
+      final nameCtrl = TextEditingController();
+      final costCtrl = TextEditingController();
+
+      nameCtrl.addListener(() {
+        _localExpenses.last.name = nameCtrl.text;
+      });
+
+      costCtrl.addListener(() {
+        final clean = costCtrl.text.replaceAll(',', '');
+        final value = double.tryParse(clean) ?? 0;
+        _localExpenses.last.cost = value;
+
+        if (value > 0) {
+          final formatted = NumberFormat('#,###.##').format(value);
+          if (costCtrl.text != formatted) {
+            costCtrl.text = formatted;
+            costCtrl.selection = TextSelection.fromPosition(
+              TextPosition(offset: costCtrl.text.length),
+            );
+          }
+        }
+      });
+
+      _nameControllers.add(nameCtrl);
+      _costControllers.add(costCtrl);
+    });
+  }
+
+  void _removeRow(int index) {
+    setState(() {
+      _localExpenses.removeAt(index);
+      _nameControllers[index].dispose();
+      _costControllers[index].dispose();
+      _nameControllers.removeAt(index);
+      _costControllers.removeAt(index);
+    });
+  }
+Future<void> _pickFile(int index) async {
+  try {
+    FilePickerResult? result;
+
+    // Try custom first (modern devices)
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+        withData: true,
+      );
+    } catch (_) {
+      // Fallback: allow any file and filter manually
+      result = await FilePicker.platform.pickFiles(
+        withData: true,
+      );
+    }
+
+    if (result?.files.isNotEmpty ?? false) {
+      final file = result!.files.single;
+      final ext = file.extension?.toLowerCase();
+
+      if (ext == null || !['jpg', 'jpeg', 'png', 'webp', 'pdf'].contains(ext)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Only images and PDFs allowed')),
+        );
+        return;
+      }
+
+      setState(() {
+        _localExpenses[index].file = file;
+      });
+    }
+  } catch (e) {
+    debugPrint('File picker failed: $e');
+  }
+}
+
+  
+@override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        top: 20,
+        left: 16,
+        right: 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'List Your Expenditures',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(),
+
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.58,
+            child: ListView.builder(
+              itemCount: _localExpenses.length,
+              itemBuilder: (ctx, i) {
+                final expense = _localExpenses[i];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: TextField(
+                                controller: _nameControllers[i],
+                                decoration: const InputDecoration(
+                                  labelText: 'Expense Name',
+                                  hintText: 'e.g. Hospital Bill, Drugs',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: _costControllers[i],
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [NumberTextInputFormatter()],
+                                decoration: const InputDecoration(
+                                  labelText: 'Cost',
+                                  prefixText: '₦ ',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: expense.file == null
+                                  ? OutlinedButton.icon(
+                                      onPressed: () => _pickFile(i),
+                                      icon: const Icon(Icons.upload_file, size: 18),
+                                      label: const Text('Upload Proof'),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                    )
+                                  : Container(
+                                      height: 80,
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(6),
+                                            child: expense.isImage && expense.file!.bytes != null
+                                                ? Image.memory(
+                                                    expense.file!.bytes!,
+                                                    width: 64,
+                                                    height: 64,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : expense.isPdf
+                                                    ? Container(
+                                                        width: 64,
+                                                        height: 64,
+                                                        color: Colors.red.shade50,
+                                                        child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
+                                                      )
+                                                    : Container(
+                                                        width: 64,
+                                                        height: 64,
+                                                        color: Colors.grey.shade200,
+                                                        child: const Icon(Icons.insert_drive_file, size: 36),
+                                                      ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              expense.file!.name,
+                                              style: const TextStyle(fontSize: 12),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                            const SizedBox(width: 12),
+                            IconButton(
+                              icon: const Icon(Icons.delete_forever, color: Colors.red, size: 32),
+                              onPressed: () => _removeRow(i),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _addRow,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Another Expense'),
+          ),
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: () {
+                final validExpenses = _localExpenses
+                    .where((e) => e.name.trim().isNotEmpty && e.cost > 0)
+                    .toList();
+
+                widget.onExpensesChanged(validExpenses);
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'FINISHED LISTING',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
 }

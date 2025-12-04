@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../class/budget.dart';
 import 'error_boundary.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,7 +36,7 @@ class _ReviewStartCampaign3ScreenState extends State<Reviewstartcampaign3> {
 
   // Editable content
   late String _editableDescription;
-  List<Map<String, String>> _budgetItems = [];
+  List<Expense> _budgetItems = [];
   List<Map<String, String>> _offers = [];
   bool isLoading = false;
 
@@ -308,6 +309,8 @@ Widget _buildTeamMemberRow({
     //print(savedAutoOffers);
     //print(savedManualOffers);
     _offers = combinedList;
+    _budgetItems = widget.campaign.budgets;
+
     loadProfile();
   }
 
@@ -348,9 +351,9 @@ Widget _buildTeamMemberRow({
   void _showEditBottomSheet() {
     // Temporary variables for editing
     String tempDescription = _editableDescription;
-    List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
+    List<Expense> tempBudgetItems = List.from(_budgetItems);
     List<Map<String, String>> tempOffers = List.from(_offers);
-
+    print(tempBudgetItems);
     // Controllers for new items
     TextEditingController aboutController = TextEditingController(text: tempDescription);
 
@@ -474,7 +477,7 @@ Widget _buildTeamMemberRow({
                               // Budget items list
                               ...tempBudgetItems.asMap().entries.map((entry) {
                                 int index = entry.key;
-                                Map<String, String> item = entry.value;
+                                Expense item = entry.value;
                                 return Container(
                                   margin: EdgeInsets.only(bottom: 8),
                                   padding: EdgeInsets.all(12),
@@ -487,7 +490,7 @@ Widget _buildTeamMemberRow({
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          item['expense'] ?? '',
+                                          item.name ?? '',
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -496,7 +499,7 @@ Widget _buildTeamMemberRow({
                                       ),
                                       Expanded(
                                         child: Text(
-                                          item['cost'] ?? '',
+                                          item.cost.toString() ?? '',
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -762,7 +765,7 @@ Widget _buildTeamMemberRow({
     );
   }
 
-  void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> budgetItems) {
+  void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Expense> budgetItems) {
     TextEditingController expenseController = TextEditingController();
     TextEditingController costController = TextEditingController();
 
@@ -807,10 +810,10 @@ Widget _buildTeamMemberRow({
               onPressed: () {
                 if (expenseController.text.isNotEmpty && costController.text.isNotEmpty) {
                   setModalState(() {
-                    budgetItems.add({
-                      'expense': expenseController.text,
-                      'cost': "₦${costController.text}",
-                    });
+                    budgetItems.add( new Expense(
+                      name: expenseController.text,
+                      cost: double.parse(costController.text),
+                    ));
                   });
                   Navigator.pop(context);
                 }
@@ -928,7 +931,7 @@ Widget _buildTeamMemberRow({
                
                
                 ..._budgetItems.map((item) =>
-                  _buildBudgetItem(item['expense']!, item['cost']!)
+                  _buildBudgetItem(item.name!, item.cost.toString()!)
                 ),
                 if (_budgetItems.isEmpty)
                   Padding(

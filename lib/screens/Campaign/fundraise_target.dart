@@ -3,41 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/services.dart'; // Add this import for TextInputFormatter
+import '../../class/budget.dart';
 import 'reviewstartcampaign3.dart';
 import '../../class/campaign.dart';
 import '../../class/participants.dart';
 import '../../class/api_service.dart';
 import 'package:file_picker/file_picker.dart';
 
-
-class Expense {
-  String name;
-  double cost;
-  PlatformFile? file;
-
-  Expense({required this.name, required this.cost, this.file});
-
-  // Add copyWith for deep copying
-  Expense copyWith({
-    String? name,
-    double? cost,
-    PlatformFile? file,
-  }) {
-    return Expense(
-      name: name ?? this.name,
-      cost: cost ?? this.cost,
-      file: file ?? this.file,
-    );
-  }
-
-  bool get isImage =>
-      file?.extension?.toLowerCase() == 'jpg' ||
-      file?.extension?.toLowerCase() == 'jpeg' ||
-      file?.extension?.toLowerCase() == 'png' ||
-      file?.extension?.toLowerCase() == 'webp';
-
-  bool get isPdf => file?.extension?.toLowerCase() == 'pdf';
-}
 
 // Add this custom formatter class for comma-separated numbers
 class NumberTextInputFormatter extends TextInputFormatter {
@@ -776,7 +748,8 @@ if (result <= 0) {
     mainImage,
     result,
     selectedParticipants,
-    selectedImages
+    selectedImages,
+    expenses
   );
   Navigator.push(
     context,

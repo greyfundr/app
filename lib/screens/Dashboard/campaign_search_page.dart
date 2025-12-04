@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:greyfdr/class/budget.dart';
 import '../../class/api_service.dart';
 // import '../../class/jwt_helper.dart';
 import '../../class/campaign.dart';
@@ -58,6 +59,7 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
     List<Map<String, String>> offer = [];
     List<Map<String, String>> moffer = [];
     List<File> images = [];
+    List<Expense> expenses = [];
     List<Participant> participant = [];
 
     try {
@@ -112,6 +114,8 @@ class _CampaignSearchPageState extends State<CampaignSearchPage> {
               obj['goal_amount'].toDouble(),
               participant,
               images,
+              expenses
+
             );
             p.setCurrentAmount(obj['current_amount'].toDouble());
             p.setCreationTime(DateTime.parse(obj['created_at']));

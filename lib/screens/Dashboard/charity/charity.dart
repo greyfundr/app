@@ -29,6 +29,8 @@ class _CharityPageState extends State<CharityPage>
 
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
   bool isLoading = true;
   List<Map<String, dynamic>> _filteredCampaigns = [];
 
@@ -38,13 +40,33 @@ class _CharityPageState extends State<CharityPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _scrollController.addListener(_scrollListener);
     _loadCampaigns();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollListener() {
+    print("Scroll position: ${_scrollController.position.pixels}");
+    print("Max Scroll position: ${_scrollController.position.maxScrollExtent}");
+
+    if (_scrollController.position.atEdge) {
+      bool isTop = _scrollController.position.pixels == 0;
+      if (isTop) {
+        print('At the top');
+      } else {
+        print('At the bottom');
+      }
+    }
+
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent && !_isLoadingMore) {
+      print("Scroll position: End of page");// Trigger loading more users
+    }
   }
 
   Future<void> _loadCampaigns() async {
@@ -509,6 +531,7 @@ class _CharityPageState extends State<CharityPage>
 
   Widget _buildCampaignList(List<Map<String, dynamic>> campaigns) {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: campaigns.length,
 

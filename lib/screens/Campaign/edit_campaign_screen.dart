@@ -1,6 +1,7 @@
 // lib/screens/Campaign/edit_campaign_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:greyfdr/class/budget.dart';
 import 'error_boundary.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -18,7 +19,7 @@ class EditCampaignScreen extends StatefulWidget {
 class _EditCampaignScreenState extends State<EditCampaignScreen> {
   late Campaign _campaign;
   late String _editableDescription;
-  List<Map<String, String>> _budgetItems = [];
+  List<Expense> _budgetItems = [];
   List<Map<String, String>> _offers = [];
   int _selectedTabIndex = 0;
 
@@ -111,6 +112,7 @@ ImageProvider _getImageProvider(String? url) {
     _campaign = Campaign.from(widget.campaign);
     _editableDescription = _campaign.description;
     _offers = [..._campaign.savedAutoOffers, ..._campaign.savedManualOffers];
+    _budgetItems = widget.campaign.budgets;
     // Load budget items if saved elsewhere in your campaign
   }
 
@@ -344,7 +346,7 @@ ImageProvider _getImageProvider(String? url) {
 
   // BUDGET EDIT MODAL (Reused from your old code)
   void _editBudget() {
-  List<Map<String, String>> tempBudgetItems = List.from(_budgetItems);
+  List<Expense> tempBudgetItems = List.from(_budgetItems);
 
   showModalBottomSheet(
     context: context,
@@ -386,7 +388,7 @@ ImageProvider _getImageProvider(String? url) {
                   // Budget Items List
                   ...tempBudgetItems.asMap().entries.map((entry) {
                     int index = entry.key;
-                    Map<String, String> item = entry.value;
+                    Expense item = entry.value;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -400,13 +402,13 @@ ImageProvider _getImageProvider(String? url) {
                           Expanded(
                             flex: 3,
                             child: Text(
-                              item['expense'] ?? '',
+                              item.name ?? '',
                               style: GoogleFonts.inter(fontSize: 14.5),
                             ),
                           ),
                           Expanded(
                             child: Text(
-                              item['cost'] ?? '',
+                              item.cost.toString() ?? '',
                               style: GoogleFonts.inter(
                                 fontSize: 14.5,
                                 color: const Color.fromRGBO(0, 164, 175, 1),
@@ -472,7 +474,7 @@ ImageProvider _getImageProvider(String? url) {
   );
 }
 
-  void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Map<String, String>> budgetItems) {
+  void _showAddBudgetItemDialog(BuildContext context, StateSetter setModalState, List<Expense> budgetItems) {
     final expenseController = TextEditingController();
     final costController = TextEditingController();
     showDialog(
@@ -500,10 +502,10 @@ ImageProvider _getImageProvider(String? url) {
             onPressed: () {
               if (expenseController.text.isNotEmpty && costController.text.isNotEmpty) {
                 setModalState(() {
-                  budgetItems.add({
-                    'expense': expenseController.text,
-                    'cost': '₦${costController.text}',
-                  });
+                  budgetItems.add (new Expense(
+                    name: expenseController.text,
+                    cost: double.parse(costController.text),
+                  ));
                 });
                 Navigator.pop(context);
               }
@@ -740,8 +742,8 @@ ImageProvider _getImageProvider(String? url) {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(item['expense'] ?? '', style: GoogleFonts.inter(fontSize: 14)),
-                    Text(item['cost'] ?? '', style: GoogleFonts.inter(fontSize: 14, color: const Color.fromRGBO(0, 164, 175, 1))),
+                    Text(item.name ?? '', style: GoogleFonts.inter(fontSize: 14)),
+                    Text(item.cost.toString() ?? '', style: GoogleFonts.inter(fontSize: 14, color: const Color.fromRGBO(0, 164, 175, 1))),
                   ],
                 ),
               )),

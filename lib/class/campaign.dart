@@ -21,7 +21,7 @@ class Campaign {
   List<Map<String, String>> savedManualOffers = [];
   DateTime? created_at;
   double currentAmount = 0.0;
-  List<Budget> budgets = [];
+  List<Expense> budgets = [];
 
 
   // Old constructor (you were using this)
@@ -57,7 +57,7 @@ class Campaign {
 
   void setCurrentAmount(double currentAmount) => this.currentAmount = currentAmount;
 
-  void setCampaignDetails(String startDate, String endDate, File mainImage, double amount, List<Participant> participant, List<File> image,List<Budget> budget) {
+  void setCampaignDetails(String startDate, String endDate, File mainImage, double amount, List<Participant> participant, List<File> image,List<Expense> budget) {
     this.startDate = startDate;
     this.endDate = endDate;
     imageUrl = mainImage;
@@ -92,6 +92,7 @@ class Campaign {
     return {
       'name': title,
       'value': description,
+      'budgets' : budgets[0].toJson(),
       // Add more fields when sending to backend
     };
   }

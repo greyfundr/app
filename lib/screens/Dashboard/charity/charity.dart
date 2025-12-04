@@ -1,21 +1,17 @@
-import 'dart:io';
-
+// import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:greyfdr/screens/Dashboard/profile_screen.dart';
-// import '../../class/campaign.dart';
-// import '../Campaign/detailedcampaign.dart';
-// import 'notification_screen.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../Auth/login_screen.dart';
-// import '../../class/auth_service.dart';
-// import '../../class/jwt_helper.dart';
-// import 'editprofile.dart'; 
-// import 'homeprofile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../class/auth_service.dart';
+import '../../Auth/login_screen.dart';
+import '../../../class/jwt_helper.dart';
 import '../../../class/api_service.dart';
-import '../../../class/participants.dart';
-import '../../Campaign/campaigndetails.dart';
+import '../../Dashboard/homeprofile.dart';
 import '../../Campaign/detailedcampaign.dart';
 import '../../Dashboard/profile_screen.dart';
+import '../../Dashboard/notification_screen.dart';
+
 
 class CharityPage extends StatefulWidget {
   const CharityPage({Key? key}) : super(key: key);
@@ -24,132 +20,280 @@ class CharityPage extends StatefulWidget {
   State<CharityPage> createState() => _CharityPageState();
 }
 
+class ConcaveBottomClipper extends CustomClipper<Path> {
+  final double depth; // how deep the curve goes (30–60 looks perfect)
+
+  const ConcaveBottomClipper({this.depth = 10});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path()
+      ..moveTo(0, 0) // top-left
+      ..lineTo(size.width, 0) // top-right
+      ..lineTo(size.width, size.height - depth) // go down to right side before curve
+      ..quadraticBezierTo(
+        size.width * 0.75, size.height, // control point (pulls up)
+        size.width * 0.5, size.height - 0, // middle point (highest point of curve)
+      )
+      ..quadraticBezierTo(
+        size.width * 0.25, size.height, // control point
+        0, size.height - depth, // back to left side
+      )
+      ..close();
+
+    ;
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
 class _CharityPageState extends State<CharityPage>
-
-
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  bool isLoading = true;
-  List<Map<String, dynamic>> _filteredCampaigns = [];
+      bool _isHeaderCollapsed = false;
+    late TabController _tabController;
 
+
+     Map<String, dynamic>? user;
+  Map<String, dynamic>? wallet;
+  int _selectedIndex = 1; // Bills tab active
+  String selectedTab = 'Bill'; // Bill, Request, History
+
+
+  // List<Map<String, dynamic>> _filteredCampaigns = [];
+
+  List<Map<String, dynamic>> _allCampaigns = [];  // Full list from API
+List<Map<String, dynamic>> _displayedCampaigns = [];  // What user sees (starts with 5)
+
+bool _isLoadingMore = false;  // Flag to prevent multiple loads
+final int _batchSize = 5;  // Load 5 more each time (adjust as needed)
+
+late ScrollController _scrollController;  // To detect scroll position
+
+  
 
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _loadCampaigns();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCampaigns() async {
-    List<Map<String, String>> offer = [];
-    List<Map<String, String>> moffer = [];
-    List<File> images = [];
-    List<Participant> participant = [];
-
-    try {
-      setState(() => isLoading = true);
-
-      dynamic token = await ApiService().getCampaign();
+void initState() {
+  super.initState();
+  _tabController = TabController(length: 3, vsync: this);
+  _scrollController = ScrollController()..addListener(_onScroll);
+  _loadCampaigns();  // Load API data
+  loadProfile();
+}
 
 
-      // Add null check
-      if (token == null) {
-        print('API returned null');
-        setState(() => isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No campaigns available'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      }
 
-      // Check if token is a List before casting
-      if (token is! List) {
-        print('Unexpected data type: ${token.runtimeType}');
-        print('Data: $token');
-        setState(() => isLoading = false);
-        return;
-      }
-
-      setState(() {
-        _filteredCampaigns = token.cast<Map<String, dynamic>>();;
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading campaign: $e');
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+void loadProfile() async {
+    String? token = await AuthService().getToken();
+    if (token != null && !JWTHelper.isTokenExpired(token)) {
+      Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+      setState(() => user = userData['user']);
+      setState(() => wallet = userData['wallet']);
+      print("User ID: ${userData['user']}");
+      print("User ID: ${userData['wallet']}");
+    } else {
+      print("Token is expired or invalid");
     }
   }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userId');
+    await AuthService().logout();
+
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+   void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+    setState(() => _selectedIndex = index);
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+        break;
+      case 1:
+        // already on Bills
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeProfile()),
+        );
+        break;
+    }
+  }
+
+  //  void _showAddMoneyModal() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => const AddMoneyBottomSheet(),
+  //   );
+  // }
+
+
+
+  void _openSettingsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SettingsActivityPage(
+          user: user,
+          onLogout: logout,
+        ),
+      ),
+    );
+  }
+
+
+
+  @override
+void dispose() {
+  _scrollController.removeListener(_onScroll);
+  _scrollController.dispose();
+  _tabController.dispose();
+  super.dispose();
+}
+
+
+void _onScroll() {
+  // Check if scrolled near bottom (200px threshold for smoothness)
+  if (_scrollController.position.pixels >=
+      _scrollController.position.maxScrollExtent - 200 &&
+      !_isLoadingMore &&
+      _displayedCampaigns.length < _allCampaigns.length) {
+    _loadMoreCampaigns();
+  }
+}
+
+Future<void> _loadMoreCampaigns() async {
+  setState(() {
+    _isLoadingMore = true;
+  });
+
+  // Optional: Simulate API delay (remove if not needed)
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  if (!mounted) return;
+
+  final startIndex = _displayedCampaigns.length;
+  final endIndex = (startIndex + _batchSize).clamp(0, _allCampaigns.length);
+  final moreCampaigns = _allCampaigns.sublist(startIndex, endIndex);
+
+  setState(() {
+    _displayedCampaigns.addAll(moreCampaigns);
+    _isLoadingMore = false;
+  });
+}
+  
+
+  Future<void> _loadCampaigns() async {
+  try {
+    dynamic response = await ApiService().getCampaign();
+
+    if (!mounted) return;
+
+    if (response == null || response is! List) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No campaigns available'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final List<Map<String, dynamic>> campaigns = response.cast<Map<String, dynamic>>();
+
+    setState(() {
+      _allCampaigns = campaigns;
+      // Start with first batch (e.g., 5)
+      _displayedCampaigns = campaigns.take(_batchSize).toList();
+    });
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error loading campaigns: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return Scaffold(
-        body: const Center(
-          child:
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text('Loading Campaign...'),
-            ],
-
-        ),
-        )
-      );
-    }
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Column(
           children: [
-            // Header Section
             _buildHeader(),
-            // Categories Section
             _buildCategories(),
-            // Urgent Campaign Carousel
             _buildUrgentCampaigns(),
-            // Tabs
             _buildTabs(),
-            // Campaign List
+
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildCampaignList(_filteredCampaigns),
-                  _buildCampaignList(_getForYouCampaigns()),
-                  _buildCampaignList(_getFollowingCampaigns()),
-                ],
+  child: TabBarView(
+    controller: _tabController,
+    children: [
+      // 1. EXPLORE TAB → Lazy Loading (API data)
+      ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _displayedCampaigns.length + (_isLoadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= _displayedCampaigns.length) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D7377)),
+                ),
               ),
-            ),
+            );
+          }
+          return _buildCampaignCard(_displayedCampaigns[index]);
+        },
+      ),
+
+      // 2. FOR YOU TAB → Static data
+      _buildStaticCampaignList(_getForYouCampaigns()),
+
+      // 3. FOLLOWING TAB → Static data
+      _buildStaticCampaignList(_getFollowingCampaigns()),
+    ],
+  ),
+),
           ],
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
+
+
+  Widget _buildStaticCampaignList(List<Map<String, dynamic>> campaigns) {
+  return ListView.builder(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    itemCount: campaigns.length,
+    itemBuilder: (context, index) => _buildCampaignCard(campaigns[index]),
+  );
+}
 
   Widget _buildHeader() {
     return Container(
@@ -176,34 +320,7 @@ class _CharityPageState extends State<CharityPage>
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Row(
-                    children: [
-                      Text(
-                        'Bills',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      const Text(
-                        'Charity',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Text(
-                        'Lifestyle',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
+                 
                 ],
               ),
               Row(
@@ -250,10 +367,10 @@ class _CharityPageState extends State<CharityPage>
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    '234 th',
+                    '0',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -281,7 +398,7 @@ class _CharityPageState extends State<CharityPage>
                     '₦3.5',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -332,17 +449,7 @@ class _CharityPageState extends State<CharityPage>
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -507,37 +614,30 @@ class _CharityPageState extends State<CharityPage>
     );
   }
 
-  Widget _buildCampaignList(List<Map<String, dynamic>> campaigns) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: campaigns.length,
 
-      itemBuilder: (context, index) {
-
-        return _buildCampaignCard(campaigns[index]);
-      },
-    );
-  }
 
   Widget _buildCampaignCard(Map<String, dynamic> campaign) {
-    print(campaign['title']);
-    final currentAmount = campaign['current_amount'];
-    final amount = campaign['goal_amount'];
-    double progress = (currentAmount / amount) * 100;
+  final currentAmount = campaign['current_amount'];
+  final amount = campaign['goal_amount'];
+  double progress = (currentAmount / amount) * 100;
 
-    final startdate = campaign['start_date'];
-    final enddate = campaign['end_date'];
-    DateTime specificDate = DateTime.parse(startdate); // Example: Nov 26, 2025, 10:30 AM
-    DateTime specificendDate = DateTime.parse(enddate); // Example: Nov 26, 2025, 10:30 AM
+  final startdate = campaign['start_date'];
+  final enddate = campaign['end_date'];
+  DateTime specificDate = DateTime.parse(startdate);
+  DateTime specificendDate = DateTime.parse(enddate);
+  int hoursDifference = specificendDate.difference(specificDate).inDays;
 
-
-    // Calculate the duration between the two dates
-    Duration difference = specificendDate.difference(specificDate);
-
-    // Get the difference in hours
-    int hoursDifference = difference.inDays;
-
-    return Container(
+  return InkWell(  // ← This makes the WHOLE card tappable with ripple effect
+    borderRadius: BorderRadius.circular(20),
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CampaignDetailPage(id: campaign['id'].toString()),
+        ),
+      );
+    },
+    child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -553,12 +653,11 @@ class _CharityPageState extends State<CharityPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
+          // Image with "Days left" badge
           Stack(
             children: [
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.network(
                   "https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${campaign['image']}",
                   height: 200,
@@ -570,23 +669,19 @@ class _CharityPageState extends State<CharityPage>
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.access_time,
-                          color: Colors.white, size: 12),
+                      const Icon(Icons.access_time, color: Colors.white, size: 12),
                       const SizedBox(width: 4),
                       Text(
                         '$hoursDifference Days left',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 11),
                       ),
                     ],
                   ),
@@ -594,6 +689,8 @@ class _CharityPageState extends State<CharityPage>
               ),
             ],
           ),
+
+          // Content below image
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -601,12 +698,10 @@ class _CharityPageState extends State<CharityPage>
               children: [
                 Text(
                   campaign['title'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -617,11 +712,7 @@ class _CharityPageState extends State<CharityPage>
                           children: [
                             TextSpan(
                               text: '₦ ${currentAmount}',
-                              style:
-                                  const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                             ),
                             TextSpan(
                               text: ' raised of ₦ ${amount}',
@@ -633,63 +724,47 @@ class _CharityPageState extends State<CharityPage>
                     ),
                     ElevatedButton(
                       onPressed: () {
+                        // Same navigation as tapping the card
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CampaignDetails(
-                                id: campaign['id'].toString()
-                            ),
+                            builder: (_) => CampaignDetailPage(id: campaign['id'].toString()),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0D7377),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       ),
-                      child: const Text(
-                        'Donate',
-                        style: TextStyle(fontSize: 12, color: Colors.white),
-                      ),
+                      child: const Text('View', style: TextStyle(fontSize: 12, color: Colors.white)),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: progress / 100,
                     backgroundColor: Colors.grey[200],
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFF0D7377),
-                    ),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0D7377)),
                     minHeight: 6,
                   ),
                 ),
+
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Text('👥', style: TextStyle(fontSize: 16)),
+                    const Text('People', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 4),
-                    Text(
-                      '${campaign['donors']} Donors',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
+                    Text('${campaign['donors']} Donors', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                     const SizedBox(width: 16),
-                    const Text('⏱️', style: TextStyle(fontSize: 16)),
+                    const Text('Trophy', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 4),
-                    Text(
-                      '${campaign['champions']} Champions',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
+                    Text('${campaign['champions']} Champions', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                     const Spacer(),
-                    Text(
-                      '$progress %',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                    ),
+                    Text('$progress %', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                   ],
                 ),
               ],
@@ -697,8 +772,16 @@ class _CharityPageState extends State<CharityPage>
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+
+
+
+
+
+  
 
   Widget _buildBottomNav() {
     return Container(
@@ -746,40 +829,40 @@ class _CharityPageState extends State<CharityPage>
     );
   }
 
-  List<Map<String, dynamic>> _getExploreCampaigns() {
-    return [
-      {
-        'title': 'Borno State Flood Victims this year 2024 October',
-        'image': 'https://picsum.photos/400/300?random=1',
-        'raised': '347,000',
-        'goal': '4,000,000',
-        'donors': 100,
-        'champions': 15,
-        'daysLeft': 12,
-        'progress': 70,
-      },
-      {
-        'title': 'Help fight Cancer treatment for my sister',
-        'image': 'https://picsum.photos/400/300?random=2',
-        'raised': '125,000',
-        'goal': '500,000',
-        'donors': 45,
-        'champions': 8,
-        'daysLeft': 20,
-        'progress': 25,
-      },
-      {
-        'title': 'Build a School in Rural Community',
-        'image': 'https://picsum.photos/400/300?random=3',
-        'raised': '890,000',
-        'goal': '2,000,000',
-        'donors': 156,
-        'champions': 22,
-        'daysLeft': 8,
-        'progress': 45,
-      },
-    ];
-  }
+  // List<Map<String, dynamic>> _getExploreCampaigns() {
+  //   return [
+  //     {
+  //       'title': 'Borno State Flood Victims this year 2024 October',
+  //       'image': 'https://picsum.photos/400/300?random=1',
+  //       'raised': '347,000',
+  //       'goal': '4,000,000',
+  //       'donors': 100,
+  //       'champions': 15,
+  //       'daysLeft': 12,
+  //       'progress': 70,
+  //     },
+  //     {
+  //       'title': 'Help fight Cancer treatment for my sister',
+  //       'image': 'https://picsum.photos/400/300?random=2',
+  //       'raised': '125,000',
+  //       'goal': '500,000',
+  //       'donors': 45,
+  //       'champions': 8,
+  //       'daysLeft': 20,
+  //       'progress': 25,
+  //     },
+  //     {
+  //       'title': 'Build a School in Rural Community',
+  //       'image': 'https://picsum.photos/400/300?random=3',
+  //       'raised': '890,000',
+  //       'goal': '2,000,000',
+  //       'donors': 156,
+  //       'champions': 22,
+  //       'daysLeft': 8,
+  //       'progress': 45,
+  //     },
+  //   ];
+  // }
 
   List<Map<String, dynamic>> _getForYouCampaigns() {
     return [

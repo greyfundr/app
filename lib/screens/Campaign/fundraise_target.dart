@@ -79,6 +79,8 @@ DateTime? selectedEndDate;
 
   List<Expense> expenses = [];   // ← Add this
 
+
+
   @override
   void initState() {
     super.initState();
@@ -1733,6 +1735,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet> {
   late List<Expense> _localExpenses;
   final List<TextEditingController> _nameControllers = [];
   final List<TextEditingController> _costControllers = [];
+  List<PlatformFile> _imagememory = [];
 
   @override
   void initState() {
@@ -1810,6 +1813,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet> {
   void _removeRow(int index) {
     setState(() {
       _localExpenses.removeAt(index);
+      _imagememory.removeAt(index);
       _nameControllers[index].dispose();
       _costControllers[index].dispose();
       _nameControllers.removeAt(index);
@@ -1845,8 +1849,15 @@ Future<void> _pickFile(int index) async {
         return;
       }
 
+        // Create a File object using the path of the PlatformFile
+        File files = File(file.path!); // Use ! for null safety assertion if confident path is not null
+
+        final image = await ApiService().uploadBudgetImage(files);
+
+
       setState(() {
-        _localExpenses[index].file = file;
+        _localExpenses[index].file = image;
+        _imagememory.insert(index,file);
       });
     }
   } catch (e) {
@@ -1857,6 +1868,29 @@ Future<void> _pickFile(int index) async {
   
 @override
   Widget build(BuildContext context) {
+
+  bool  isImage (file) {
+     bool trueimage = false;
+    if(
+        file?.extension?.toLowerCase() == 'jpg' ||
+        file?.extension?.toLowerCase() == 'jpeg' ||
+        file?.extension?.toLowerCase() == 'png' ||
+        file?.extension?.toLowerCase() == 'webp')
+      {
+        trueimage = true;
+      }
+
+    return trueimage;
+  }
+
+  bool isPdf(file) {
+    bool trueimage = false;
+    if(file?.extension?.toLowerCase() == 'pdf') {
+      trueimage = true;
+    }
+    return trueimage;
+  }
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -1892,6 +1926,10 @@ Future<void> _pickFile(int index) async {
               itemCount: _localExpenses.length,
               itemBuilder: (ctx, i) {
                 final expense = _localExpenses[i];
+                var image = null;
+                if (_imagememory.isNotEmpty && i < _imagememory.length) {
+                   image = _imagememory[i];
+                }
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 8),
                   elevation: 2,
@@ -1938,57 +1976,57 @@ Future<void> _pickFile(int index) async {
                             Expanded(
                               child: expense.file == null
                                   ? OutlinedButton.icon(
-                                      onPressed: () => _pickFile(i),
-                                      icon: const Icon(Icons.upload_file, size: 18),
-                                      label: const Text('Upload Proof'),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 14),
-                                      ),
-                                    )
+                                onPressed: () => _pickFile(i),
+                                icon: const Icon(Icons.upload_file, size: 18),
+                                label: const Text('Upload Proof'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                              )
                                   : Container(
-                                      height: 80,
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey.shade300),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(6),
-                                            child: expense.isImage && expense.file!.bytes != null
-                                                ? Image.memory(
-                                                    expense.file!.bytes!,
-                                                    width: 64,
-                                                    height: 64,
-                                                    fit: BoxFit.cover,
-                                                  )
-                                                : expense.isPdf
-                                                    ? Container(
-                                                        width: 64,
-                                                        height: 64,
-                                                        color: Colors.red.shade50,
-                                                        child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
-                                                      )
-                                                    : Container(
-                                                        width: 64,
-                                                        height: 64,
-                                                        color: Colors.grey.shade200,
-                                                        child: const Icon(Icons.insert_drive_file, size: 36),
-                                                      ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              expense.file!.name,
-                                              style: const TextStyle(fontSize: 12),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
+                                height: 80,
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: isImage(image) && image.bytes != null
+                                          ? Image.memory(
+                                        image.bytes!,
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                      )
+                                          : isPdf(image)
+                                          ? Container(
+                                        width: 64,
+                                        height: 64,
+                                        color: Colors.red.shade50,
+                                        child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
+                                      )
+                                          : Container(
+                                        width: 64,
+                                        height: 64,
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(Icons.insert_drive_file, size: 36),
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        expense.file!,
+                                        style: const TextStyle(fontSize: 12),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             IconButton(
@@ -2039,4 +2077,5 @@ Future<void> _pickFile(int index) async {
       ),
     );
   }
-}
+  }
+

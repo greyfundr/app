@@ -56,6 +56,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   String occupation = '';
   late List< dynamic> moffer = [];
   late List< dynamic> aoffer = [];
+  late List< dynamic> expenses = [];
 
   late bool campaignLive = true;
 
@@ -121,6 +122,7 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
            moffer = campaign['moffer'];
            aoffer = campaign['aoffer'];
+           expenses = campaign['budget'];
           //final dataArray = JSON.parse(storedString);
           //List<dynamic> combinedList = [...muoffer, ...amoffer];
           print(moffer);

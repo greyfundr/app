@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 class Expense {
   String name;
   double cost;
-  PlatformFile? file;
+  String? file;
 
   Expense({required this.name, required this.cost, this.file});
 
@@ -12,7 +12,7 @@ class Expense {
   Expense copyWith({
     String? name,
     double? cost,
-    PlatformFile? file,
+    String? file,
   }) {
     return Expense(
       name: name ?? this.name,
@@ -21,18 +21,13 @@ class Expense {
     );
   }
 
-  bool get isImage =>
-      file?.extension?.toLowerCase() == 'jpg' ||
-          file?.extension?.toLowerCase() == 'jpeg' ||
-          file?.extension?.toLowerCase() == 'png' ||
-          file?.extension?.toLowerCase() == 'webp';
 
-  bool get isPdf => file?.extension?.toLowerCase() == 'pdf';
 
   // Convert object to a Map
   Map<String, dynamic> toJson() => {
     "name": name,
     "cost": cost,
+    "file": file,
   };
 
   factory Expense.fromJson(Map<String, dynamic> json) => Expense(
@@ -45,7 +40,7 @@ class Expense {
     return Expense(
       name: map['name']!,
       cost: double.parse(map['amount']!), // Convert string to double
-
+      file: map['file']!,
     );
   }
 

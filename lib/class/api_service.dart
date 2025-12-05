@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'package:greyfdr/class/budget.dart';
 import 'package:greyfdr/class/user.dart';
 import 'package:greyfdr/class/wallet.dart';
 
@@ -75,6 +76,49 @@ class ApiService {
     return category;
   }
 
+  Future<dynamic> uploadBudgetImage(File imageFile) async {
+    String fileName = imageFile.path.split('/').last;
+    String fileExt = fileName.split('.').last;
+    String type = '';
+    if(fileExt == 'pdf')
+      {
+        type = 'application';
+      }
+    else
+      {
+        type = 'image';
+      }
+
+
+    FormData formData = FormData.fromMap({
+      "image": await MultipartFile.fromFile(
+        imageFile.path,
+        filename: fileName,
+        contentType: MediaType(type, fileExt), // e.g., MediaType("image", "jpeg")
+      ),
+    });
+
+    try {
+
+
+      final response = await _dio.post(
+        'http://localhost:3000/campaign/uploadBudget',
+          data: formData
+      );
+
+      if (response.statusCode == 200) {
+        dynamic category = response.data['id'];
+
+        print(category);
+
+        return category;
+      }
+    } catch (e) {
+      print("Login failed: $e");
+    }
+
+  }
+
   Future<dynamic> createCampaign(Campaign campaign, int id) async {
     List<MultipartFile> multipartImages = [];
     Response response;
@@ -98,6 +142,8 @@ class ApiService {
         );
       }
 
+
+
       print(campaign.startDate);
       print(campaign.endDate);
       FormData formData = FormData.fromMap({
@@ -110,6 +156,7 @@ class ApiService {
         'amount': campaign.amount.toString(),
         'id': id,
         'stakeholders': json.encode(campaign.participants),
+        'budget': json.encode(campaign.budgets),
         'images': campaign.imageUrl!.path,
         'moffers': json.encode(campaign.savedManualOffers),
         'aoffers': json.encode(campaign.savedAutoOffers),
@@ -117,7 +164,7 @@ class ApiService {
       });
 
       Response response = await dio.post(
-        "$baseUrl/campaign/create",
+        "http://localhost:3000/campaign/create",
         data: formData,
       );
       return response;
@@ -129,10 +176,9 @@ class ApiService {
 
   Future<dynamic> updateUser(users) async {
     dynamic user = users;
-    print(users);
     File profile = File(user['profile_pic']);
     Response response;
-    print(users);
+
     Dio dio = Dio();
     try {
 
@@ -161,9 +207,9 @@ class ApiService {
 
       });
       int id = user['id'];
-      print(id);
+
       Response response = await dio.put(
-        "$baseUrl/users/updateUser/$id",
+        "http://localhost:3000/users/updateUser/$id",
         data: formData,
       );
 

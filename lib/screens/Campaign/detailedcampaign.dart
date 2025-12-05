@@ -3,6 +3,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../class/api_service.dart';
+import '../../class/budget.dart';
 import '../../class/jwt_helper.dart';
 import '../../class/auth_service.dart';
 import '../../main.dart';
@@ -57,6 +58,9 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
   late List< dynamic> moffer = [];
   late List< dynamic> aoffer = [];
   late List< dynamic> expenses = [];
+
+  double totalExpense = 0.0;
+  int documentCount = 0;
 
   late bool campaignLive = true;
 
@@ -122,11 +126,24 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
 
            moffer = campaign['moffer'];
            aoffer = campaign['aoffer'];
-           expenses = campaign['budget'];
-          //final dataArray = JSON.parse(storedString);
-          //List<dynamic> combinedList = [...muoffer, ...amoffer];
-          print(moffer);
-          print(aoffer);
+           expenses = json.decode(campaign['budget']);
+
+          print(expenses);
+
+          for(final item in expenses)
+            {
+              totalExpense = totalExpense + item['cost'];
+
+              if(item['file']  == null)
+                {
+
+                }
+              else
+                {
+                  documentCount++;
+                }
+
+            }
 
 
           donations=donors.cast<Map<String, dynamic>>();
@@ -334,7 +351,21 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
     );
   }
 
+  List<Expanded> _buildExpandedItems(item, cost, file) {
+    return [
+
+          Expanded(flex: 2, child: Text( item)),
+          Expanded(child: Text("₦ $cost")),
+          Expanded(
+              child: Text("View docs",
+                  style: TextStyle(color: Colors.teal))),
+
+
+    ];
+  }
+
   Widget _buildExpenditureContent() {
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -358,98 +389,33 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
               ),
             ],
           ),
+
           const Divider(),
-          Row(
-            children: const [
-              Expanded(flex: 2, child: Text("1. Vedic Hospital Bill")),
-              Expanded(child: Text("₦3,458,000")),
-              Expanded(
-                  child: Text("View 2 docs",
-                      style: TextStyle(color: Colors.teal))),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: const [
-              Expanded(flex: 2, child: Text("2. Transportation")),
-              Expanded(child: Text("₦458,000")),
-              Expanded(
-                  child: Text("No docs", style: TextStyle(color: Colors.grey))),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: const [
-              Expanded(flex: 2, child: Text("3. Feeding and hygiene")),
-              Expanded(child: Text("₦1,458,000")),
-              Expanded(
-                  child: Text("View 4 docs",
-                      style: TextStyle(color: Colors.teal))),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(flex: 2, child: Text("4. Lab Tests")),
-              const Expanded(child: Text("₦800,000")),
-              Expanded(
-                child: Row(
-                  children: [
-                    Image.asset('assets/images/doc1.png',
-                        height: 40, width: 30, fit: BoxFit.cover),
-                    const SizedBox(width: 4),
-                    Image.asset('assets/images/doc2.png',
-                        height: 40, width: 30, fit: BoxFit.cover),
-                    const SizedBox(width: 4),
-                    Image.asset('assets/images/doc3.png',
-                        height: 40, width: 30, fit: BoxFit.cover),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Through the surgery we will be doing 20 lab tests at ₦40,000 each.",
-            style: TextStyle(color: Colors.grey, fontSize: 13),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
-                    borderRadius: BorderRadius.circular(8)),
-                child: const Text("Tags",
-                    style: TextStyle(color: Colors.teal, fontSize: 13)),
-              ),
-              const SizedBox(width: 8),
-              Image.asset('assets/images/doc1.png',
-                  height: 40, width: 30, fit: BoxFit.cover),
-              const SizedBox(width: 4),
-              Image.asset('assets/images/doc2.png',
-                  height: 40, width: 30, fit: BoxFit.cover),
-              const SizedBox(width: 4),
-              Image.asset('assets/images/doc3.png',
-                  height: 40, width: 30, fit: BoxFit.cover),
-            ],
-          ),
+
+          for (final item in expenses)
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+
+
+                  ..._buildExpandedItems(item['name'],item['cost'],item['file'])
+                ]
+            ),
+
           const SizedBox(height: 20),
           const Divider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text("Total Estimate =",
+            children: [
+              const Text("Total Estimate =",
                   style: TextStyle(fontWeight: FontWeight.bold)),
-              Text("₦6,458,000", style: TextStyle(fontWeight: FontWeight.bold)),
-              Text("7 docs", style: TextStyle(color: Colors.teal)),
+              Text('$totalExpense', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("$documentCount docs", style: const TextStyle(color: Colors.teal)),
             ],
           ),
         ],
       ),
+
     );
   }
 
@@ -814,8 +780,8 @@ class _CampaignDetailPageState extends State<CampaignDetailPage> {
                     CircleAvatar(
                       backgroundImage: profile.isNotEmpty &&
                           profile.startsWith('http')
-                          ? NetworkImage(profile) as ImageProvider
-                          : AssetImage(profile),
+                          ? NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/$profile') as ImageProvider
+                          : NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/$profile'),
                       radius: 22,
                     ),
                     const SizedBox(width: 12),

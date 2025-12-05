@@ -9,7 +9,6 @@ import '../Auth/login_screen.dart';
 import '../../class/auth_service.dart';
 import '../../class/jwt_helper.dart';
 import 'editprofile.dart'; 
-import 'charity/chart.dart';
 import 'package:intl/intl.dart';
 import '../create/createnew.dart';
 import 'homeprofile.dart';
@@ -222,14 +221,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
                         _buildFeatureCard(
                             'Lifestyle', 'assets/images/lifestyle.png', null),
                         _buildFeatureCard(
-                            'Invoices', 'assets/images/invoices.png', () {
-                               Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const CharityScreen()),
-                          );
-                              
-  }),
+                            'Invoices', 'assets/images/invoices.png', null),
                         
                         _buildFeatureCard('Create New',
                             'assets/images/create.png', () {
@@ -245,7 +237,7 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CharityPage()),
+                                builder: (_) => const CharityScreen()),
                           );
                         }),
                       ],

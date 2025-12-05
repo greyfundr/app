@@ -54,10 +54,13 @@ class _CharityScreenState extends State<CharityScreen> {
   
   Map<String, dynamic>? user;
   Map<String, dynamic>? wallet;
+  String profile = '';
   int _selectedIndex = 1; // Bills tab active
   String selectedTab = 'Explore'; // Explore, For You, Following
-
-  
+  List<Map<String, dynamic>> _allCampaigns = [];
+  int pageNumber = 1;
+  late ScrollController _scrollController;
+  bool _isLoadingMore = false;  // Flag to prevent multiple loads
 
 
   Widget _getTabContent() {
@@ -73,51 +76,34 @@ class _CharityScreenState extends State<CharityScreen> {
   }
 }
 
+  void _onScroll() {
+    // Check if scrolled near bottom (200px threshold for smoothness)
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200 && !_isLoadingMore) {
+      //_loadMoreCampaigns();
+    }
+  }
+
 
 
 Widget _buildExploreTab() {
-  return ListView(
+  return ListView.builder(
+    controller: _scrollController,
     padding: const EdgeInsets.symmetric(horizontal: 16),
-    // scrollDirection: Axis.horizontal,
-    children: [
-      _buildCampaignCard(
-        title: "Help fight Cancer treatment for my sister",
-        timeLeft: "12 Days left",
-        amountPaid: "₦24,000",
-        totalAmount: "₦50,000",
-        progress: 0.48,
-        remainingAmount: "₦26,000.00",
-        splits: "25 Splits",
-        champions: "5 Champions",
-        backers: "3 Backers",
-        progressPercent: "48%",
-      ),
-      _buildCampaignCard(
-        title: "Support Education for Orphans in Lagos",
-        timeLeft: "8 Days left",
-        amountPaid: "₦180,000",
-        totalAmount: "₦500,000",
-        progress: 0.36,
-        remainingAmount: "₦320,000.00",
-        splits: "42 Splits",
-        champions: "12 Champions",
-        backers: "8 Backers",
-        progressPercent: "36%",
-      ),
-      _buildCampaignCard(
-        title: "Medical Emergency: Baby Needs Heart Surgery",
-        timeLeft: "3 Days left",
-        amountPaid: "₦2,100,000",
-        totalAmount: "₦5,000,000",
-        progress: 0.42,
-        remainingAmount: "₦2,900,000.00",
-        splits: "89 Splits",
-        champions: "21 Champions",
-        backers: "15 Backers",
-        progressPercent: "42%",
-      ),
-      // Add more _buildCampaignCard() calls as needed for real data
-    ],
+    itemCount: _allCampaigns.length + (_isLoadingMore ? 1 : 0),
+    itemBuilder: (context, index) {
+      if (index >= _allCampaigns.length) {
+        return const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D7377)),
+            ),
+          ),
+        );
+      }
+      return _buildCampaignCard(_allCampaigns[index]);
+    },
   );
 }
 
@@ -193,6 +179,15 @@ Widget _buildFollowingTab() {
   void initState() {
     super.initState();
     loadProfile();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    _loadCampaigns();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
      String formatAmount(dynamic amount) {
@@ -209,10 +204,46 @@ final formatter = NumberFormat('#,##0.00'); // comma + 2 decimal places
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
       setState(() => user = userData['user']);
       setState(() => wallet = userData['wallet']);
+      setState(() => profile = userData['user']['profile_pic']);
       print("User ID: ${userData['user']}");
       print("User ID: ${userData['wallet']}");
+      print(profile);
     } else {
       print("Token is expired or invalid");
+    }
+  }
+
+  Future<void> _loadCampaigns() async {
+    try {
+      dynamic response = await ApiService().getCampaign();
+
+      if (!mounted) return;
+
+      if (response == null || response is! List) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No campaigns available'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final List<Map<String, dynamic>> campaigns = response.cast<Map<String, dynamic>>();
+
+      setState(() {
+        _allCampaigns = campaigns;
+        // Start with first batch (e.g., 5)
+
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading campaigns: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -320,7 +351,7 @@ GestureDetector(
                         children: [
                           CircleAvatar(
                             radius: 23,
-                            backgroundImage: const AssetImage('assets/images/personal.png'),
+                            backgroundImage: NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/${user?['profile_pic']}'),
                           ),
                           const SizedBox(width: 12),
                           Column(
@@ -784,31 +815,30 @@ AnimatedOpacity(
     );
   }
 
-  Widget _buildCampaignCard({
-    required String title,
-    required String timeLeft,
-    required String amountPaid,
-    required String totalAmount,
-    required double progress,
-    required String remainingAmount,
-    required String splits,
-    required String champions,
-    required String backers,
-    required String progressPercent,
-  }) {
+  Widget _buildCampaignCard(Map<String, dynamic> campaign) {
+
+    final startdate = campaign['start_date'];
+    final enddate = campaign['end_date'];
+    DateTime specificDate = DateTime.parse(startdate);
+    DateTime specificendDate = DateTime.parse(enddate);
+    int hoursDifference = specificendDate.difference(specificDate).inDays;
+    final currentAmount = campaign['current_amount'];
+    final amount = campaign['goal_amount'];
+    String image = campaign['image'];
+    double progress = (currentAmount / amount) * 100;
+
     return Container(
+
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          )
-        ],
+
+        image: DecorationImage(
+          image: NetworkImage('https://pub-bcb5a51a1259483e892a2c2993882380.r2.dev/$image'), // Path to your image asset
+
+          fit: BoxFit.cover, // Adjusts how the image fits within the container
+        ),
+
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -825,7 +855,7 @@ AnimatedOpacity(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      campaign['title'],
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -837,7 +867,7 @@ AnimatedOpacity(
                         Icon(Icons.access_time, size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
-                          timeLeft,
+                          hoursDifference.toString(),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 11,
@@ -867,7 +897,7 @@ AnimatedOpacity(
           ),
           const SizedBox(height: 12),
           Text(
-            "$amountPaid paid of $totalAmount",
+            "$currentAmount paid of $amount",
             style: TextStyle(
               color: Colors.grey[700],
               fontSize: 12,
@@ -891,7 +921,7 @@ AnimatedOpacity(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 4),
                     child: Text(
-                      progressPercent,
+                      progress.toString(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 8,
@@ -912,7 +942,7 @@ AnimatedOpacity(
                   Icon(Icons.people_outline, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    splits,
+                    campaign['title'],
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 11,
@@ -922,7 +952,7 @@ AnimatedOpacity(
                   Icon(Icons.emoji_events_outlined, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    champions,
+                    campaign['champions'].toString(),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 11,
@@ -932,7 +962,7 @@ AnimatedOpacity(
                   Icon(Icons.favorite_outline, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    backers,
+                    campaign['host'].toString(),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 11,
@@ -941,7 +971,7 @@ AnimatedOpacity(
                 ],
               ),
               Text(
-                remainingAmount,
+                campaign['donors'].toString(),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

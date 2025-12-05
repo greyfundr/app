@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:greyfdr/screens/Auth/pin_screen.dart';
+// import 'package:greyfdr/screens/Auth/pin_screen.dart';
 import '../../class/api_service.dart';
 import '../../class/jwt_helper.dart';
+import '../../utils/custom_message_modal.dart';        // ← Your modal
 import '../../class/user.dart';
 import '../../class/wallet.dart';
 import 'check.dart';
 import 'register_screen.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../class/auth_service.dart';
-import '../Dashboard/profile_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import '../Dashboard/profile_screen.dart';               // ← AuthWrapper is here
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,14 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
   static final emailController = TextEditingController();
   static final passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-  bool _isLoading = false; // Added loading state
+  bool _isLoading = false;
   late User user;
   late Wallet userWallet;
 
-  void loadUser() async {
+  // ← CORRECT PLACE: Outside build()
+  Future<void> loadUser() async {
     String? token = await AuthService().getToken();
     if (token != null && !JWTHelper.isTokenExpired(token)) {
       Map<String, dynamic> userData = JWTHelper.decodeToken(token);
+
       user = User(
         id: userData['user']["id"],
         first_name: userData['user']["first_name"],
@@ -38,108 +41,86 @@ class _LoginScreenState extends State<LoginScreen> {
         profile_pic: userData['user']["profile_pic"],
         username: userData['user']["username"],
         occupation: userData['user']["occupation"],
-          );
-
-      String balance =userData['wallet']["balance"];
+      );
 
       userWallet = Wallet(
-          id: userData['wallet']["id"],
-          balance: double.parse(balance),
-          incoming_balance: double.parse(userData['wallet']["incoming_balance"]),
-          balance_owed: double.parse(userData['wallet']["balance_owed"]),
-
+        id: userData['wallet']["id"],
+        balance: double.parse(userData['wallet']["balance"].toString()),
+        incoming_balance: double.parse(userData['wallet']["incoming_balance"].toString()),
+        balance_owed: double.parse(userData['wallet']["balance_owed"].toString()),
       );
 
       String userString = jsonEncode(user.toJson());
       String walletString = jsonEncode(userWallet.toJson());
+
       await AuthService().saveUserToken(userString);
       await AuthService().saveWalletToken(walletString);
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) {
-              Navigator.of(context).pop(); // Close the dialog
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const AuthWrapper()),
-              );
-            }
-          });
-          return const AlertDialog(
-            title: Text('Login Successful'),
-            content: Text('You have logged in successfully!'),
-          );
-        },
-      );
+
+      // ← No AlertDialog anymore! Success message shown in login()
     } else {
       print("Token is expired or invalid");
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    void _showErrorDialog(BuildContext context, String message) {
-      showDialog(
+  // ← CORRECT PLACE: Outside build()
+  Future<void> login() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final email = emailController.text.trim();
+      final password = passwordController.text;
+
+      if (email.isEmpty || password.isEmpty) {
+        CustomMessageModal.show(
+          context: context,
+          message: "Please fill in all fields",
+          isSuccess: false,
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      dynamic token = await ApiService().login(email, password);
+
+      setState(() => _isLoading = false);
+
+      if (token != false && token != null) {
+        await loadUser();
+
+        CustomMessageModal.show(
+          context: context,
+          message: "Welcome back! Login successful",
+          isSuccess: true,
+          duration: const Duration(seconds: 2),
+        );
+
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AuthWrapper()),
+            );
+          }
+        });
+      } else {
+        CustomMessageModal.show(
+          context: context,
+          message: "Invalid email or password",
+          isSuccess: false,
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      CustomMessageModal.show(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Login Error'),
-            content: Text(message),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
+        message: "Network error. Please try again.",
+        isSuccess: false,
       );
     }
+  }
 
-    void login() async {
-      // Start loading
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        SharedPreferences.setMockInitialValues({});
-        final email = emailController.text;
-        final password = passwordController.text;
-
-        dynamic token = await ApiService().login(email,password);
-
-        // Stop loading
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (token) {
-          // Show success dialog that auto-dismisses after 1 second and navigates
-          loadUser();
-
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login Error!'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (e) {
-        // Stop loading on error
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorDialog(context, 'An error occurred. Please try again.');
-      }
-    }
-
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
@@ -154,13 +135,10 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Top section
               Expanded(
                 flex: 8,
                 child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
                   color: Colors.transparent,
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -178,7 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Bottom section with curved background
               Expanded(
                 flex: 12,
                 child: ClipPath(
@@ -192,125 +169,71 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 10),
-                          const Text(
-                            "Welcome",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          const Text("Welcome", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          const Text(
-                            "Log in to GreyFundr to continue",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          const Text("Log in to GreyFundr to continue", style: TextStyle(fontSize: 14, color: Colors.grey)),
                           const SizedBox(height: 20),
 
-                          // Email / Phone
+                          // Email Field
                           TextField(
                             controller: emailController,
-                            enabled: !_isLoading, // Disable when loading
+                            enabled: !_isLoading,
                             decoration: InputDecoration(
                               labelText: "Enter Email or Phone",
                               labelStyle: const TextStyle(color: Colors.grey),
                               suffixIcon: const Icon(Icons.email, color: Colors.grey),
                               filled: true,
                               fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                             ),
                           ),
                           const SizedBox(height: 15),
 
-                          // Password
+                          // Password Field
                           TextField(
                             controller: passwordController,
-                            enabled: !_isLoading, // Disable when loading
+                            enabled: !_isLoading,
                             obscureText: !_isPasswordVisible,
                             decoration: InputDecoration(
                               labelText: "Password",
                               labelStyle: const TextStyle(color: Colors.grey),
                               suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordVisible = !_isPasswordVisible;
-                                  });
-                                },
+                                icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                               ),
                               filled: true,
                               fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                             ),
                           ),
                           const SizedBox(height: 10),
 
-                          // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: _isLoading ? null : () {}, // Disable when loading
-                              child: const Text(
-                                "Forgot Password?",
-                                style: TextStyle(color: Colors.red),
-                              ),
+                              onPressed: _isLoading ? null : () {},
+                              child: const Text("Forgot Password?", style: TextStyle(color: Colors.red)),
                             ),
                           ),
                           const SizedBox(height: 10),
 
-                          // Login Button with Loading Spinner
+                          // Login Button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00796B),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
-                              onPressed: _isLoading ? null : login, // Disable when loading
+                              onPressed: _isLoading ? null : login,
                               child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : const Text(
-                                      "Log In",
-                                      style: TextStyle(
-                                          fontSize: 16, color: Colors.white),
-                                    ),
+                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                  : const Text("Log In", style: TextStyle(fontSize: 16, color: Colors.white)),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -319,26 +242,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                "Don't have an account? ",
-                                style: TextStyle(color: Colors.grey),
-                              ),
+                              const Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
                               GestureDetector(
-                                onTap: _isLoading ? null : () { // Disable when loading
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const RegisterScreen()),
-                                  );
-                                },
+                                onTap: _isLoading ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
                                 child: Text(
                                   "Sign Up",
-                                  style: TextStyle(
-                                    color: _isLoading ? Colors.grey : const Color(0xFF00796B),
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: TextStyle(color: _isLoading ? Colors.grey : const Color(0xFF00796B), fontWeight: FontWeight.bold),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ],
@@ -355,23 +266,18 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// Curved background clipper
 class CurvedTopClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, 20);
-
     var firstControlPoint = Offset(size.width / 4, 0);
     var firstEndPoint = Offset(size.width / 2, 1);
-
     var secondControlPoint = Offset(3 * size.width / 4, 0);
     var secondEndPoint = Offset(size.width, 30);
 
-    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
-        firstEndPoint.dx, firstEndPoint.dy);
-    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
-        secondEndPoint.dx, secondEndPoint.dy);
+    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy, firstEndPoint.dx, firstEndPoint.dy);
+    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
 
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
